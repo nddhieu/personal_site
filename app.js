@@ -226,6 +226,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             try {
                 const response = await fetch(apiEndpoint, {
+                    cache: 'no-store',
                     headers: {
                         'Content-Type': 'application/json',
                         // Bypass ngrok free tier browser warning page for API calls
