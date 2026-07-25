@@ -3,40 +3,558 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hieu Nguyen - Portfolio</title>
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #0f172a;
-            color: #f8fafc;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-        .container {
-            text-align: center;
-            padding: 2rem;
-            background: #1e293b;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-            max-width: 400px;
-            width: 100%;
-        }
-        h1 {
-            color: #38bdf8;
-            margin-bottom: 0.5rem;
-        }
-        p {
-            color: #94a3b8;
-        }
-    </style>
+    <title>Hieu Nguyen | Technical Lead & Full-Stack Engineer</title>
+    <meta name="description" content="Portfolio of Hieu Nguyen, a Technical Lead and Full-Stack Engineer with 7+ years of experience leading migrations, AI initiatives, and cloud optimization at Verizon.">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Link to custom styles -->
+    <link rel="stylesheet" href="style.css">
 </head>
-<body>
-    <div class="container">
-        <h1>Hello World!</h1>
-        <p>Welcome to my live site running on hieu-nguyen.com via GitHub Pages.</p>
+<body class="dark-theme">
+    <!-- Custom Scroll Progress Indicator -->
+    <div id="scroll-indicator" class="scroll-indicator"></div>
+
+    <!-- Header / Navigation -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="#" class="logo">
+                <span class="logo-accent">&lt;</span>Hieu<span class="logo-accent"> /&gt;</span>
+            </a>
+            <nav class="nav-links">
+                <a href="#home" class="nav-link active">Home</a>
+                <a href="#about" class="nav-link">About</a>
+                <a href="#projects" class="nav-link">Projects</a>
+                <a href="#resume" class="nav-link">Resume</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </nav>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light theme">
+                    <!-- Sun Icon (visible in dark mode) -->
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <!-- Moon Icon (visible in light mode) -->
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div id="mobile-nav" class="mobile-nav-overlay">
+        <nav class="mobile-nav-links">
+            <a href="#home" class="mobile-nav-link">Home</a>
+            <a href="#about" class="mobile-nav-link">About</a>
+            <a href="#projects" class="mobile-nav-link">Projects</a>
+            <a href="#resume" class="mobile-nav-link">Resume</a>
+            <a href="#contact" class="mobile-nav-link">Contact</a>
+        </nav>
     </div>
+
+    <!-- Main Content -->
+    <main>
+        <!-- Hero Section -->
+        <section id="home" class="hero-section">
+            <div class="hero-bg-shapes">
+                <div class="shape shape-1"></div>
+                <div class="shape shape-2"></div>
+                <div class="shape shape-3"></div>
+            </div>
+            <div class="container hero-container">
+                <div class="hero-content">
+                    <div class="badge">7+ Years of Experience</div>
+                    <h1 class="hero-title">
+                        Hi, I'm <span class="text-gradient">Hieu Nguyen</span>
+                    </h1>
+                    <h2 class="hero-subtitle">
+                        I am a <span id="typewriter" class="typewriter-text"></span><span class="cursor">|</span>
+                    </h2>
+                    <p class="hero-description">
+                        Technical Lead & Full-Stack Developer specializing in modernizing enterprise architectures, optimizing cloud infrastructure (Verizon), and engineering cutting-edge AI systems using LangGraph. I build resilient, end-to-end applications that drive real business value.
+                    </p>
+                    <div class="hero-cta">
+                        <a href="#projects" class="btn btn-primary">View My Work</a>
+                        <a href="#contact" class="btn btn-secondary">Get In Touch</a>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <div class="profile-card-glow">
+                        <div class="profile-card">
+                            <!-- SVG Abstract Profile/Avatar Art -->
+                            <svg class="profile-art" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                                <defs>
+                                    <linearGradient id="grad-accent" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="var(--color-primary)" />
+                                        <stop offset="100%" stop-color="var(--color-secondary)" />
+                                    </linearGradient>
+                                    <linearGradient id="grad-mesh" x1="100%" y1="0%" x2="0%" y2="100%">
+                                        <stop offset="0%" stop-color="var(--color-accent)" stop-opacity="0.8" />
+                                        <stop offset="100%" stop-color="var(--color-primary)" stop-opacity="0.2" />
+                                    </linearGradient>
+                                </defs>
+                                <circle cx="100" cy="100" r="85" fill="url(#grad-mesh)" />
+                                <circle cx="100" cy="100" r="70" stroke="url(#grad-accent)" stroke-width="2" fill="none" stroke-dasharray="10 5" />
+                                <!-- Coding Icon Representation -->
+                                <g transform="translate(60, 75)">
+                                    <path d="M 0,25 L 20,5 L 0,-15" fill="none" stroke="var(--color-text)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                                    <path d="M 80,25 L 60,5 L 80,-15" fill="none" stroke="var(--color-text)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />
+                                    <line x1="45" y1="-25" x2="35" y2="35" stroke="var(--color-secondary)" stroke-width="4" stroke-linecap="round" />
+                                </g>
+                                <!-- Floating dots -->
+                                <circle cx="45" cy="50" r="3" fill="var(--color-secondary)" />
+                                <circle cx="155" cy="140" r="4" fill="var(--color-primary)" />
+                                <circle cx="160" cy="65" r="3" fill="var(--color-accent)" />
+                                <circle cx="40" cy="130" r="5" fill="var(--color-accent)" />
+                            </svg>
+                            <div class="profile-details">
+                                <span class="profile-name">Hieu Nguyen</span>
+                                <span class="profile-role">Technical Lead / Full-Stack Engineer</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="scroll-down">
+                <a href="#about" aria-label="Scroll down to About section">
+                    <svg class="arrow-down" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <polyline points="19 12 12 19 5 12"></polyline>
+                    </svg>
+                </a>
+            </div>
+        </section>
+
+        <!-- About Me Section -->
+        <section id="about" class="about-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">About Me</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Systems architect and modernization specialist based in Arlington, TX.</p>
+                </div>
+                <div class="about-grid">
+                    <div class="about-info">
+                        <h3>Leading Full-Stack Modernization</h3>
+                        <p>
+                            I have spent over 7 years modernizing legacy platforms, refactoring monoliths into modular architectures, and driving cloud efficiency. Acting as Technical Lead on Verizon projects, I've directed migration paths from Java 8 to Java 17 and Spring Boot 3 across 30+ enterprise microservices.
+                        </p>
+                        <p>
+                            My approach combines rigorous testing (BDD/TDD via Cucumber and Selenium), microservice design patterns (such as Custom Mediator Orchestration), DevOps automation, and advanced multi-agent AI frameworks (LangGraph, RAG).
+                        </p>
+                        <div class="about-highlights">
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+                                </div>
+                                <div class="highlight-text">
+                                    <h4>Legacy Refactoring</h4>
+                                    <p>Monolith to microservices, securing 90+ vulnerabilities.</p>
+                                </div>
+                            </div>
+                            <div class="highlight-item">
+                                <div class="highlight-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                                </div>
+                                <div class="highlight-text">
+                                    <h4>Infrastructure Cost Cuts</h4>
+                                    <p>Achieved 50% EC2 infrastructure savings by optimizing pods and logs.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="about-skills">
+                        <h3>Technical Skills</h3>
+                        <div class="skills-category">
+                            <h4>Languages</h4>
+                            <div class="skills-grid">
+                                <span class="skill-tag">Java (8/11/17)</span>
+                                <span class="skill-tag">Python</span>
+                                <span class="skill-tag">TypeScript</span>
+                                <span class="skill-tag">JavaScript</span>
+                                <span class="skill-tag">SQL</span>
+                                <span class="skill-tag">Groovy</span>
+                                <span class="skill-tag">Go</span>
+                            </div>
+                        </div>
+                        <div class="skills-category">
+                            <h4>DevOps & Cloud</h4>
+                            <div class="skills-grid">
+                                <span class="skill-tag">AWS (Lambda, EC2, S3)</span>
+                                <span class="skill-tag">Terraform</span>
+                                <span class="skill-tag">Kubernetes</span>
+                                <span class="skill-tag">Docker</span>
+                                <span class="skill-tag">GitLab CI/CD</span>
+                                <span class="skill-tag">Jenkins</span>
+                            </div>
+                        </div>
+                        <div class="skills-category">
+                            <h4>Frameworks & Databases</h4>
+                            <div class="skills-grid">
+                                <span class="skill-tag">Spring Boot</span>
+                                <span class="skill-tag">Spring Batch / Hibernate</span>
+                                <span class="skill-tag">Angular (2+)</span>
+                                <span class="skill-tag">React</span>
+                                <span class="skill-tag">PostgreSQL / Cassandra</span>
+                                <span class="skill-tag">Kafka / Pulsar</span>
+                            </div>
+                        </div>
+                        <div class="skills-category">
+                            <h4>AI Tools & Security</h4>
+                            <div class="skills-grid">
+                                <span class="skill-tag">LangGraph</span>
+                                <span class="skill-tag">LangChain / RAG</span>
+                                <span class="skill-tag">JUnit / Mockito</span>
+                                <span class="skill-tag">Cucumber / Selenium</span>
+                                <span class="skill-tag">Fortify / Black Duck</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Projects Section -->
+        <section id="projects" class="projects-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Projects & Achievements</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Real-world implementations driving cost savings, funding wins, and performance gains.</p>
+                </div>
+                
+                <!-- Category Filter -->
+                <div class="project-filter">
+                    <button class="filter-btn active" data-filter="all">All</button>
+                    <button class="filter-btn" data-filter="ai">AI / Backend</button>
+                    <button class="filter-btn" data-filter="automation">Automation</button>
+                </div>
+
+                <div class="projects-grid">
+                    <!-- Project 1 -->
+                    <div class="project-card" data-category="ai">
+                        <div class="project-img-placeholder">
+                            <svg class="project-graphic" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="400" height="220" fill="#151528" />
+                                <circle cx="200" cy="110" r="40" fill="none" stroke="var(--color-primary)" stroke-width="2" />
+                                <text x="200" y="114" fill="var(--color-text)" font-family="sans-serif" font-size="10" text-anchor="middle">Supervisor</text>
+                                <line x1="200" y1="70" x2="200" y2="40" stroke="var(--color-secondary)" stroke-width="2" />
+                                <circle cx="200" cy="30" r="10" fill="var(--color-secondary)" />
+                                <line x1="240" y1="110" x2="280" y2="110" stroke="var(--color-secondary)" stroke-width="2" />
+                                <circle cx="290" cy="110" r="10" fill="var(--color-secondary)" />
+                                <line x1="160" y1="110" x2="120" y2="110" stroke="var(--color-secondary)" stroke-width="2" />
+                                <circle cx="110" cy="110" r="10" fill="var(--color-secondary)" />
+                                <line x1="200" y1="150" x2="200" y2="180" stroke="var(--color-secondary)" stroke-width="2" />
+                                <circle cx="200" cy="190" r="10" fill="var(--color-secondary)" />
+                                <text x="20" y="30" fill="var(--color-primary)" font-family="monospace" font-size="10">LANGGRAPH + RAG</text>
+                            </svg>
+                        </div>
+                        <div class="project-content">
+                            <span class="project-tag">LangGraph / RAG / Java</span>
+                            <h3>Multi-Agent AI Network Assistant</h3>
+                            <p>
+                                Co-designed a multi-agent AI orchestration system with a supervisor agent directing specialized nodes for intent extraction, tool calling, and action execution. Replaced manual Verizon service qualifications and secured a $500K project win.
+                            </p>
+                            <div class="project-links">
+                                <span class="project-link">
+                                    Enterprise Client: Verizon
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 2 -->
+                    <div class="project-card" data-category="ai">
+                        <div class="project-img-placeholder">
+                            <svg class="project-graphic" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="400" height="220" fill="#12252c" />
+                                <path d="M 50 160 L 100 120 L 150 140 L 200 90 L 250 110 L 300 60 L 350 80" fill="none" stroke="var(--color-accent)" stroke-width="3" stroke-linecap="round" />
+                                <rect x="290" y="20" width="80" height="30" rx="4" fill="var(--color-card-bg)" stroke="var(--color-accent)" stroke-width="1" />
+                                <text x="330" y="38" fill="var(--color-text)" font-family="sans-serif" font-size="9" text-anchor="middle">Kelly Criterion</text>
+                                <text x="20" y="30" fill="var(--color-accent)" font-family="monospace" font-size="10">FastAPI / WebSockets / React</text>
+                            </svg>
+                        </div>
+                        <div class="project-content">
+                            <span class="project-tag">Python / LangGraph / React</span>
+                            <h3>Quantitative AI Portfolio Platform</h3>
+                            <p>
+                                Personal project architecting a 12-stage investment pipeline using LangGraph, combining LLM sentiment evaluation with deterministic Kelly Criterion formulas for trade sizing. Implements real-time WebSocket communication for sub-second updates.
+                            </p>
+                            <div class="project-links">
+                                <a href="https://github.com" target="_blank" rel="noopener noreferrer" class="project-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg>
+                                    Code
+                                </a>
+                                <a href="#" class="project-link demo-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+                                    Live Demo
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 3 -->
+                    <div class="project-card" data-category="automation">
+                        <div class="project-img-placeholder">
+                            <svg class="project-graphic" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="400" height="220" fill="#1b2520" />
+                                <rect x="50" y="60" width="100" height="100" rx="8" fill="var(--color-card-bg)" stroke="var(--color-primary)" stroke-width="1.5" />
+                                <text x="100" y="115" fill="var(--color-primary)" font-family="monospace" font-size="14" text-anchor="middle">JSON</text>
+                                <path d="M 180 110 L 220 110" fill="none" stroke="var(--color-accent)" stroke-width="3" />
+                                <polygon points="220,105 230,110 220,115" fill="var(--color-accent)" />
+                                <rect x="250" y="60" width="100" height="100" rx="8" fill="var(--color-card-bg)" stroke="var(--color-accent)" stroke-width="1.5" />
+                                <text x="300" y="115" fill="var(--color-accent)" font-family="monospace" font-size="14" text-anchor="middle">JS APP</text>
+                                <text x="20" y="30" fill="var(--color-accent)" font-family="monospace" font-size="10">HACKATHON 4TH PLACE</text>
+                            </svg>
+                        </div>
+                        <div class="project-content">
+                            <span class="project-tag">JavaScript / JSON / AST</span>
+                            <h3>Declarative UI Code Generator</h3>
+                            <p>
+                                Developed a code generation engine that converts declarative JSON UI configurations into fully functional JavaScript web applications. Placed 4th out of 30+ competing teams at the Verizon Hackathon.
+                            </p>
+                            <div class="project-links">
+                                <span class="project-link">
+                                    Verizon Hackathon Award
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Project 4 -->
+                    <div class="project-card" data-category="automation">
+                        <div class="project-img-placeholder">
+                            <svg class="project-graphic" viewBox="0 0 400 220" xmlns="http://www.w3.org/2000/svg">
+                                <rect width="400" height="220" fill="#201a28" />
+                                <rect x="50" y="40" width="300" height="30" rx="6" fill="#ef4444" opacity="0.15" />
+                                <text x="70" y="58" fill="#f87171" font-family="sans-serif" font-size="9">Manual Process (Emails, Slack, Excel)</text>
+                                <path d="M 200 80 L 200 110" fill="none" stroke="var(--color-text-muted)" stroke-width="2" stroke-dasharray="4 4" />
+                                <rect x="50" y="120" width="300" height="40" rx="6" fill="#10b981" opacity="0.2" stroke="var(--color-accent)" stroke-width="1" />
+                                <text x="200" y="145" fill="var(--color-text)" font-family="sans-serif" font-size="10" font-weight="600" text-anchor="middle">Application-Driven CPQ Workflow</text>
+                                <text x="20" y="30" fill="var(--color-secondary)" font-family="monospace" font-size="10">$80,000 / YR SAVED</text>
+                            </svg>
+                        </div>
+                        <div class="project-content">
+                            <span class="project-tag">Spring Boot / REST APIs / Angular</span>
+                            <h3>Enterprise CPQ Automation</h3>
+                            <p>
+                                Automated the Verizon Cost Price Quote (CPQ) workflow. Replaced fragmented manual Excel sheets, Slack messages, and emails with a unified application-driven flow, saving Verizon an estimated $80,000 annually.
+                            </p>
+                            <div class="project-links">
+                                <span class="project-link">
+                                    Enterprise Client: Verizon
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Resume Section -->
+        <section id="resume" class="resume-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Resume & Experience</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">7+ years of experience leading projects, modernizing stacks, and building scalable software.</p>
+                </div>
+                
+                <div class="timeline">
+                    <!-- Timeline Item 1 -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">May 2019 - Present</div>
+                        <div class="timeline-content card-glass">
+                            <h3>Technical Lead / Full Stack Developer</h3>
+                            <h4>Tata Consultancy Services (Client: Verizon)</h4>
+                            <p>
+                                Lead backend architecture and cloud development. Refactored a monolithic qualification platform using Java, Groovy, and a custom Mediator orchestration pattern. 
+                            </p>
+                            <p style="margin-top: 0.5rem; font-size: 0.9rem; color: var(--color-primary);">
+                                Key Achievements:
+                            </p>
+                            <ul style="margin-left: 1.2rem; margin-top: 0.3rem; font-size: 0.9rem; color: var(--color-text-muted);">
+                                <li>Reduced non-production EC2 infrastructure costs by 50%.</li>
+                                <li>Modernized 30+ services from Java 8 to Java 17 and Spring Boot 3, addressing 90+ security vulnerabilities.</li>
+                                <li>Tuned batch processing (slashed import time from 2 hours to 10 minutes) and critical APIs (improved latency from 2s to 250ms).</li>
+                                <li>Built a multi-agent AI assistant (LangGraph + RAG), securing a $500K Verizon project win.</li>
+                                <li>Built Cucumber/Selenium test suites, reducing manual regression testing from 2 days to 4 hours.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 2 -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">Feb 2025 - May 2024</div>
+                        <div class="timeline-content card-glass">
+                            <h3>TCS Corporate Recognitions</h3>
+                            <h4>Tata Consultancy Services</h4>
+                            <p>
+                                Received multiple corporate accolades recognizing technical and leadership excellence:
+                            </p>
+                            <ul style="margin-left: 1.2rem; margin-top: 0.5rem; font-size: 0.9rem; color: var(--color-text-muted);">
+                                <li><strong>Technical Excellence Award</strong> (Feb 2025) for system optimizations and AI-assistant engineering.</li>
+                                <li><strong>Star of the Quarter</strong> (May 2024) for team execution and monolith migration leadership.</li>
+                                <li><strong>Best Team Award</strong> (Oct 2023) for CPQ workflow automation delivery.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Item 3 -->
+                    <div class="timeline-item">
+                        <div class="timeline-dot"></div>
+                        <div class="timeline-date">Education</div>
+                        <div class="timeline-content card-glass">
+                            <h3>Academic Background</h3>
+                            <h4 style="margin-bottom: 0.5rem;">Texas Christian University & Tarrant County College</h4>
+                            <p>
+                                <strong>Bachelor of Science in Biochemistry</strong><br>
+                                Texas Christian University (TCU) — Fort Worth, TX
+                            </p>
+                            <p style="margin-top: 0.5rem;">
+                                <strong>Associate of Science in Computer Science</strong><br>
+                                Tarrant County College (TCC) — Fort Worth, TX
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="resume-download">
+                    <a href="mailto:hieu.ng8936@gmail.com" class="btn btn-secondary">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                        Request Complete Resume (PDF)
+                    </a>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="contact-section">
+            <div class="container">
+                <div class="section-header">
+                    <h2 class="section-title">Get In Touch</h2>
+                    <div class="section-divider"></div>
+                    <p class="section-subtitle">Have an opportunity, questions, or just want to connect? Let's talk!</p>
+                </div>
+                
+                <div class="contact-grid">
+                    <div class="contact-info-panel">
+                        <h3>Let's Connect</h3>
+                        <p>
+                            I'm open to discussing full-stack software development opportunities, architectural refactoring consulting, or AI integration solutions (LangGraph/RAG).
+                        </p>
+                        
+                        <div class="contact-details">
+                            <div class="contact-detail-item">
+                                <div class="detail-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                                </div>
+                                <div class="detail-text">
+                                    <span>Email</span>
+                                    <a href="mailto:hieu.ng8936@gmail.com">hieu.ng8936@gmail.com</a>
+                                </div>
+                            </div>
+                            <div class="contact-detail-item">
+                                <div class="detail-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+                                </div>
+                                <div class="detail-text">
+                                    <span>Phone</span>
+                                    <a href="tel:4693219976">(469) 321-9976</a>
+                                </div>
+                            </div>
+                            <div class="contact-detail-item">
+                                <div class="detail-icon">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+                                </div>
+                                <div class="detail-text">
+                                    <span>Location</span>
+                                    <span>Arlington, TX 76002</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="social-links">
+                            <a href="mailto:hieu.ng8936@gmail.com" aria-label="Email">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                            </a>
+                            <a href="https://linkedin.com/in/hieu-nguyen-0894bb57" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg>
+                            </a>
+                        </div>
+                    </div>
+                    
+                    <form id="contact-form" class="contact-form card-glass">
+                        <div class="form-group">
+                            <label for="name">Your Name</label>
+                            <input type="text" id="name" name="name" placeholder="John Doe" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Your Email</label>
+                            <input type="email" id="email" name="email" placeholder="john@example.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="subject">Subject</label>
+                            <input type="text" id="subject" name="subject" placeholder="Collaboration Idea" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="message">Message</label>
+                            <textarea id="message" name="message" rows="5" placeholder="Tell me about your project..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block">Send Message</button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 Hieu Nguyen. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#home">Home</a>
+                <a href="#about">About</a>
+                <a href="#projects">Projects</a>
+                <a href="#resume">Resume</a>
+                <a href="#contact">Contact</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Form Success Notification Overlay -->
+    <div id="success-modal" class="modal-overlay">
+        <div class="modal-content card-glass">
+            <div class="modal-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
+            </div>
+            <h3>Message Sent!</h3>
+            <p>Thank you for reaching out. I'll get back to you as soon as possible.</p>
+            <button id="modal-close-btn" class="btn btn-primary">Close</button>
+        </div>
+    </div>
+
+    <!-- Main JavaScript -->
+    <script src="app.js"></script>
 </body>
 </html>
