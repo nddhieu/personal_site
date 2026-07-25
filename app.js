@@ -209,4 +209,40 @@ document.addEventListener('DOMContentLoaded', () => {
             alert('This is a preview version of the site. A live interactive environment for this project is being set up and will be deployed soon!');
         });
     });
+
+    // === Local API Demo ===
+    const callApiBtn = document.getElementById('call-api-btn');
+    const apiResponse = document.getElementById('api-response');
+
+    if (callApiBtn && apiResponse) {
+        callApiBtn.addEventListener('click', async () => {
+            apiResponse.textContent = 'Calling API...';
+            apiResponse.style.color = 'var(--color-text-muted)';
+            
+            // Detect if running locally (calls local port directly) 
+            // or on Vercel production (uses Vercel /api rewrite proxy)
+            const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+            const apiEndpoint = isLocal ? 'http://127.0.0.1:8000/api/hello' : '/api/hello';
+            
+            try {
+                const response = await fetch(apiEndpoint, {
+                    headers: {
+                        'Content-Type': 'application/json',
+                        // Bypass ngrok free tier browser warning page for API calls
+                        'ngrok-skip-browser-warning': 'true'
+                    }
+                });
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                apiResponse.textContent = JSON.stringify(data);
+                apiResponse.style.color = 'var(--color-accent)';
+            } catch (error) {
+                console.error('Error calling backend:', error);
+                apiResponse.textContent = `Error: ${error.message}. Is the backend running?`;
+                apiResponse.style.color = 'var(--color-secondary)';
+            }
+        });
+    }
 });
