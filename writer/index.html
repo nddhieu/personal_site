@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Co-Author Workbench</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+Double+Pica:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="dark-theme">
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-left">
+                <span class="logo-accent">✦</span>
+                <h1>AI Co-Author Workbench</h1>
+            </div>
+            <div class="header-right">
+                <div class="story-selector-container">
+                    <select id="story-select">
+                        <option value="">Select a Story...</option>
+                    </select>
+                </div>
+                <button id="new-story-btn" class="btn btn-accent">New Story</button>
+            </div>
+        </header>
+
+        <!-- Main Body Workspace -->
+        <main class="workspace">
+            <!-- Left Pane: Reading Room -->
+            <section class="reading-room">
+                <div class="room-header">
+                    <h2>Reading Room</h2>
+                    <span id="current-story-title" class="story-title-display">No Story Selected</span>
+                </div>
+                <div id="narrative-display" class="narrative-display">
+                    <div class="narrative-placeholder">
+                        <div class="placeholder-icon">✦</div>
+                        <h3>Welcome to the Co-Author Workbench</h3>
+                        <p>Select an existing story or create a new one to begin your interactive co-authoring journey.</p>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <div class="input-controls">
+                        <button id="btn-continue" class="btn btn-secondary btn-sm" disabled>Continue Scene</button>
+                        <button id="btn-ooc" class="btn btn-secondary btn-sm" disabled>OOC Command</button>
+                    </div>
+                    <form id="prompt-form" class="prompt-form">
+                        <textarea id="prompt-input" placeholder="Type your action in first person (e.g., 'I pull my coat closer and step into the wind...')" rows="3" disabled></textarea>
+                        <button type="submit" id="send-btn" class="btn btn-primary" disabled>
+                            <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Right Pane: Story Bible -->
+            <section class="story-bible">
+                <div class="bible-tabs">
+                    <button class="tab-btn active" data-tab="tab-roster">Roster & Visuals</button>
+                    <button class="tab-btn" data-tab="tab-ledger">Ledger & Threads</button>
+                    <button class="tab-btn" data-tab="tab-blueprints">Facial Blueprints</button>
+                </div>
+
+                <div class="tab-content-container">
+                    <!-- Tab 1: Roster & Visuals -->
+                    <div id="tab-roster" class="tab-content active">
+                        <div class="bible-card">
+                            <h3>Active Location & State</h3>
+                            <div class="state-detail">
+                                <span class="label">Timeline:</span>
+                                <span id="val-timeline" class="value">-</span>
+                            </div>
+                            <div class="state-detail">
+                                <span class="label">Location:</span>
+                                <span id="val-location" class="value">-</span>
+                            </div>
+                            <div class="state-detail">
+                                <span class="label">Atmosphere:</span>
+                                <span id="val-atmosphere" class="value">-</span>
+                            </div>
+                            <div class="state-detail">
+                                <span class="label">Relationship:</span>
+                                <span id="val-relationship" class="value">-</span>
+                            </div>
+                        </div>
+
+                        <div class="bible-card">
+                            <h3>Current Scene Visuals</h3>
+                            <div class="state-detail">
+                                <span class="label">Clothing & Props:</span>
+                                <span id="val-clothing" class="value">-</span>
+                            </div>
+                            <div class="state-detail">
+                                <span class="label">Lighting & Background:</span>
+                                <span id="val-visual-bg" class="value">-</span>
+                            </div>
+                        </div>
+
+                        <div class="bible-card">
+                            <h3>Living Roster</h3>
+                            <div class="roster-section">
+                                <h4>On-Screen</h4>
+                                <ul id="roster-onscreen" class="roster-list">
+                                    <li class="empty-list">No characters in scene</li>
+                                </ul>
+                            </div>
+                            <div class="roster-section">
+                                <h4>Off-Screen Active</h4>
+                                <ul id="roster-offscreen" class="roster-list">
+                                    <li class="empty-list">No active off-screen characters</li>
+                                </ul>
+                            </div>
+                            <div class="roster-section">
+                                <h4>Partitioned / Unaware</h4>
+                                <ul id="roster-partitioned" class="roster-list">
+                                    <li class="empty-list">No partitioned characters</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Tab 2: Ledger & Threads -->
+                    <div id="tab-ledger" class="tab-content">
+                        <div class="bible-card">
+                            <h3>Short-Term Critical Past Beats</h3>
+                            <ul id="ledger-shortterm" class="ledger-list">
+                                <li class="empty-list">No recent beats</li>
+                            </ul>
+                        </div>
+
+                        <div class="bible-card">
+                            <h3>Long-Term Historical Ledger</h3>
+                            <ul id="ledger-longterm" class="ledger-list">
+                                <li class="empty-list">No historical records</li>
+                            </ul>
+                        </div>
+
+                        <div class="bible-card">
+                            <h3>Open Threads & Pending Questions</h3>
+                            <ul id="open-threads" class="threads-list">
+                                <li class="empty-list">No active threads</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- Tab 3: Character Blueprints -->
+                    <div id="tab-blueprints" class="tab-content">
+                        <div class="bible-card">
+                            <h3>Facial Identity Blueprints</h3>
+                            <div id="blueprints-list" class="blueprints-list">
+                                <p class="empty-list">No blueprints established yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal: New Story Creator -->
+    <div id="new-story-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>Create New Co-Author Story</h2>
+                <button id="modal-close" class="modal-close-btn">&times;</button>
+            </div>
+            <form id="create-story-form">
+                <div class="form-group">
+                    <label for="story-title-input">Story Title</label>
+                    <input type="text" id="story-title-input" placeholder="Enter an evocative title..." required>
+                </div>
+                <div class="form-group row">
+                    <div class="col">
+                        <label for="proto-name-input">Protagonist Name</label>
+                        <input type="text" id="proto-name-input" value="Elias" required>
+                    </div>
+                    <div class="col">
+                        <label for="comp-name-input">Companion Name (NPC)</label>
+                        <input type="text" id="comp-name-input" value="Jennie" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="proto-desc-input">Protagonist Facial & Build Blueprint</label>
+                    <textarea id="proto-desc-input" rows="2" placeholder="Tall, dark hair, sharp grey eyes, structured jawline..." required>Tall, structured build, sharp grey eyes, dark hair swept back, wearing a weatherworn dark grey coat.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="comp-desc-input">Companion Facial & Build Blueprint</label>
+                    <textarea id="comp-desc-input" rows="2" placeholder="Sleek black hair, deep dark eyes, elegant posture..." required>Sleek dark hair, warm expressive eyes, slender build, wearing a dark fitted sweater.</textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" id="modal-cancel" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-accent">Initialize Story</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
