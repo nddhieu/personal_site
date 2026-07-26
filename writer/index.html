@@ -12,10 +12,105 @@
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+Double+Pica:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="/writer/style.css">
+    <!-- Google Identity Services (for Google Sign-In) -->
+    <!-- Client ID is fetched from backend API at /api/auth/google-client-id -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
 
 <body class="dark-theme">
-    <div class="app-container">
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- AUTH PAGE (shown when user is not logged in)               -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div id="auth-page" class="auth-page active">
+        <div class="auth-container">
+            <div class="auth-header">
+                <div class="auth-logo">✦</div>
+                <h1 class="auth-title">Co-Author Workbench</h1>
+                <p class="auth-subtitle">Interactive AI Co-Authoring Studio</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="auth-tab-btn active" data-auth-tab="login">Sign In</button>
+                <button class="auth-tab-btn" data-auth-tab="signup">Create Account</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="login-form" class="auth-form active">
+                <div class="auth-form-group">
+                    <label for="login-email">Email</label>
+                    <input type="email" id="login-email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="auth-form-group">
+                    <label for="login-password">Password</label>
+                    <input type="password" id="login-password" placeholder="Enter your password" required
+                        autocomplete="current-password">
+                </div>
+                <div class="auth-form-group auth-submit-group">
+                    <button type="submit" id="auth-submit-btn" class="btn btn-accent auth-submit-btn">
+                        <span id="auth-submit-text">Sign In</span>
+                        <span id="auth-submit-spinner" class="spinner" style="display:none"></span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Signup Form -->
+            <form id="signup-form" class="auth-form">
+                <div class="auth-form-group">
+                    <label for="signup-email">Email</label>
+                    <input type="email" id="signup-email" placeholder="you@example.com" required autocomplete="email">
+                </div>
+                <div class="auth-form-group">
+                    <label for="signup-display-name">Display Name (optional)</label>
+                    <input type="text" id="signup-display-name" placeholder="How should we call you?"
+                        autocomplete="name">
+                </div>
+                <div class="auth-form-group">
+                    <label for="signup-password">Password</label>
+                    <input type="password" id="signup-password" placeholder="At least 6 characters" required
+                        minlength="6" autocomplete="new-password">
+                </div>
+                <div class="auth-form-group">
+                    <label for="signup-confirm">Confirm Password</label>
+                    <input type="password" id="signup-confirm" placeholder="Repeat your password" required minlength="6"
+                        autocomplete="new-password">
+                </div>
+                <div class="auth-form-group auth-submit-group">
+                    <button type="submit" class="btn btn-accent auth-submit-btn">
+                        <span>Create Account</span>
+                    </button>
+                </div>
+            </form>
+
+            <!-- Auth Error -->
+            <div id="auth-error" class="auth-error" style="display:none"></div>
+
+            <!-- Auth Loading Overlay -->
+            <div id="auth-loading" class="auth-loading" style="display:none">
+                <div class="spinner-large"></div>
+                <span>Authenticating...</span>
+            </div>
+
+            <!-- Divider -->
+            <div class="auth-divider">
+                <span>or</span>
+            </div>
+
+            <!-- Google Sign-In Button -->
+            <!-- Client ID is fetched dynamically from /api/auth/google-client-id (set GOOGLE_CLIENT_ID in .env) -->
+            <div class="auth-google-section">
+                <div id="google-signin-btn" class="google-signin-container"></div>
+            </div>
+
+            <p class="auth-footer-text">
+                Your stories are private and only accessible by you.
+            </p>
+        </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <!-- MAIN APPLICATION                                           -->
+    <!-- ════════════════════════════════════════════════════════════ -->
+    <div class="app-container auth-hidden">
         <!-- Header -->
         <header class="app-header">
             <div class="header-left">
@@ -23,6 +118,12 @@
                 <h1>AI Co-Author Workbench</h1>
             </div>
             <div class="header-right">
+                <!-- User Info -->
+                <div class="user-badge" id="user-badge">
+                    <img id="user-avatar" class="user-avatar" src="" alt="" style="display:none">
+                    <span id="user-display-name" class="user-name"></span>
+                    <button id="logout-btn" class="btn btn-secondary btn-sm" title="Sign out">Sign Out</button>
+                </div>
                 <div class="story-selector-container">
                     <select id="story-select">
                         <option value="">Select a Story...</option>

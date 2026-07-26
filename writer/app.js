@@ -1,10 +1,152 @@
 import { state } from './js/state.js';
 import { ARCHIVIST_REFRESH_DELAY_MS } from './js/config.js';
+import { auth } from './js/auth.js';
 import * as api from './js/api.js';
 import * as ui from './js/ui.js';
 import { elements } from './js/ui.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+    // ── Auth Gate ────────────────────────────────────────────────
+    auth.init();
+
+    // DOM references for auth page
+    const authPage = document.getElementById('auth-page');
+    const appContainer = document.querySelector('.app-container');
+    const authTabBtns = document.querySelectorAll('.auth-tab-btn');
+    const authForms = {
+        login: document.getElementById('login-form'),
+        signup: document.getElementById('signup-form'),
+    };
+    const authError = document.getElementById('auth-error');
+    const authLoading = document.getElementById('auth-loading');
+    const authSubmitBtn = document.getElementById('auth-submit-btn');
+    const authSubmitText = document.getElementById('auth-submit-text');
+    const authSubmitSpinner = document.getElementById('auth-submit-spinner');
+    const logoutBtn = document.getElementById('logout-btn');
+    const userDisplayName = document.getElementById('user-display-name');
+    const userAvatar = document.getElementById('user-avatar');
+
+    // Current active auth mode
+    let currentAuthMode = 'login'; // 'login' or 'signup'
+
+    function showApp() {
+        authPage.classList.remove('active');
+        appContainer.classList.remove('auth-hidden');
+    }
+
+    function showAuth() {
+        authPage.classList.add('active');
+        appContainer.classList.add('auth-hidden');
+        // Initialize Google Sign-In button (safe to call multiple times)
+        auth.initGoogleSignIn('google-signin-btn');
+    }
+
+    function setAuthError(msg) {
+        authError.textContent = msg;
+        authError.style.display = msg ? 'block' : 'none';
+    }
+
+    function setAuthLoading(loading) {
+        authLoading.style.display = loading ? 'flex' : 'none';
+        authSubmitBtn.disabled = loading;
+        authSubmitText.textContent = loading ? 'Please wait...' : (currentAuthMode === 'login' ? 'Sign In' : 'Create Account');
+        authSubmitSpinner.style.display = loading ? 'block' : 'none';
+    }
+
+    function switchAuthMode(mode) {
+        currentAuthMode = mode;
+        setAuthError('');
+
+        // Toggle tab styling
+        authTabBtns.forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.authTab === mode);
+        });
+
+        // Toggle form visibility
+        authForms.login.classList.toggle('active', mode === 'login');
+        authForms.signup.classList.toggle('active', mode === 'signup');
+
+        // Update submit button text
+        authSubmitText.textContent = mode === 'login' ? 'Sign In' : 'Create Account';
+    }
+
+    // Auth tab switching
+    authTabBtns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            switchAuthMode(btn.dataset.authTab);
+        });
+    });
+
+    // Auth form submission
+    async function handleAuthSubmit(e) {
+        e.preventDefault();
+        setAuthError('');
+        setAuthLoading(true);
+
+        try {
+            if (currentAuthMode === 'login') {
+                const email = document.getElementById('login-email').value;
+                const password = document.getElementById('login-password').value;
+                await auth.login(email, password);
+            } else {
+                const email = document.getElementById('signup-email').value;
+                const password = document.getElementById('signup-password').value;
+                const confirm = document.getElementById('signup-confirm').value;
+                const displayName = document.getElementById('signup-display-name').value;
+
+                if (password !== confirm) {
+                    throw new Error('Passwords do not match');
+                }
+                if (password.length < 6) {
+                    throw new Error('Password must be at least 6 characters');
+                }
+
+                await auth.signup(email, password, displayName);
+            }
+        } catch (err) {
+            setAuthError(err.message);
+            setAuthLoading(false);
+        }
+    }
+
+    authForms.login.addEventListener('submit', handleAuthSubmit);
+    authForms.signup.addEventListener('submit', handleAuthSubmit);
+
+    // Logout
+    logoutBtn.addEventListener('click', () => {
+        auth.logout();
+    });
+
+    // Listen for auth state changes
+    auth.onAuthChange((isLoggedIn, user) => {
+        if (isLoggedIn) {
+            showApp();
+            // Update user info in header
+            if (user) {
+                userDisplayName.textContent = user.display_name || user.email;
+                if (user.avatar_url) {
+                    userAvatar.src = user.avatar_url;
+                    userAvatar.style.display = 'inline';
+                } else {
+                    userAvatar.style.display = 'none';
+                }
+            }
+            // Re-initialize the workbench
+            initWorkbench();
+        } else {
+            showAuth();
+            setAuthLoading(false);
+        }
+    });
+
+    // ── Workbench Initialization ─────────────────────────────────
+    function initWorkbench() {
+        // Load stories and set up the workbench
+        loadStories();
+        selectStory('');
+        ui.updateProviderIndicator();
+    }
+
     // === App State ===
     // (activeStoryId and isOocMode are housed in `state`)
 
@@ -492,9 +634,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    // Initialize provider indicator
-    ui.updateProviderIndicator();
-
-    // Initial load
-    loadStories();
+    // Initial auth-based initialization is handled by auth.onAuthChange above.
+    // The workbench is only initialized after successful authentication.
 });
