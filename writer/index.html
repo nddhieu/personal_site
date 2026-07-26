@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,9 +8,12 @@
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+Double+Pica:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+Double+Pica:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body class="dark-theme">
     <div class="app-container">
         <!-- Header -->
@@ -24,7 +28,22 @@
                         <option value="">Select a Story...</option>
                     </select>
                 </div>
+                <button id="delete-story-btn" class="btn btn-danger" disabled
+                    title="Delete the currently selected story">Delete</button>
                 <button id="new-story-btn" class="btn btn-accent">New Story</button>
+                <span class="provider-badge" id="provider-badge" title="Click to change LLM provider">
+                    <span class="provider-dot" id="provider-dot">●</span>
+                    <span class="provider-name" id="provider-name">Ollama</span>
+                </span>
+                <button id="settings-btn" class="btn btn-secondary btn-icon" title="LLM Settings">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="3"></circle>
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z">
+                        </path>
+                    </svg>
+                </button>
             </div>
         </header>
 
@@ -40,7 +59,8 @@
                     <div class="narrative-placeholder">
                         <div class="placeholder-icon">✦</div>
                         <h3>Welcome to the Co-Author Workbench</h3>
-                        <p>Select an existing story or create a new one to begin your interactive co-authoring journey.</p>
+                        <p>Select an existing story or create a new one to begin your interactive co-authoring journey.
+                        </p>
                     </div>
                 </div>
                 <div class="input-area">
@@ -49,9 +69,12 @@
                         <button id="btn-ooc" class="btn btn-secondary btn-sm" disabled>OOC Command</button>
                     </div>
                     <form id="prompt-form" class="prompt-form">
-                        <textarea id="prompt-input" placeholder="Type your action in first person (e.g., 'I pull my coat closer and step into the wind...')" rows="3" disabled></textarea>
+                        <textarea id="prompt-input"
+                            placeholder="Type your action in first person (e.g., 'I pull my coat closer and step into the wind...')"
+                            rows="3" disabled></textarea>
                         <button type="submit" id="send-btn" class="btn btn-primary" disabled>
-                            <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <svg class="send-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                 <line x1="22" y1="2" x2="11" y2="13"></line>
                                 <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
                             </svg>
@@ -164,6 +187,70 @@
         </main>
     </div>
 
+    <!-- Modal: LLM Settings -->
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2>LLM Provider Settings</h2>
+                <button id="settings-modal-close" class="modal-close-btn">&times;</button>
+            </div>
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="settings-provider">Provider</label>
+                    <select id="settings-provider">
+                        <option value="ollama">Ollama (Local)</option>
+                        <option value="openai">OpenAI-Compatible (DeepSeek, OpenAI, Groq, etc.)</option>
+                    </select>
+                </div>
+
+                <div id="settings-openai-fields" class="settings-group">
+                    <div class="form-group">
+                        <label for="settings-api-key">API Key</label>
+                        <div class="api-key-wrapper">
+                            <input type="password" id="settings-api-key" placeholder="sk-...">
+                            <button type="button" id="toggle-api-key-visibility" class="btn btn-sm btn-secondary"
+                                title="Show/Hide API Key">Show</button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-base-url">Base URL</label>
+                        <input type="text" id="settings-base-url" placeholder="https://api.deepseek.com">
+                        <span class="form-hint">e.g. https://api.deepseek.com, https://api.openai.com/v1</span>
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-model">Model Name</label>
+                        <input type="text" id="settings-model" placeholder="deepseek-chat">
+                        <span class="form-hint">e.g. deepseek-chat, gpt-4o-mini, llama-3.3-70b</span>
+                    </div>
+                </div>
+
+                <div id="settings-ollama-fields" class="settings-group">
+                    <div class="form-group">
+                        <label for="settings-ollama-model">Ollama Model</label>
+                        <input type="text" id="settings-ollama-model" placeholder="dolphin-llama3:8b">
+                        <span class="form-hint">Model name pulled locally via <code>ollama pull <name></code></span>
+                    </div>
+                    <div class="form-group">
+                        <label for="settings-ollama-url">Ollama URL</label>
+                        <input type="text" id="settings-ollama-url" placeholder="http://[::1]:11434">
+                        <span class="form-hint">Default: http://[::1]:11434 (IPv6 localhost)</span>
+                    </div>
+                </div>
+
+                <div class="settings-status" id="settings-status">
+                    <span class="provider-indicator" id="provider-indicator">●</span>
+                    <span id="settings-summary">Ollama (dolphin-llama3:8b)</span>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" id="settings-test-btn" class="btn btn-secondary">Test Connection</button>
+                    <button type="button" id="settings-cancel" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-accent">Save Settings</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal: New Story Creator -->
     <div id="new-story-modal" class="modal-overlay">
         <div class="modal-box">
@@ -188,11 +275,15 @@
                 </div>
                 <div class="form-group">
                     <label for="proto-desc-input">Protagonist Facial & Build Blueprint</label>
-                    <textarea id="proto-desc-input" rows="2" placeholder="Tall, dark hair, sharp grey eyes, structured jawline..." required>Tall, structured build, sharp grey eyes, dark hair swept back, wearing a weatherworn dark grey coat.</textarea>
+                    <textarea id="proto-desc-input" rows="2"
+                        placeholder="Tall, dark hair, sharp grey eyes, structured jawline..."
+                        required>Tall, structured build, sharp grey eyes, dark hair swept back, wearing a weatherworn dark grey coat.</textarea>
                 </div>
                 <div class="form-group">
                     <label for="comp-desc-input">Companion Facial & Build Blueprint</label>
-                    <textarea id="comp-desc-input" rows="2" placeholder="Sleek black hair, deep dark eyes, elegant posture..." required>Sleek dark hair, warm expressive eyes, slender build, wearing a dark fitted sweater.</textarea>
+                    <textarea id="comp-desc-input" rows="2"
+                        placeholder="Sleek black hair, deep dark eyes, elegant posture..."
+                        required>Sleek dark hair, warm expressive eyes, slender build, wearing a dark fitted sweater.</textarea>
                 </div>
                 <div class="form-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Cancel</button>
@@ -204,4 +295,5 @@
 
     <script src="app.js"></script>
 </body>
+
 </html>
