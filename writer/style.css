@@ -1116,3 +1116,454 @@ body {
     font-size: 0.8rem;
     padding: 4px 10px;
 }
+
+/* ══════════════════════════════════════════════════════════════
+   RESPONSIVE MEDIA QUERIES
+   ══════════════════════════════════════════════════════════════ */
+
+/* Tablet: 1024px and below */
+@media (max-width: 1024px) {
+    .header-right {
+        gap: 10px;
+    }
+
+    .story-selector-container select {
+        min-width: 150px;
+    }
+
+    .narrative-display {
+        padding: 20px 24px;
+    }
+
+    .user-name {
+        max-width: 80px;
+    }
+}
+
+/* Small tablet / large phone: 768px and below */
+@media (max-width: 768px) {
+    body {
+        overflow-y: auto;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .app-container {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    /* Stack header items - allow wrapping */
+    .app-header {
+        height: auto;
+        min-height: 60px;
+        padding: 10px 16px;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .header-left h1 {
+        font-size: 1rem;
+    }
+
+    .header-right {
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        justify-content: flex-end;
+    }
+
+    .header-left {
+        flex: 1;
+    }
+
+    .story-selector-container {
+        order: 10;
+        width: 100%;
+    }
+
+    .story-selector-container select {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .provider-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+
+    .user-badge {
+        margin-right: 0;
+        padding: 2px 8px 2px 2px;
+    }
+
+    .user-name {
+        display: none;
+    }
+
+    .user-avatar {
+        width: 24px;
+        height: 24px;
+    }
+
+    #new-story-btn {
+        font-size: 0.8rem;
+        padding: 6px 12px;
+    }
+
+    #delete-story-btn {
+        font-size: 0.8rem;
+        padding: 6px 10px;
+    }
+
+    #settings-btn {
+        padding: 6px;
+    }
+
+    .btn-icon svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Stack workspace vertically */
+    .workspace {
+        grid-template-columns: 1fr;
+        overflow-y: auto;
+    }
+
+    .reading-room {
+        border-right: none;
+        border-bottom: 1px solid var(--color-border);
+        max-height: 70vh;
+    }
+
+    .story-bible {
+        max-height: none;
+        min-height: 400px;
+    }
+
+    .room-header {
+        padding: 12px 16px;
+    }
+
+    .narrative-display {
+        padding: 16px;
+        max-width: 100%;
+    }
+
+    .narrative-display p {
+        font-size: 1.1rem;
+    }
+
+    .input-area {
+        padding: 12px 16px;
+    }
+
+    .tab-content-container {
+        padding: 16px;
+    }
+
+    .bible-card {
+        padding: 14px;
+    }
+
+    .modal-box {
+        max-width: 90vw;
+        margin: 0 16px;
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+}
+
+/* Phone: 480px and below */
+@media (max-width: 480px) {
+    .app-header {
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .header-left h1 {
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+    }
+
+    .header-left {
+        gap: 6px;
+    }
+
+    .logo-accent {
+        font-size: 1rem;
+    }
+
+    .header-right {
+        gap: 6px;
+    }
+
+    .btn-sm {
+        padding: 3px 8px;
+        font-size: 0.75rem;
+    }
+
+    #new-story-btn {
+        font-size: 0.75rem;
+        padding: 5px 10px;
+    }
+
+    #delete-story-btn {
+        font-size: 0.75rem;
+        padding: 5px 8px;
+    }
+
+    .story-selector-container select {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Auth page mobile */
+    .auth-container {
+        padding: 24px 16px;
+    }
+
+    .auth-title {
+        font-size: 1.4rem;
+    }
+
+    .auth-logo {
+        font-size: 2.2rem;
+    }
+
+    .auth-tab-btn {
+        font-size: 0.85rem;
+        padding: 10px;
+    }
+
+    .auth-form-group input {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    .auth-submit-btn {
+        padding: 10px 16px;
+        font-size: 0.9rem;
+    }
+
+    /* Reading room */
+    .reading-room {
+        max-height: 60vh;
+    }
+
+    .room-header h2 {
+        font-size: 0.75rem;
+    }
+
+    .story-title-display {
+        font-size: 0.85rem;
+        max-width: 180px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .narrative-display {
+        padding: 12px;
+        gap: 14px;
+    }
+
+    .narrative-display p {
+        font-size: 1rem;
+        line-height: 1.7;
+    }
+
+    .user-action-block {
+        padding: 10px 14px;
+        font-size: 0.95rem !important;
+    }
+
+    .ooc-action-block {
+        font-size: 0.85rem !important;
+        padding: 8px 12px;
+    }
+
+    .narrative-transition {
+        font-size: 0.75rem !important;
+    }
+
+    /* Input area */
+    .input-area {
+        padding: 10px 12px;
+    }
+
+    .input-controls {
+        gap: 6px;
+    }
+
+    .input-controls .btn {
+        font-size: 0.75rem;
+        padding: 4px 8px;
+    }
+
+    .prompt-form {
+        gap: 8px;
+    }
+
+    .prompt-form textarea {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    .prompt-form .btn-primary {
+        width: 42px;
+        height: 42px;
+    }
+
+    .send-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Story Bible */
+    .story-bible {
+        min-height: 350px;
+    }
+
+    .bible-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .tab-btn {
+        padding: 10px 8px;
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .tab-content-container {
+        padding: 12px;
+        gap: 14px;
+    }
+
+    .bible-card {
+        padding: 12px;
+    }
+
+    .bible-card h3 {
+        font-size: 0.7rem;
+    }
+
+    .state-detail {
+        font-size: 0.85rem;
+    }
+
+    .state-detail .label {
+        width: 90px;
+    }
+
+    /* Form row columns stack */
+    .form-group.row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-group input,
+    .form-group textarea {
+        font-size: 0.85rem;
+        padding: 8px 10px;
+    }
+
+    /* Modals */
+    .modal-box {
+        padding: 16px;
+    }
+
+    .modal-header h2 {
+        font-size: 1.05rem;
+    }
+
+    .form-actions {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .form-actions .btn {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.85rem;
+        padding: 8px 12px;
+    }
+
+    .settings-group {
+        padding: 12px;
+    }
+
+    .api-key-wrapper {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .api-key-wrapper button {
+        width: 100%;
+    }
+}
+
+/* Very small phone: 360px and below */
+@media (max-width: 360px) {
+    .app-header {
+        padding: 6px 8px;
+    }
+
+    .header-left h1 {
+        font-size: 0.75rem;
+    }
+
+    .header-right .btn {
+        font-size: 0.7rem;
+        padding: 4px 6px;
+    }
+
+    .story-selector-container select {
+        font-size: 0.75rem;
+        padding: 4px 6px;
+    }
+
+    .narrative-display {
+        padding: 8px;
+    }
+
+    .narrative-display p {
+        font-size: 0.95rem;
+    }
+
+    .prompt-form textarea {
+        font-size: 0.8rem;
+        padding: 6px 8px;
+    }
+
+    .prompt-form .btn-primary {
+        width: 36px;
+        height: 36px;
+    }
+
+    .send-icon {
+        width: 14px;
+        height: 14px;
+    }
+
+    .auth-container {
+        padding: 16px 12px;
+    }
+
+    .auth-title {
+        font-size: 1.2rem;
+    }
+
+    .bible-card {
+        padding: 10px;
+    }
+
+    .modal-box {
+        padding: 12px;
+        margin: 0 8px;
+    }
+}
