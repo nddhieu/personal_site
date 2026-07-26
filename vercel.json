@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://curse-passivism-omnivore.ngrok-free.dev/api/:path*"
+      "destination": "https://api.hieu-nguyen.com/api/:path*"
     }
   ]
 }
