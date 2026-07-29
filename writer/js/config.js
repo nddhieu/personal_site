@@ -3,5 +3,3 @@ const isLocal = window.location.hostname === 'localhost' || window.location.host
 export const API_BASE = isLocal ? 'http://127.0.0.1:8001/api' : '/api';
 
 export const PROVIDER_STORAGE_KEY = 'coauthor_llm_provider';
-
-export const ARCHIVIST_REFRESH_DELAY_MS = 2500;

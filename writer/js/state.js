@@ -1,5 +1,3 @@
-import { PROVIDER_STORAGE_KEY } from './config.js';
-
 class AppState {
     constructor() {
         this.activeStoryId = null;
@@ -8,25 +6,18 @@ class AppState {
     }
 
     loadProviderSettings() {
-        try {
-            const saved = localStorage.getItem(PROVIDER_STORAGE_KEY);
-            if (saved) return JSON.parse(saved);
-        } catch (e) {
-            console.warn('Failed to load provider settings:', e);
-        }
         return {
             provider: 'ollama',
             apiKey: '',
             baseUrl: 'https://api.deepseek.com',
             model: 'deepseek-chat',
-            ollamaModel: 'dolphin-llama3:8b',
+            ollamaModel: 'magnum:12b',
             ollamaUrl: 'http://[::1]:11434',
         };
     }
 
     saveProviderSettings(settings) {
         this.providerSettings = { ...settings };
-        localStorage.setItem(PROVIDER_STORAGE_KEY, JSON.stringify(this.providerSettings));
     }
 
     getProviderSummary() {

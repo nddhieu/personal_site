@@ -7,17 +7,17 @@ import { auth } from './auth.js';
  */
 async function fetchWithAuth(url, options = {}) {
     const opts = auth.withAuth(options);
-    
+
     try {
         const res = await fetch(url, opts);
-        
+
         // If we get a 401 and have a token, the session expired
         if (res.status === 401 && auth.getToken()) {
             console.warn('Session expired — logging out');
             auth.logout();
             // The auth change callback will handle showing the login page
         }
-        
+
         return res;
     } catch (err) {
         // Network errors will propagate
@@ -96,4 +96,25 @@ export async function sendChatMessage(storyId, payload) {
         throw new Error(`HTTP error! status: ${res.status}`);
     }
     return res;
+}
+
+export async function fetchUserSettings() {
+    const res = await fetchWithAuth(`${API_BASE}/user/settings`);
+    if (!res.ok) {
+        throw new Error(`Failed to load user settings: ${res.statusText}`);
+    }
+    return res.json();
+}
+
+export async function saveUserSettings(settings) {
+    const res = await fetchWithAuth(`${API_BASE}/user/settings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings)
+    });
+    if (!res.ok) {
+        const errData = await res.json();
+        throw new Error(errData.detail || `Failed to save settings: ${res.statusText}`);
+    }
+    return res.json();
 }

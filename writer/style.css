@@ -178,21 +178,39 @@ body {
     cursor: not-allowed;
 }
 
-/* === Workspace Grids === */
+/* === Workspace Layout === */
 .workspace {
-    display: grid;
-    grid-template-columns: 3fr 2fr;
+    display: flex;
+    flex-direction: row;
+    position: relative;
+    width: 100%;
     flex-grow: 1;
     overflow: hidden;
 }
 
+.sidebar-overlay {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    z-index: 99;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+
 /* === Left Pane: Reading Room === */
 .reading-room {
+    flex-grow: 1;
     display: flex;
     flex-direction: column;
-    border-right: 1px solid var(--color-border);
     background-color: #0b0e14;
     overflow: hidden;
+    transition: var(--transition-smooth);
+    min-width: 0;
 }
 
 .room-header {
@@ -422,195 +440,57 @@ body {
     height: 20px;
 }
 
-/* === Right Pane: Story Bible === */
+/* === Right Pane: Collapsible Story Memory Block === */
 .story-bible {
     background-color: var(--color-bg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
-}
-
-.bible-tabs {
-    display: flex;
-    background-color: var(--color-surface);
-    border-bottom: 1px solid var(--color-border);
-}
-
-.tab-btn {
-    flex-grow: 1;
-    padding: 14px;
-    background: transparent;
-    border: none;
-    color: var(--color-text-muted);
-    font-family: var(--font-sans);
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 0.85rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    border-bottom: 2px solid transparent;
+    width: 400px;
+    flex-shrink: 0;
+    border-left: 1px solid var(--color-border);
     transition: var(--transition-smooth);
+    position: relative;
+    z-index: 10;
 }
 
-.tab-btn:hover {
-    color: var(--color-text);
+.story-bible.collapsed {
+    width: 0;
+    border-left-color: transparent;
+    transform: translateX(100%);
 }
 
-.tab-btn.active {
-    color: var(--color-accent);
-    border-bottom-color: var(--color-accent);
-    background-color: rgba(240, 136, 62, 0.02);
-}
-
-.tab-content-container {
-    flex-grow: 1;
-    padding: 24px;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.tab-content {
-    display: none;
-    flex-direction: column;
-    gap: 20px;
-}
-
-.tab-content.active {
-    display: flex;
-}
-
-/* --- Cards --- */
-.bible-card {
-    background-color: var(--color-surface);
-    border: 1px solid var(--color-border);
-    border-radius: var(--border-radius);
-    padding: 20px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.bible-card h3 {
-    font-size: 0.8rem;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    color: var(--color-text-muted);
+.bible-header {
+    padding: 16px 24px;
     border-bottom: 1px solid var(--color-border);
-    padding-bottom: 10px;
-    margin-bottom: 14px;
-}
-
-.state-detail {
+    background-color: var(--color-surface);
     display: flex;
-    margin-bottom: 10px;
-    font-size: 0.95rem;
-    line-height: 1.5;
-}
-
-.state-detail:last-child {
-    margin-bottom: 0;
-}
-
-.state-detail .label {
-    width: 120px;
-    color: var(--color-text-muted);
-    font-weight: 500;
+    align-items: center;
+    gap: 10px;
     flex-shrink: 0;
 }
 
-.state-detail .value {
-    color: #ffffff;
-}
-
-/* Lists in Bible */
-.roster-section {
-    margin-bottom: 16px;
-}
-
-.roster-section:last-child {
-    margin-bottom: 0;
-}
-
-.roster-section h4 {
-    font-size: 0.8rem;
-    color: var(--color-text-muted);
-    margin-bottom: 8px;
-}
-
-.roster-list,
-.ledger-list,
-.threads-list {
-    list-style: none;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-}
-
-.roster-list li,
-.ledger-list li,
-.threads-list li {
-    font-size: 0.9rem;
-    padding: 8px 12px;
-    background-color: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    line-height: 1.4;
-}
-
-.roster-list li {
-    border-left: 3px solid var(--color-companion);
-}
-
-.roster-list li.partitioned-char {
-    border-left-color: var(--color-text-muted);
-}
-
-.roster-list li.onscreen-char {
-    border-left-color: var(--color-accent);
-}
-
-.ledger-list li {
-    border-left: 3px solid #58a6ff;
-}
-
-.threads-list li {
-    border-left: 3px solid #ff7b72;
-}
-
-.empty-list {
-    color: var(--color-text-muted);
-    font-style: italic;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-}
-
-/* Blueprints */
-.blueprints-list {
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-}
-
-.blueprint-item {
-    background-color: var(--color-bg);
-    border: 1px solid var(--color-border);
-    border-radius: 6px;
-    padding: 12px;
-}
-
-.blueprint-name {
+.bible-header h3 {
     font-family: var(--font-title);
-    color: var(--color-accent);
-    font-weight: 700;
     font-size: 0.95rem;
-    margin-bottom: 6px;
+    font-weight: 700;
+    color: #ffffff;
+    letter-spacing: 0.5px;
+    margin: 0;
+    text-transform: uppercase;
 }
 
-.blueprint-desc {
-    font-size: 0.9rem;
-    color: var(--color-text);
-    line-height: 1.5;
+.bible-header-icon {
+    font-size: 1.2rem;
+}
+
+.bible-content {
+    flex-grow: 1;
+    padding: 20px;
+    overflow-y: auto;
+    background-color: var(--color-bg);
+    display: flex;
+    flex-direction: column;
 }
 
 /* === Modal Overlay === */
@@ -833,7 +713,8 @@ body {
 }
 
 /* Settings Form Select */
-#settings-provider {
+#settings-provider,
+#settings-ollama-model {
     width: 100%;
     background-color: var(--color-bg);
     border: 1px solid var(--color-border);
@@ -847,11 +728,13 @@ body {
     transition: var(--transition-smooth);
 }
 
-#settings-provider:focus {
+#settings-provider:focus,
+#settings-ollama-model:focus {
     border-color: var(--color-accent);
 }
 
-#settings-provider option {
+#settings-provider option,
+#settings-ollama-model option {
     background-color: var(--color-bg);
     color: var(--color-text);
 }
@@ -1225,21 +1108,40 @@ body {
         height: 16px;
     }
 
-    /* Stack workspace vertically */
+    /* Slide-in collapsible drawer layout */
     .workspace {
-        grid-template-columns: 1fr;
-        overflow-y: auto;
+        flex-direction: column;
+        position: relative;
+        overflow: hidden;
+        height: calc(100vh - 60px);
     }
 
     .reading-room {
+        width: 100%;
         border-right: none;
-        border-bottom: 1px solid var(--color-border);
-        max-height: 70vh;
+        max-height: unset;
+        flex-grow: 1;
     }
 
     .story-bible {
-        max-height: none;
-        min-height: 400px;
+        position: absolute;
+        top: 0;
+        right: 0;
+        bottom: 0;
+        width: 85%;
+        max-width: 360px;
+        z-index: 100;
+        background-color: var(--color-surface);
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+        border-left: 1px solid var(--color-border);
+        transform: translateX(0);
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .story-bible.collapsed {
+        width: 85%;
+        transform: translateX(100%);
+        border-left-color: transparent;
     }
 
     .room-header {
@@ -1566,4 +1468,77 @@ body {
         padding: 12px;
         margin: 0 8px;
     }
+}
+
+/* ── Memory Block Debug Section (Collapsible) ──────────────────────── */
+.debug-section {
+    margin-top: 12px;
+    border: 1px dashed var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-bg);
+}
+
+.debug-section details {
+    padding: 0;
+}
+
+.debug-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    cursor: pointer;
+    user-select: none;
+    list-style: none;
+}
+
+.debug-summary::-webkit-details-marker {
+    display: none;
+}
+
+.debug-summary:hover {
+    background: var(--color-surface-hover);
+}
+
+.debug-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    letter-spacing: 0.3px;
+}
+
+.debug-hint {
+    font-size: 0.7rem;
+    color: var(--color-text-muted);
+    opacity: 0.6;
+    font-family: var(--font-sans);
+}
+
+.debug-content {
+    padding: 8px 12px 12px;
+    border-top: 1px solid var(--color-border);
+}
+
+.memory-block-display {
+    background: #0d1117;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    padding: 16px;
+    flex-grow: 1;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    color: var(--color-text);
+    margin: 0;
+}
+
+.memory-block-display code {
+    font-family: inherit;
+    color: inherit;
+    background: none;
+    padding: 0;
 }

@@ -44,26 +44,30 @@ export const elements = {
     providerDot: document.getElementById('provider-dot'),
     providerName: document.getElementById('provider-name'),
 
-    // Sidebar State Fields
-    valTimeline: document.getElementById('val-timeline'),
-    valLocation: document.getElementById('val-location'),
-    valAtmosphere: document.getElementById('val-atmosphere'),
-    valRelationship: document.getElementById('val-relationship'),
-    valClothing: document.getElementById('val-clothing'),
-    valVisualBg: document.getElementById('val-visual-bg'),
+    // Collapsible Sidebar Elements
+    sidebarToggle: document.getElementById('sidebar-toggle'),
+    storyBible: document.getElementById('story-bible'),
+    sidebarOverlay: document.getElementById('sidebar-overlay'),
 
-    rosterOnscreen: document.getElementById('roster-onscreen'),
-    rosterOffscreen: document.getElementById('roster-offscreen'),
-    rosterPartitioned: document.getElementById('roster-partitioned'),
-
-    ledgerShortterm: document.getElementById('ledger-shortterm'),
-    ledgerLongterm: document.getElementById('ledger-longterm'),
-    openThreads: document.getElementById('open-threads'),
-    blueprintsList: document.getElementById('blueprints-list'),
+    // Debug: Memory Block
+    valMemoryBlock: document.getElementById('val-memory-block'),
 };
+
+// === Helper: Escape HTML to safely display raw text ===
+export function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
 
 // === Helper: Clean narrative text of any remaining artifacts ===
 export function cleanNarrativeText(text) {
+    // If the text contains the start of a code block, strip it and everything after it
+    const codeBlockIndex = text.indexOf('```');
+    if (codeBlockIndex !== -1) {
+        text = text.substring(0, codeBlockIndex);
+    }
+
     return text
         .replace(/\*\*Memory Anchor Updated\*\*/g, '')
         .replace(/\*\*The Scene Unfolds\*\*/g, '')
@@ -83,6 +87,10 @@ export function cleanNarrativeText(text) {
         .replace(/In response to your command:[^.]*\.\s*/g, '')
         // Strip budget/query meta-responses (e.g. "As for your query about budget mode: *budget economy*, it has been set...")
         .replace(/As for your query about[^.]*\.\s*/g, '')
+        // Strip transition commentary
+        .replace(/\[Adjusting the story\.\.\.\]/g, '')
+        .replace(/\[Reconnecting to story engine\.\.\.\]/g, '')
+        .replace(/\[The story engine needs a moment to reframe the story\.\.\.\]/g, '')
         .trim();
 }
 
@@ -137,28 +145,23 @@ export function populateList(element, list, createLiFunc, emptyText) {
 
 // === Clear Sidebar details ===
 export function clearSidebar() {
-    elements.valTimeline.textContent = '-';
-    elements.valLocation.textContent = '-';
-    elements.valAtmosphere.textContent = '-';
-    elements.valRelationship.textContent = '-';
-    elements.valClothing.textContent = '-';
-    elements.valVisualBg.textContent = '-';
-
-    elements.rosterOnscreen.innerHTML = '<li class="empty-list">No characters in scene</li>';
-    elements.rosterOffscreen.innerHTML = '<li class="empty-list">No active off-screen characters</li>';
-    elements.rosterPartitioned.innerHTML = '<li class="empty-list">No partitioned characters</li>';
-    elements.ledgerShortterm.innerHTML = '<li class="empty-list">No recent beats</li>';
-    elements.ledgerLongterm.innerHTML = '<li class="empty-list">No historical records</li>';
-    elements.openThreads.innerHTML = '<li class="empty-list">No active threads</li>';
-    elements.blueprintsList.innerHTML = '<p class="empty-list">No blueprints established yet</p>';
+    if (elements.valMemoryBlock) {
+        elements.valMemoryBlock.innerHTML = '<code>No memory block available</code>';
+    }
 }
 
 // === Enable/Disable Inputs ===
-export function setInputsEnabled(enabled) {
+export function setInputsEnabled(enabled, placeholder = null) {
     elements.promptInput.disabled = !enabled;
     elements.sendBtn.disabled = !enabled;
     elements.btnContinue.disabled = !enabled;
     elements.btnOoc.disabled = !enabled;
+
+    if (placeholder !== null) {
+        elements.promptInput.placeholder = placeholder;
+    } else if (enabled) {
+        elements.promptInput.placeholder = "Type your action in first person (e.g., 'I pull my coat closer and step into the wind...')";
+    }
 
     if (enabled) {
         elements.promptInput.focus();
@@ -200,3 +203,17 @@ export function updateProviderIndicator() {
         ? (state.providerSettings.model || 'DeepSeek')
         : (state.providerSettings.ollamaModel || 'Ollama');
 }
+
+// === Image Lightbox Controls ===
+export function showImageLightbox(src, caption = '') {
+    if (!elements.imageLightbox || !elements.lightboxImg) return;
+    elements.lightboxImg.src = src;
+    elements.lightboxCaption.textContent = caption;
+    elements.imageLightbox.style.display = 'flex';
+}
+
+export function hideImageLightbox() {
+    if (!elements.imageLightbox) return;
+    elements.imageLightbox.style.display = 'none';
+}
+

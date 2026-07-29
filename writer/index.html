@@ -145,11 +145,16 @@
                         </path>
                     </svg>
                 </button>
+                <button id="sidebar-toggle" class="btn btn-secondary btn-icon" title="Toggle Memory Block">
+                    <span id="sidebar-toggle-icon">🧠</span>
+                </button>
             </div>
         </header>
 
         <!-- Main Body Workspace -->
         <main class="workspace">
+            <div id="sidebar-overlay" class="sidebar-overlay"></div>
+
             <!-- Left Pane: Reading Room -->
             <section class="reading-room">
                 <div class="room-header">
@@ -184,105 +189,14 @@
                 </div>
             </section>
 
-            <!-- Right Pane: Story Bible -->
-            <section class="story-bible">
-                <div class="bible-tabs">
-                    <button class="tab-btn active" data-tab="tab-roster">Roster & Visuals</button>
-                    <button class="tab-btn" data-tab="tab-ledger">Ledger & Threads</button>
-                    <button class="tab-btn" data-tab="tab-blueprints">Facial Blueprints</button>
+            <!-- Right Pane: Collapsible Story Memory Block -->
+            <section id="story-bible" class="story-bible collapsed">
+                <div class="bible-header">
+                    <span class="bible-header-icon">🧠</span>
+                    <h3>Story Memory Block</h3>
                 </div>
-
-                <div class="tab-content-container">
-                    <!-- Tab 1: Roster & Visuals -->
-                    <div id="tab-roster" class="tab-content active">
-                        <div class="bible-card">
-                            <h3>Active Location & State</h3>
-                            <div class="state-detail">
-                                <span class="label">Timeline:</span>
-                                <span id="val-timeline" class="value">-</span>
-                            </div>
-                            <div class="state-detail">
-                                <span class="label">Location:</span>
-                                <span id="val-location" class="value">-</span>
-                            </div>
-                            <div class="state-detail">
-                                <span class="label">Atmosphere:</span>
-                                <span id="val-atmosphere" class="value">-</span>
-                            </div>
-                            <div class="state-detail">
-                                <span class="label">Relationship:</span>
-                                <span id="val-relationship" class="value">-</span>
-                            </div>
-                        </div>
-
-                        <div class="bible-card">
-                            <h3>Current Scene Visuals</h3>
-                            <div class="state-detail">
-                                <span class="label">Clothing & Props:</span>
-                                <span id="val-clothing" class="value">-</span>
-                            </div>
-                            <div class="state-detail">
-                                <span class="label">Lighting & Background:</span>
-                                <span id="val-visual-bg" class="value">-</span>
-                            </div>
-                        </div>
-
-                        <div class="bible-card">
-                            <h3>Living Roster</h3>
-                            <div class="roster-section">
-                                <h4>On-Screen</h4>
-                                <ul id="roster-onscreen" class="roster-list">
-                                    <li class="empty-list">No characters in scene</li>
-                                </ul>
-                            </div>
-                            <div class="roster-section">
-                                <h4>Off-Screen Active</h4>
-                                <ul id="roster-offscreen" class="roster-list">
-                                    <li class="empty-list">No active off-screen characters</li>
-                                </ul>
-                            </div>
-                            <div class="roster-section">
-                                <h4>Partitioned / Unaware</h4>
-                                <ul id="roster-partitioned" class="roster-list">
-                                    <li class="empty-list">No partitioned characters</li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Tab 2: Ledger & Threads -->
-                    <div id="tab-ledger" class="tab-content">
-                        <div class="bible-card">
-                            <h3>Short-Term Critical Past Beats</h3>
-                            <ul id="ledger-shortterm" class="ledger-list">
-                                <li class="empty-list">No recent beats</li>
-                            </ul>
-                        </div>
-
-                        <div class="bible-card">
-                            <h3>Long-Term Historical Ledger</h3>
-                            <ul id="ledger-longterm" class="ledger-list">
-                                <li class="empty-list">No historical records</li>
-                            </ul>
-                        </div>
-
-                        <div class="bible-card">
-                            <h3>Open Threads & Pending Questions</h3>
-                            <ul id="open-threads" class="threads-list">
-                                <li class="empty-list">No active threads</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <!-- Tab 3: Character Blueprints -->
-                    <div id="tab-blueprints" class="tab-content">
-                        <div class="bible-card">
-                            <h3>Facial Identity Blueprints</h3>
-                            <div id="blueprints-list" class="blueprints-list">
-                                <p class="empty-list">No blueprints established yet</p>
-                            </div>
-                        </div>
-                    </div>
+                <div class="bible-content">
+                    <pre id="val-memory-block" class="memory-block-display"><code>No memory block available</code></pre>
                 </div>
             </section>
         </main>
@@ -328,14 +242,12 @@
                 <div id="settings-ollama-fields" class="settings-group">
                     <div class="form-group">
                         <label for="settings-ollama-model">Ollama Model</label>
-                        <input type="text" id="settings-ollama-model" placeholder="dolphin-llama3:8b">
-                        <span class="form-hint">Model name pulled locally via <code>ollama pull <name></code></span>
+                        <select id="settings-ollama-model">
+                            <option value="magnum:12b">magnum:12b</option>
+                            <option value="dolphin-llama3:8b">dolphin-llama3:8b</option>
+                        </select>
                     </div>
-                    <div class="form-group">
-                        <label for="settings-ollama-url">Ollama URL</label>
-                        <input type="text" id="settings-ollama-url" placeholder="http://[::1]:11434">
-                        <span class="form-hint">Default: http://[::1]:11434 (IPv6 localhost)</span>
-                    </div>
+                    <input type="hidden" id="settings-ollama-url" value="http://[::1]:11434">
                 </div>
 
                 <div class="settings-status" id="settings-status">
@@ -367,11 +279,11 @@
                 <div class="form-group row">
                     <div class="col">
                         <label for="proto-name-input">Protagonist Name</label>
-                        <input type="text" id="proto-name-input" value="Elias" required>
+                        <input type="text" id="proto-name-input" placeholder="Elias" required>
                     </div>
                     <div class="col">
                         <label for="comp-name-input">Companion Name (NPC)</label>
-                        <input type="text" id="comp-name-input" value="Jennie" required>
+                        <input type="text" id="comp-name-input" placeholder="Jennie" required>
                     </div>
                 </div>
                 <div class="form-group">

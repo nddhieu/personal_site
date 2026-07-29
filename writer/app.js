@@ -1,5 +1,4 @@
 import { state } from './js/state.js';
-import { ARCHIVIST_REFRESH_DELAY_MS } from './js/config.js';
 import { auth } from './js/auth.js';
 import * as api from './js/api.js';
 import * as ui from './js/ui.js';
@@ -136,14 +135,23 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             showAuth();
             setAuthLoading(false);
+            // Reset provider settings to default on logout
+            state.saveProviderSettings(state.loadProviderSettings());
+            ui.updateProviderIndicator();
         }
     });
 
     // ── Workbench Initialization ─────────────────────────────────
-    function initWorkbench() {
+    async function initWorkbench() {
         // Load stories and set up the workbench
         loadStories();
         selectStory('');
+        try {
+            const userSettings = await api.fetchUserSettings();
+            state.saveProviderSettings(userSettings);
+        } catch (err) {
+            console.error('Failed to load user settings from database:', err);
+        }
         ui.updateProviderIndicator();
     }
 
@@ -232,87 +240,19 @@ document.addEventListener('DOMContentLoaded', () => {
     async function refreshStoryState(storyId) {
         try {
             const storyState = await api.fetchStoryState(storyId);
-            if (!storyState) return;
+            if (!storyState) return null;
 
-            // Populate basic states
-            elements.valTimeline.textContent = storyState.timeline || '-';
-            elements.valLocation.textContent = storyState.location || '-';
-            elements.valAtmosphere.textContent = storyState.atmosphere || '-';
-            elements.valRelationship.textContent = storyState.relationship_phase || '-';
-
-            // Populate scene visuals
-            elements.valClothing.textContent = storyState.visuals.clothing || '-';
-
-            let visBg = storyState.visuals.lighting || '';
-            if (storyState.visuals.background) {
-                visBg += visBg ? ` / ${storyState.visuals.background}` : storyState.visuals.background;
-            }
-            elements.valVisualBg.textContent = visBg || '-';
-
-            // Populate Roster lists
-            ui.populateList(elements.rosterOnscreen, storyState.roster.onscreen, char => {
-                const li = document.createElement('li');
-                li.className = 'onscreen-char';
-                li.textContent = char.description ? `${char.name} (${char.description})` : char.name;
-                return li;
-            }, 'No characters in scene');
-
-            ui.populateList(elements.rosterOffscreen, storyState.roster.offscreen, char => {
-                const li = document.createElement('li');
-                li.textContent = char.description ? `${char.name} (${char.description})` : char.name;
-                return li;
-            }, 'No active off-screen characters');
-
-            ui.populateList(elements.rosterPartitioned, storyState.roster.partitioned, char => {
-                const li = document.createElement('li');
-                li.className = 'partitioned-char';
-                li.textContent = char.belief ? `${char.name} (Believes: "${char.belief}")` : char.name;
-                return li;
-            }, 'No partitioned characters');
-
-            // Populate Ledger lists
-            ui.populateList(elements.ledgerShortterm, storyState.ledger.short_term, item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                return li;
-            }, 'No recent beats');
-
-            ui.populateList(elements.ledgerLongterm, storyState.ledger.long_term, item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                return li;
-            }, 'No historical records');
-
-            ui.populateList(elements.openThreads, storyState.open_threads, item => {
-                const li = document.createElement('li');
-                li.textContent = item;
-                return li;
-            }, 'No active threads');
-
-            // Populate blueprints
-            if (storyState.blueprints.length === 0) {
-                elements.blueprintsList.innerHTML = '<p class="empty-list">No blueprints established yet</p>';
+            // Populate raw memory block (debug display)
+            if (storyState.memory_block) {
+                elements.valMemoryBlock.innerHTML = `<code>${ui.escapeHtml(storyState.memory_block)}</code>`;
             } else {
-                elements.blueprintsList.innerHTML = '';
-                storyState.blueprints.forEach(bp => {
-                    const div = document.createElement('div');
-                    div.className = 'blueprint-item';
-
-                    const name = document.createElement('div');
-                    name.className = 'blueprint-name';
-                    name.textContent = bp.name;
-
-                    const desc = document.createElement('div');
-                    desc.className = 'blueprint-desc';
-                    desc.textContent = bp.description;
-
-                    div.appendChild(name);
-                    div.appendChild(desc);
-                    elements.blueprintsList.appendChild(div);
-                });
+                elements.valMemoryBlock.innerHTML = '<code>No memory block available</code>';
             }
+
+            return storyState;
         } catch (err) {
             console.error('Failed to refresh state:', err);
+            return null;
         }
     }
 
@@ -346,7 +286,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // Save settings
-    elements.settingsForm.addEventListener('submit', (e) => {
+    elements.settingsForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const settings = {
             provider: elements.settingsProvider.value,
@@ -356,9 +296,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ollamaModel: elements.settingsOllamaModel.value.trim(),
             ollamaUrl: elements.settingsOllamaUrl.value.trim(),
         };
-        state.saveProviderSettings(settings);
-        ui.updateProviderIndicator();
-        closeSettingsModal();
+        try {
+            await api.saveUserSettings(settings);
+            state.saveProviderSettings(settings);
+            ui.updateProviderIndicator();
+            closeSettingsModal();
+        } catch (err) {
+            alert('Failed to save settings: ' + err.message);
+        }
     });
 
     // Test connection button
@@ -437,6 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Send User Action & Stream AI Co-Author ===
     async function submitAction(messageText) {
         if (!state.activeStoryId || !messageText.trim()) return;
+        const storyId = state.activeStoryId;
 
         // Disable UI
         ui.setInputsEnabled(false);
@@ -463,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 body.provider = providerPayload;
             }
 
-            const res = await api.sendChatMessage(state.activeStoryId, body);
+            const res = await api.sendChatMessage(storyId, body);
 
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
@@ -494,15 +440,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 aiParagraph.classList.remove('stream-chunk-active');
             }
 
-            // Reload the Story Bible State
-            await refreshStoryState(state.activeStoryId);
-
-            // Second refresh after a delay to catch the archivist background task completion
-            setTimeout(async () => {
-                if (state.activeStoryId) {
-                    await refreshStoryState(state.activeStoryId);
-                }
-            }, ARCHIVIST_REFRESH_DELAY_MS);
+            // Reload the Story Bible State (includes memory block for debug)
+            await refreshStoryState(storyId);
 
         } catch (err) {
             console.error('Streaming error:', err);
@@ -567,8 +506,8 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const title = document.getElementById('story-title-input').value;
-        const protoName = document.getElementById('proto-name-input').value;
-        const compName = document.getElementById('comp-name-input').value;
+        const protoName = document.getElementById('proto-name-input').value.trim() || 'Elias';
+        const compName = document.getElementById('comp-name-input').value.trim() || 'Jennie';
         const protoDesc = document.getElementById('proto-desc-input').value;
         const compDesc = document.getElementById('comp-desc-input').value;
 
@@ -619,20 +558,24 @@ document.addEventListener('DOMContentLoaded', () => {
         toggleOocMode();
     });
 
-    // Tabs switching
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    const tabContents = document.querySelectorAll('.tab-content');
+    // Sidebar Toggle
+    const workspace = document.querySelector('.workspace');
 
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', () => {
-            tabBtns.forEach(b => b.classList.remove('active'));
-            tabContents.forEach(c => c.classList.remove('active'));
+    function toggleSidebar() {
+        if (elements.storyBible) {
+            elements.storyBible.classList.toggle('collapsed');
+        }
+        if (workspace) {
+            workspace.classList.toggle('sidebar-open');
+        }
+    }
 
-            btn.classList.add('active');
-            const tabId = btn.getAttribute('data-tab');
-            document.getElementById(tabId).classList.add('active');
-        });
-    });
+    if (elements.sidebarToggle) {
+        elements.sidebarToggle.addEventListener('click', toggleSidebar);
+    }
+    if (elements.sidebarOverlay) {
+        elements.sidebarOverlay.addEventListener('click', toggleSidebar);
+    }
 
     // Initial auth-based initialization is handled by auth.onAuthChange above.
     // The workbench is only initialized after successful authentication.
