@@ -5,13 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI Co-Author Workbench</title>
+    <script>
+        if (window.location.pathname.endsWith('/writer')) {
+            window.location.replace(window.location.pathname + '/' + window.location.search + window.location.hash);
+        }
+    </script>
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
         href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=IM+Fell+Double+Pica:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="/writer/style.css">
+    <link rel="stylesheet" href="style.css">
     <!-- Google Identity Services (for Google Sign-In) -->
     <!-- Client ID is fetched from backend API at /api/auth/google-client-id -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
@@ -278,25 +283,33 @@
                 </div>
                 <div class="form-group row">
                     <div class="col">
-                        <label for="proto-name-input">Protagonist Name</label>
+                        <label for="proto-name-input">Your Character's Name</label>
                         <input type="text" id="proto-name-input" placeholder="Elias" required>
                     </div>
                     <div class="col">
-                        <label for="comp-name-input">Companion Name (NPC)</label>
+                        <label for="comp-name-input">Main Character's Name</label>
                         <input type="text" id="comp-name-input" placeholder="Jennie" required>
                     </div>
                 </div>
                 <div class="form-group">
-                    <label for="proto-desc-input">Protagonist Facial & Build Blueprint</label>
+                    <label for="proto-desc-input">Your Character's Description</label>
                     <textarea id="proto-desc-input" rows="2"
                         placeholder="Tall, dark hair, sharp grey eyes, structured jawline..."
                         required>Tall, structured build, sharp grey eyes, dark hair swept back, wearing a weatherworn dark grey coat.</textarea>
                 </div>
                 <div class="form-group">
-                    <label for="comp-desc-input">Companion Facial & Build Blueprint</label>
+                    <label for="comp-desc-input">Main Character's Description</label>
                     <textarea id="comp-desc-input" rows="2"
                         placeholder="Sleek black hair, deep dark eyes, elegant posture..."
                         required>Sleek dark hair, warm expressive eyes, slender build, wearing a dark fitted sweater.</textarea>
+                </div>
+                <div class="form-group">
+                    <label for="story-premise-input">Story Premise</label>
+                    <textarea id="story-premise-input" rows="3"
+                        placeholder="e.g., Jennie is a CEO of a high-value fashion company, installed by her parents as a figurehead. After witnessing a stranger save a boy from traffic, she decides on the spot that he will be her husband..."
+                        required></textarea>
+                    <span class="form-hint">Describe the initial situation, characters' relationship, and what drives
+                        the story forward.</span>
                 </div>
                 <div class="form-actions">
                     <button type="button" id="modal-cancel" class="btn btn-secondary">Cancel</button>
@@ -306,7 +319,7 @@
         </div>
     </div>
 
-    <script type="module" src="/writer/app.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 
 </html>

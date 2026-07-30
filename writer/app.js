@@ -204,9 +204,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         ui.setInputsEnabled(true);
 
-        // Load messages & state
-        await loadMessages(storyId);
+        // Load state sidebar
         await refreshStoryState(storyId);
+
+        // Auto-begin or load messages
+        await autoBeginStory(storyId);
     }
 
     async function loadMessages(storyId) {
@@ -379,7 +381,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // === Send User Action & Stream AI Co-Author ===
+    // === Simple Markdown to HTML renderer (client-side for SSE results) ===
+    function markdownToHtml(text) {
+        if (!text) return '';
+        let html = text;
+        // Scene breaks
+        html = html.replace(/^[\s]*([-*_]){3,}\s*$/gm, '<hr class="scene-break">');
+        // Bold + Italic
+        html = html.replace(/\*\*\*(.+?)\*\*\*/g, '<strong><em>$1</em></strong>');
+        // Bold
+        html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        // Italic
+        html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+        // Paragraphs
+        html = html.replace(/\n\n/g, '</p><p>');
+        html = html.replace(/\n/g, '<br>');
+        if (!html.startsWith('<p>')) html = '<p>' + html + '</p>';
+        html = html.replace(/<p>\s*<\/p>/g, '');
+        return html;
+    }
+
+    // === Send User Action & Stream AI Co-Author (SSE Protocol) ===
     async function submitAction(messageText) {
         if (!state.activeStoryId || !messageText.trim()) return;
         const storyId = state.activeStoryId;
@@ -395,11 +417,10 @@ document.addEventListener('DOMContentLoaded', () => {
         ui.renderMessage('user', messageText);
         ui.scrollToBottom();
 
-        // Render placeholder paragraph for AI streaming response
-        const aiParagraph = document.createElement('p');
-        aiParagraph.className = 'stream-chunk-active';
-        elements.narrativeDisplay.appendChild(aiParagraph);
-        ui.scrollToBottom();
+        // Track the streaming paragraphs dynamically to format on the fly
+        const activeParagraphs = [];
+        let storyTextAccumulated = '';
+        let memoryBlock = '';
 
         try {
             const body = { message: messageText };
@@ -413,42 +434,146 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const reader = res.body.getReader();
             const decoder = new TextDecoder();
-            let accumulatedText = '';
+            let buffer = '';
 
             while (true) {
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                const chunk = decoder.decode(value, { stream: true });
-                accumulatedText += chunk;
+                buffer += decoder.decode(value, { stream: true });
 
-                // Client-side cleanup during streaming
-                let displayText = ui.cleanNarrativeText(accumulatedText);
-                aiParagraph.textContent = displayText;
-                ui.scrollToBottom();
+                // Process complete SSE events from buffer
+                const lines = buffer.split('\n');
+                buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                for (const line of lines) {
+                    const trimmed = line.trim();
+                    if (!trimmed || !trimmed.startsWith('data: ')) continue;
+
+                    try {
+                        const event = JSON.parse(trimmed.substring(6));
+
+                        switch (event.type) {
+                            case 'status':
+                                // Show/hide agent status indicators
+                                if (event.label) {
+                                    ui.hideAgentStatus();
+                                    ui.showAgentStatus(event.label);
+                                }
+                                break;
+
+                            case 'stream':
+                                // Hide agent status on first stream chunk
+                                if (storyTextAccumulated.length === 0) {
+                                    ui.hideAgentStatus();
+                                }
+                                // Accumulate and render with Markdown formatting
+                                storyTextAccumulated += event.chunk;
+                                let displayText = ui.cleanNarrativeText(storyTextAccumulated);
+                                ui.updateStreamParagraphs(activeParagraphs, displayText);
+                                ui.scrollToBottom();
+                                break;
+
+                            case 'stream_complete':
+                                // Streaming done — remove cursor class
+                                if (activeParagraphs.length > 0) {
+                                    activeParagraphs[activeParagraphs.length - 1].classList.remove('stream-chunk-active');
+                                    // Mark as rendered
+                                    activeParagraphs[activeParagraphs.length - 1].classList.add('rendered');
+                                }
+                                break;
+
+                            case 'complete':
+                                // Final result: memory block + auto-scroll
+                                memoryBlock = event.memory_block || '';
+                                const firstSentence = event.first_sentence || '';
+
+                                // Update sidebar with memory block
+                                if (memoryBlock) {
+                                    elements.valMemoryBlock.innerHTML = `<code>${ui.escapeHtml(memoryBlock)}</code>`;
+                                }
+
+                                // Auto-scroll to first sentence of the new scene
+                                if (firstSentence) {
+                                    // Find the paragraph containing the first sentence
+                                    const paras = elements.narrativeDisplay.querySelectorAll('.narrative-paragraph');
+                                    for (const para of paras) {
+                                        if (para.textContent.includes(firstSentence.substring(0, 30))) {
+                                            para.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                                            // Brief highlight
+                                            para.style.transition = 'background-color 1s ease';
+                                            para.style.backgroundColor = 'rgba(255, 255, 255, 0.03)';
+                                            setTimeout(() => { para.style.backgroundColor = ''; }, 1500);
+                                            break;
+                                        }
+                                    }
+                                } else {
+                                    // Fallback: scroll to bottom
+                                    ui.scrollToBottom();
+                                }
+                                break;
+
+                            case 'error':
+                                console.error('Backend error:', event.message);
+                                ui.hideAgentStatus();
+                                if (activeParagraphs.length > 0) {
+                                    activeParagraphs[activeParagraphs.length - 1].innerHTML +=
+                                        ` <span style="color:var(--color-secondary)">[Error: ${event.message}]</span>`;
+                                }
+                                break;
+                        }
+                    } catch (parseErr) {
+                        // Skip malformed SSE events
+                        console.warn('SSE parse error:', parseErr, 'line:', trimmed);
+                    }
+                }
             }
 
-            // Streaming finished — clean the full text
-            const finalText = ui.cleanNarrativeText(accumulatedText);
-
-            // If the text has paragraph breaks, replace the single <p> with proper rendering
-            if (finalText.includes('\n\n') || finalText.includes('\n')) {
-                aiParagraph.remove();
-                ui.renderMessage('assistant', finalText);
-            } else {
-                aiParagraph.textContent = finalText;
-                aiParagraph.classList.remove('stream-chunk-active');
+            // Final cleanup: mark last paragraph as rendered
+            if (activeParagraphs.length > 0) {
+                activeParagraphs[activeParagraphs.length - 1].classList.remove('stream-chunk-active');
+                activeParagraphs[activeParagraphs.length - 1].classList.add('rendered');
             }
 
-            // Reload the Story Bible State (includes memory block for debug)
-            await refreshStoryState(storyId);
+            // Reload full story state if memory wasn't in SSE
+            if (!memoryBlock) {
+                await refreshStoryState(storyId);
+            }
 
         } catch (err) {
+            ui.hideAgentStatus();
             console.error('Streaming error:', err);
-            aiParagraph.classList.remove('stream-chunk-active');
-            aiParagraph.innerHTML += ` <span style="color:var(--color-secondary)">[Generation interrupted: ${err.message}]</span>`;
+            if (activeParagraphs.length > 0) {
+                const lastP = activeParagraphs[activeParagraphs.length - 1];
+                lastP.classList.remove('stream-chunk-active');
+                lastP.innerHTML += ` <span style="color:var(--color-secondary)">[Generation interrupted: ${err.message}]</span>`;
+            } else {
+                const errP = document.createElement('p');
+                errP.style.color = 'var(--color-secondary)';
+                errP.textContent = `[Generation interrupted: ${err.message}]`;
+                elements.narrativeDisplay.appendChild(errP);
+            }
         } finally {
             ui.setInputsEnabled(true);
+        }
+    }
+
+    // === Auto-send "Begin" for new/fresh stories ===
+    async function autoBeginStory(storyId) {
+        try {
+            // Check if story has messages
+            const messages = await api.fetchStoryMessages(storyId);
+            if (messages.length === 0) {
+                // No messages — auto-send "Begin" to trigger first scene
+                console.log('New story detected — auto-sending "Begin"');
+                await submitAction('Begin');
+            } else {
+                // Load existing messages
+                await loadMessages(storyId);
+            }
+        } catch (err) {
+            console.error('autoBeginStory error:', err);
+            await loadMessages(storyId);
         }
     }
 
@@ -506,23 +631,25 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
 
         const title = document.getElementById('story-title-input').value;
-        const protoName = document.getElementById('proto-name-input').value.trim() || 'Elias';
-        const compName = document.getElementById('comp-name-input').value.trim() || 'Jennie';
+        const protoName = document.getElementById('proto-name-input').value.trim() || 'Protagonist';
+        const compName = document.getElementById('comp-name-input').value.trim() || 'Main Character';
         const protoDesc = document.getElementById('proto-desc-input').value;
         const compDesc = document.getElementById('comp-desc-input').value;
+        const storyPremise = document.getElementById('story-premise-input').value.trim();
 
         try {
             const story = await api.createStory({
                 title: title,
                 protagonist_name: protoName,
                 protagonist_description: protoDesc,
-                co_author_name: compName,
-                co_author_description: compDesc
+                main_character_name: compName,
+                main_character_description: compDesc,
+                story_premise: storyPremise
             });
 
             closeModal();
 
-            // Reload and select new story
+            // Reload and select new story (auto-begin will trigger if fresh)
             await loadStories();
             await selectStory(story.id);
 

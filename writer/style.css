@@ -385,6 +385,151 @@ body {
     }
 }
 
+/* --- Thinking/Writing Indicator --- */
+.thinking-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 0 16px 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    opacity: 0;
+    animation: thinking-fade-in 0.5s ease forwards;
+}
+
+.thinking-indicator .indicator-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    animation: thinking-pulse 1.6s ease-in-out infinite;
+}
+
+.thinking-indicator .indicator-text {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.thinking-indicator .indicator-dots {
+    display: inline-block;
+    width: 0;
+    overflow: hidden;
+    vertical-align: bottom;
+    animation: dots-cycle 1.5s steps(4, end) infinite;
+}
+
+.thinking-indicator .indicator-dots::after {
+    content: '...';
+}
+
+@keyframes thinking-fade-in {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes thinking-pulse {
+
+    0%,
+    100% {
+        opacity: 0.5;
+        transform: scale(1);
+    }
+
+    50% {
+        opacity: 1;
+        transform: scale(1.2);
+    }
+}
+
+@keyframes dots-cycle {
+    to {
+        width: 1.5em;
+    }
+}
+
+/* --- Agent Status Indicator (for multi-agent pipeline) --- */
+.agent-status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 0 16px 0;
+    color: var(--color-text-muted);
+    font-family: var(--font-sans);
+    font-size: 0.9rem;
+    opacity: 0;
+    animation: thinking-fade-in 0.5s ease forwards;
+}
+
+.agent-status-icon {
+    font-size: 1.2rem;
+    line-height: 1;
+    animation: thinking-pulse 1.6s ease-in-out infinite;
+}
+
+.agent-status-text {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.agent-status-dots {
+    display: inline-block;
+    width: 0;
+    overflow: hidden;
+    vertical-align: bottom;
+    animation: dots-cycle 1.5s steps(4, end) infinite;
+}
+
+.agent-status-dots::after {
+    content: '...';
+}
+
+/* --- Narrative Paragraph (with Markdown rendering) --- */
+.narrative-paragraph {
+    margin-bottom: 0.5em;
+    line-height: 1.7;
+}
+
+.narrative-paragraph p {
+    margin-bottom: 0.5em;
+}
+
+.narrative-paragraph em {
+    font-style: italic;
+    color: var(--color-text);
+}
+
+.narrative-paragraph strong {
+    font-weight: 600;
+    color: var(--color-text);
+}
+
+.narrative-paragraph strong em,
+.narrative-paragraph em strong {
+    font-style: italic;
+    font-weight: 600;
+}
+
+/* --- Scene Break (hr) --- */
+hr.scene-break {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 1.5em 0;
+    opacity: 0.5;
+    width: 4em;
+}
+
+/* --- Narrative Transition Header --- */
+.narrative-transition h3.transition-header {
+    font-family: var(--font-title);
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 1.5em 0 0.5em 0;
+}
+
 /* --- Input Area --- */
 .input-area {
     padding: 16px 24px;
