@@ -202,12 +202,77 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === Live Demo Buttons Notification ===
-    demoLinks.forEach(link => {
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            alert('This is a preview version of the site. A live interactive environment for this project is being set up and will be deployed soon!');
+    // === Toast Notification System ===
+    const toastContainer = document.getElementById('toast-container');
+    
+    function showToast(title, message, icon = '✦', durationMs = 6000) {
+        if (!toastContainer) return;
+        
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `
+            <span class="toast-icon">${icon}</span>
+            <div class="toast-body">
+                <div class="toast-title">${title}</div>
+                <div class="toast-msg">${message}</div>
+            </div>
+            <button class="toast-close" aria-label="Close">&times;</button>
+        `;
+        
+        const closeBtn = toast.querySelector('.toast-close');
+        const removeToast = () => {
+            toast.classList.add('fade-out');
+            setTimeout(() => {
+                if (toast.parentNode) {
+                    toast.parentNode.removeChild(toast);
+                }
+            }, 300);
+        };
+        
+        closeBtn.addEventListener('click', removeToast);
+        toastContainer.appendChild(toast);
+        
+        if (durationMs > 0) {
+            setTimeout(removeToast, durationMs);
+        }
+    }
+
+    // === Omni AI Life Companion Demo Launcher ===
+    const omniDemoBtn = document.getElementById('omni-demo-btn');
+    if (omniDemoBtn) {
+        omniDemoBtn.addEventListener('click', async (e) => {
+            // Asynchronously check if the local companion server is up
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 1200);
+                
+                const res = await fetch('http://127.0.0.1:8000/api/users', {
+                    method: 'GET',
+                    signal: controller.signal
+                });
+                clearTimeout(timeoutId);
+                
+                if (res.ok) {
+                    showToast('Omni Companion Active', 'Connecting to local AI Companion at <code>http://127.0.0.1:8000</code>', '🚀', 4000);
+                } else {
+                    showToast('Launching Omni Companion', 'Opening <code>http://127.0.0.1:8000</code>. If server is down, run <code>python main.py</code> in <code>AI_companion</code>', '💡', 8000);
+                }
+            } catch (err) {
+                // If fetch fails (server not running or blocked by CORS), provide friendly instructions
+                showToast('Launching AI Companion', 'Opening <code>http://127.0.0.1:8000</code>. Tip: Make sure the local server is running by executing <code>python main.py</code> in <code>AI_companion</code>.', '💡', 9000);
+            }
         });
+    }
+
+    // === Placeholder Live Demo Buttons Notification ===
+    demoLinks.forEach(link => {
+        const href = link.getAttribute('href');
+        if (!href || href === '#') {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                showToast('Interactive Demo Preview', 'A live interactive environment for this project is being set up and will be deployed soon!', '🛠️', 5000);
+            });
+        }
     });
 
     // === Local API Demo ===

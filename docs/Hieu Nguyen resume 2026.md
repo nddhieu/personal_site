@@ -37,6 +37,11 @@ Tata Consultancy Services (Client: Verizon) — Irving, TX
 
 **PERSONAL PROJECTS**
 
+**Omni — Stateful AI Life Companion**
+
+* Engineered an autonomous personal growth AI companion pairing a Playwright CDP bridge with a Stateful Autobiographical Memory Layer (dense vector embeddings, BM25, and exponential recency decay).
+* Integrated a 2D Affective Circumplex (Valence & Arousal emotional scoring), Model Context Protocol (MCP JSON-RPC 2.0) tool interface, and cryptographic privacy sovereignty ("Forget Me" hard purge).
+
 **Quantitative AI Portfolio Platform**
 
 * Architected a 12-stage investment pipeline using LangGraph, combining LLM market sentiment analysis with deterministic models (Kelly Criterion) for trade sizing.  
