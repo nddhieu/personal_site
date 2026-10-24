@@ -7,7 +7,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
     const navLinks = document.querySelectorAll('.nav-link');
     const scrollIndicator = document.getElementById('scroll-indicator');
-    const typewriterElement = document.getElementById('typewriter');
     
     // Project Filter Elements
     const filterButtons = document.querySelectorAll('.filter-btn');
@@ -97,41 +96,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     });
-
-    // === Typewriter Text Animation ===
-    const roles = ['Technical Lead', 'Full-Stack Developer', 'Systems Modernizer'];
-    let roleIndex = 0;
-    let charIndex = 0;
-    let isDeleting = false;
-    let typingSpeed = 100;
-
-    function type() {
-        const currentRole = roles[roleIndex];
-        
-        if (isDeleting) {
-            typewriterElement.textContent = currentRole.substring(0, charIndex - 1);
-            charIndex--;
-            typingSpeed = 50; // Deleting is faster
-        } else {
-            typewriterElement.textContent = currentRole.substring(0, charIndex + 1);
-            charIndex++;
-            typingSpeed = 100;
-        }
-
-        if (!isDeleting && charIndex === currentRole.length) {
-            isDeleting = true;
-            typingSpeed = 2000; // Pause at full word
-        } else if (isDeleting && charIndex === 0) {
-            isDeleting = false;
-            roleIndex = (roleIndex + 1) % roles.length;
-            typingSpeed = 500; // Brief pause before next word
-        }
-
-        setTimeout(type, typingSpeed);
-    }
-    
-    // Start typing animation
-    type();
 
     // === Project Filter Logic ===
     filterButtons.forEach(btn => {
@@ -235,33 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (durationMs > 0) {
             setTimeout(removeToast, durationMs);
         }
-    }
-
-    // === Omni AI Life Companion Demo Launcher ===
-    const omniDemoBtn = document.getElementById('omni-demo-btn');
-    if (omniDemoBtn) {
-        omniDemoBtn.addEventListener('click', async (e) => {
-            // Asynchronously check if the local companion server is up
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 1200);
-                
-                const res = await fetch('http://127.0.0.1:8000/api/users', {
-                    method: 'GET',
-                    signal: controller.signal
-                });
-                clearTimeout(timeoutId);
-                
-                if (res.ok) {
-                    showToast('Omni Companion Active', 'Connecting to local AI Companion at <code>http://127.0.0.1:8000</code>', '🚀', 4000);
-                } else {
-                    showToast('Launching Omni Companion', 'Opening <code>http://127.0.0.1:8000</code>. If server is down, run <code>python main.py</code> in <code>AI_companion</code>', '💡', 8000);
-                }
-            } catch (err) {
-                // If fetch fails (server not running or blocked by CORS), provide friendly instructions
-                showToast('Launching AI Companion', 'Opening <code>http://127.0.0.1:8000</code>. Tip: Make sure the local server is running by executing <code>python main.py</code> in <code>AI_companion</code>.', '💡', 9000);
-            }
-        });
     }
 
     // === Placeholder Live Demo Buttons Notification ===
