@@ -91,4 +91,19 @@ body.light-theme {
    6. Retired: --color-secondary (purple #a855f7 / #7c3aed).
       Any component still using it should switch to --color-primary
       or a neutral.
+
+   LAYERS (so one change can't break other pages)
+   - Level 1 — Brand (this file + brand-components.css): shared by
+     every project. Change rarely, deliberately, and review every
+     page that uses it. Never edit these files to fix one page.
+   - Level 2 — App (e.g. storytelling.css, dashboard.css,
+     style.css): one file per app. It may add app components and
+     override shared ones, scoped to that app (e.g.
+     .app-storytelling .btn-primary { … }).
+   - Level 3 — Page (e.g. play.css, library.css): one file per
+     page, loaded last. Overrides for that page only, scoped to
+     the page (e.g. .page-play .card { … }).
+   Load order: theme → components → app → page. Later wins.
+   An agent fixing one page edits ONLY that page's (or app's)
+   file — never the shared files. No !important in shared files.
    ============================================================ */
