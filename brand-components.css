@@ -1,0 +1,414 @@
+/* ============================================================
+   Brand components — Hieu's own Bootstrap (shared, lightweight)
+   A small component library built on brand-theme.css tokens.
+   Include AFTER brand-theme.css. Every project uses these two
+   files and gets the same look — no per-project button styles.
+
+   HOW TO USE
+   - Buttons:   <button class="btn btn-primary">Save</button>
+   - Card:      <div class="card"><div class="card-body">…</div></div>
+   - Form:      <div class="form-group"><label>Name</label>
+                 <input class="input" type="text"></div>
+   - Badge:     <span class="badge badge-primary">Romance</span>
+   - Alert:     <div class="alert alert-error">Something went wrong.</div>
+   - Modal:     <div class="modal-overlay open"><div class="modal-content card">…</div></div>
+   - Toast:     <div class="toast">…</div> (see app.js showToast)
+
+   RULES
+   - Colors come ONLY from brand-theme.css tokens. No hex here.
+   - One accent: blue (--color-primary) for primary actions.
+     Green / amber / red appear only as success / warning / error.
+   - Class names match the personal site's existing ones (.btn,
+     .btn-primary, .form-group, .modal-overlay …) so the site's
+     HTML keeps working — we reuse, we don't rename.
+   - Retired: --color-secondary (purple) and --color-accent.
+     Success states use --color-success now.
+   ============================================================ */
+
+/* ---------- Buttons ---------- */
+/* Base button: every button starts here. Inline-flex so an icon
+   and a label sit nicely side by side with a small gap. */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-family: var(--font-heading);
+    font-weight: 600;
+    font-size: 1rem;
+    padding: 0.8rem 2rem;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    border: none;
+    transition: transform var(--transition-fast),
+        box-shadow var(--transition-fast),
+        background var(--transition-fast),
+        border-color var(--transition-fast),
+        color var(--transition-fast);
+}
+
+/* Pressed state: a tiny shrink tells the user the click landed. */
+.btn:active { transform: scale(0.98); }
+
+/* A button that can't be used yet: faded, no pointer, no hover lift. */
+.btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Primary: the ONE action on a screen (Save, Send, Continue).
+   Solid brand blue — no gradient, per the brand theme. */
+.btn-primary {
+    background-color: var(--color-primary);
+    color: #fff;
+    box-shadow: 0 4px 15px var(--color-glow);
+}
+.btn-primary:hover {
+    background-color: var(--color-primary-hover);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--color-glow);
+}
+
+/* Secondary: the safe, quiet action (Cancel, Back). A card-colored
+   button with a border; the border turns blue on hover. */
+.btn-secondary {
+    background-color: var(--color-card-bg);
+    color: var(--color-text);
+    border: 1px solid var(--color-card-border);
+}
+.btn-secondary:hover {
+    background-color: var(--color-bg-secondary);
+    border-color: var(--color-primary);
+    transform: translateY(-2px);
+}
+
+/* Ghost: a text-only button (a subtle link-like action). No
+   background until hover, so it never competes with primary. */
+.btn-ghost {
+    background: transparent;
+    color: var(--color-text-muted);
+    border: 1px solid transparent;
+}
+.btn-ghost:hover {
+    color: var(--color-text);
+    background-color: var(--color-card-bg);
+}
+
+/* Danger: destructive actions only (Delete, Remove). Red, so the
+   user pauses before clicking. */
+.btn-danger {
+    background-color: var(--color-error);
+    color: #fff;
+}
+.btn-danger:hover { transform: translateY(-2px); }
+
+/* Sizes: small for tight places (table rows, card footers),
+   large for the main call-to-action on a page. */
+.btn-sm { font-size: 0.875rem; padding: 0.5rem 1rem; }
+.btn-lg { font-size: 1.125rem; padding: 1rem 2.5rem; }
+
+/* Full-width button (forms, mobile). */
+.btn-block { width: 100%; }
+
+/* ---------- Cards ---------- */
+/* A card is a surface that groups related content: a book, a
+   project, a settings panel. Soft background, thin border, and
+   the medium shadow from the theme. */
+.card {
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    overflow: hidden; /* keeps child corners inside the radius */
+}
+
+.card-header {
+    padding: 1.25rem 1.5rem;
+    border-bottom: 1px solid var(--color-card-border);
+}
+
+.card-body { padding: 1.5rem; }
+
+.card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid var(--color-card-border);
+    display: flex;
+    gap: 0.75rem;
+    justify-content: flex-end; /* actions sit on the right */
+}
+
+.card-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+/* ---------- Forms ---------- */
+/* A form group is one label + one control + optional help text.
+   The bottom margin is what spaces fields apart. */
+.form-group { margin-bottom: 1.5rem; }
+
+.form-group label {
+    display: block;
+    font-size: 0.9rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+/* .input is the shared style for text inputs, textareas and
+   selects — one class, one look, everywhere. */
+.input,
+.form-group input,
+.form-group textarea,
+.form-group select {
+    width: 100%;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-card-border);
+    color: var(--color-text);
+    border-radius: var(--radius-sm);
+    padding: 0.8rem 1rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    transition: border-color var(--transition-fast),
+        box-shadow var(--transition-fast);
+}
+
+/* Focus: the border turns brand blue and a soft ring appears,
+   so keyboard users always see where they are. */
+.input:focus,
+.form-group input:focus,
+.form-group textarea:focus,
+.form-group select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px var(--color-glow);
+}
+
+/* A textarea that grows with its content (the play screen's
+   action box). */
+textarea.input { min-height: 120px; resize: vertical; }
+
+/* Small grey hint under a field ("8+ characters"). */
+.form-help {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-text-muted);
+    margin-top: 0.4rem;
+}
+
+/* A field with a validation error: red border, red message. */
+.input-error { border-color: var(--color-error); }
+.form-error {
+    display: block;
+    font-size: 0.85rem;
+    color: var(--color-error);
+    margin-top: 0.4rem;
+}
+
+/* ---------- Badges (tags) ---------- */
+/* A badge is a small pill that labels something: a genre, a
+   status, a language. Quiet by default; the colored ones are
+   for meaning (a status), not decoration. */
+.badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-card-bg);
+    color: var(--color-text-muted);
+    border: 1px solid var(--color-card-border);
+}
+
+/* The primary badge is the only colored one used for labeling
+   (e.g. the featured book). The rest mark a state. */
+.badge-primary {
+    background-color: var(--color-primary-soft);
+    color: var(--color-primary);
+    border-color: transparent;
+}
+.badge-success {
+    background-color: rgba(52, 211, 153, 0.12);
+    color: var(--color-success);
+    border-color: transparent;
+}
+.badge-warning {
+    background-color: rgba(245, 158, 11, 0.12);
+    color: var(--color-warning);
+    border-color: transparent;
+}
+.badge-error {
+    background-color: rgba(239, 68, 68, 0.12);
+    color: var(--color-error);
+    border-color: transparent;
+}
+
+/* ---------- Alerts ---------- */
+/* An alert is a full-width message bar: success, warning, error,
+   or info. The colored left border is what the eye catches first. */
+.alert {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 1rem 1.25rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-card-border);
+    background-color: var(--color-card-bg);
+    color: var(--color-text);
+    margin-bottom: 1rem;
+}
+
+.alert-success {
+    border-left: 4px solid var(--color-success);
+}
+.alert-warning {
+    border-left: 4px solid var(--color-warning);
+}
+.alert-error {
+    border-left: 4px solid var(--color-error);
+}
+.alert-info {
+    border-left: 4px solid var(--color-primary);
+}
+
+/* ---------- Modal ---------- */
+/* The overlay dims the page and centers the dialog. Hidden by
+   default; adding .open shows it with a fade. */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(11, 15, 25, 0.7);
+    backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay.open {
+    display: flex;
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* The dialog itself. Reuses .card for its surface; keep it
+   narrow (420px) so a confirm dialog never looks like a page. */
+.modal-content {
+    max-width: 420px;
+    width: 90%;
+    padding: 3rem 2.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-content h3 { font-size: 1.6rem; margin-bottom: 0.5rem; }
+.modal-content p { color: var(--color-text-muted); margin-bottom: 2rem; }
+
+/* The round icon at the top of a modal. Success green by
+   default; swap the modifier for other meanings. */
+.modal-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: rgba(52, 211, 153, 0.15);
+    border: 1px solid rgba(52, 211, 153, 0.2);
+    color: var(--color-success);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+.modal-icon svg { width: 28px; height: 28px; }
+.modal-icon-info {
+    background-color: var(--color-primary-soft);
+    border-color: transparent;
+    color: var(--color-primary);
+}
+.modal-icon-error {
+    background-color: rgba(239, 68, 68, 0.12);
+    border-color: transparent;
+    color: var(--color-error);
+}
+
+/* Buttons at the bottom of a modal. */
+.modal-actions {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+@keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+}
+
+/* ---------- Toast ---------- */
+/* A toast is a small popup in a corner that reports a result
+   ("Saved", "Scene published") and disappears on its own.
+   See app.js showToast() for the JavaScript that builds one. */
+.toast {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    background-color: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    padding: 1rem 1.25rem;
+    max-width: 360px;
+    animation: slideUp 0.3s ease-out;
+}
+.toast.fade-out { opacity: 0; transition: opacity 0.3s ease; }
+.toast-icon { font-size: 1.25rem; line-height: 1.4; }
+.toast-body { flex: 1; }
+.toast-title { font-weight: 600; margin-bottom: 0.15rem; }
+.toast-msg { font-size: 0.9rem; color: var(--color-text-muted); }
+.toast-close {
+    background: none;
+    border: none;
+    color: var(--color-text-muted);
+    font-size: 1.25rem;
+    cursor: pointer;
+    line-height: 1;
+    padding: 0;
+}
+.toast-close:hover { color: var(--color-text); }
+
+/* ---------- Spinner (loading) ---------- */
+/* A spinning ring for "the AI is writing…". Brand blue, so the
+   wait feels like part of the product, not an error. */
+.spinner {
+    width: 24px;
+    height: 24px;
+    border: 3px solid var(--color-card-border);
+    border-top-color: var(--color-primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Small utilities ---------- */
+/* A thin line that separates two sections. */
+.divider {
+    height: 1px;
+    background-color: var(--color-card-border);
+    border: none;
+    margin: 1.5rem 0;
+}
+
+/* Muted text: captions, meta info, secondary labels. */
+.text-muted { color: var(--color-text-muted); }
