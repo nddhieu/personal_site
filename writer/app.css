@@ -69,3 +69,9 @@ body.light-theme h2 {
   gap: 0.75rem;
   color: var(--color-text-muted);
 }
+
+/* The hidden attribute must always win: component classes set
+   display:flex/block, which overrides the UA [hidden] rule and
+   made hidden elements (loading rows, empty notes) stay visible.
+   (Found by Hieu screenshot, Oct 26.) */
+[hidden] { display: none !important; }

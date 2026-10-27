@@ -30,26 +30,41 @@
     </section>
 
     <aside class="pane-play">
-      <div class="suggestions">
-        <button class="suggestion-card" data-testid="suggestion-1" type="button" aria-label="Suggestion 1">Loading...</button>
-        <button class="suggestion-card" data-testid="suggestion-2" type="button" aria-label="Suggestion 2">Loading...</button>
-        <button class="suggestion-card" data-testid="suggestion-3" type="button" aria-label="Suggestion 3">Loading...</button>
-      </div>
-      <button id="continue-btn" data-testid="continue-btn" class="btn btn-secondary" type="button">Continue</button>
-      <div class="turn-tools">
-        <button id="retry-btn" data-testid="retry-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Retry <span class="badge">Soon</span></button>
-        <button id="correct-btn" data-testid="correct-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Correct <span class="badge">Soon</span></button>
-      </div>
       <div id="diary-panel" class="diary-panel" hidden>
         <h2>Story diary</h2>
         <ul id="diary-list"></ul>
         <p id="diary-empty" class="play-note">No diary entries yet - they appear as the story unfolds.</p>
       </div>
       <p id="play-note" class="play-note" hidden></p>
-      <div class="action-bar">
-        <textarea id="action-input" data-testid="action-input" class="input" rows="2"
-          placeholder="What do you do?"></textarea>
-        <button id="send-btn" data-testid="send-btn" class="btn btn-primary" type="button">Send</button>
+      <!-- Composer (Emochi-style, Hieu Oct 27): the suggestions
+           live in a sheet directly above one rounded input bar;
+           the bar's toolbar carries the two icons - Suggestion
+           (toggles the sheet) and Continue. -->
+      <div class="composer-wrap">
+        <div id="suggest-panel" class="suggest-panel suggest-sheet" hidden>
+          <div class="suggestions">
+            <button class="suggestion-card" data-testid="suggestion-1" type="button" aria-label="Suggestion 1">Loading...</button>
+            <button class="suggestion-card" data-testid="suggestion-2" type="button" aria-label="Suggestion 2">Loading...</button>
+            <button class="suggestion-card" data-testid="suggestion-3" type="button" aria-label="Suggestion 3">Loading...</button>
+          </div>
+          <div class="turn-tools">
+            <button id="retry-btn" data-testid="retry-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Retry <span class="badge">Soon</span></button>
+            <button id="correct-btn" data-testid="correct-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Correct <span class="badge">Soon</span></button>
+          </div>
+        </div>
+        <div class="composer">
+          <textarea id="action-input" data-testid="action-input" class="input" rows="1"
+            placeholder="What do you do?"></textarea>
+          <div class="composer-bar">
+            <div class="composer-icons">
+              <button id="suggest-toggle" data-testid="suggest-toggle" class="tool-btn" type="button"
+                aria-expanded="false" aria-controls="suggest-panel" title="Show suggestions">&#128161; <span>Suggest</span></button>
+              <button id="continue-btn" data-testid="continue-btn" class="tool-btn" type="button"
+                title="Continue the story">&#9193; <span>Continue</span></button>
+            </div>
+            <p class="input-hint">Enter to send &middot; Shift+Enter for a new line</p>
+          </div>
+        </div>
       </div>
     </aside>
   </div>

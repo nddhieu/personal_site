@@ -69,41 +69,138 @@
   top: 1rem;
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: 0.5rem;
+}
+/* Composer (Emochi-style, Hieu Oct 27): one rounded bar holds
+   the input and a slim toolbar with the two icon actions -
+   Suggest (toggles the sheet) and Continue. The suggestions
+   themselves live in a sheet directly above the bar, hidden
+   until the reader asks or a new scene lands. */
+.page-play .composer-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+.page-play .composer {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.5rem 0.6rem;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: 1rem;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+.page-play .composer textarea.input {
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  padding: 0.25rem 0.3rem;
+  resize: none;
+  width: 100%;
+  /* Starts at one row; play.js grows it with the text up to
+     this cap - five lines, then it scrolls (Hieu, Oct 27). */
+  line-height: 1.45;
+  /* The shared brand rule sets textarea.input min-height:
+     120px site-wide; the composer input must be free to
+     start at a single row, so it opts out here. */
+  min-height: 0;
+  max-height: calc(1.45em * 5 + 0.5rem);
+  overflow-y: auto;
+}
+.page-play .composer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+.page-play .composer-icons {
+  display: flex;
+  gap: 0.4rem;
+}
+.page-play .tool-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.35rem 0.6rem;
+  cursor: pointer;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text);
+}
+.page-play .tool-btn:hover {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+.page-play .tool-btn:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+.page-play #suggest-toggle[aria-expanded="true"] {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+.page-play .suggest-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.page-play .suggest-sheet {
+  padding: 0.55rem;
+  max-height: 45vh;
+  overflow-y: auto;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: 1rem;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.14);
 }
 .page-play .suggestion-card {
   display: block;
   width: 100%;
   text-align: left;
-  margin-bottom: 0.5rem;
-  padding: 0.6rem 0.75rem;
+  margin-bottom: 0.3rem;
+  padding: 0.4rem 0.55rem;
   font: inherit;
+  font-size: 0.85rem;
+  line-height: 1.35;
   cursor: pointer;
   background: var(--color-card-bg);
-  border: 1px solid var(--color-card-border);
+  border: none;
   border-radius: var(--radius-md);
   color: var(--color-text);
 }
+.page-play .suggest-sheet .suggestion-card {
+  background: var(--color-bg-primary);
+}
 .page-play .suggestion-card:hover {
-  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-primary);
 }
 .page-play .suggestion-card:focus-visible {
   outline: none;
-  border-color: var(--color-primary);
   box-shadow: 0 0 0 3px var(--color-glow);
+}
+.page-play .suggestion-card:disabled {
+  opacity: 0.55;
+  cursor: default;
+  box-shadow: none;
+}
+.page-play .input-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+/* A landed scene scrolls to its own first line (play.js
+   scrollIntoView); keep that line clear of the top edge. */
+.page-play .prose p {
+  scroll-margin-top: 5.5rem;
 }
 .page-play .turn-tools {
   display: flex;
   gap: 0.5rem;
-}
-.page-play .action-bar {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-end;
-}
-.page-play .action-bar textarea {
-  flex: 1;
-  resize: none;
 }
 .page-play .play-note {
   padding: 0 1rem;
@@ -116,14 +213,17 @@
   .page-play .pane-play {
     width: auto;
     position: static;
-    padding-bottom: 6.5rem;
+    padding-bottom: 9rem;
   }
-  .page-play .action-bar {
+  /* The whole composer (sheet + bar) pins to the bottom, so
+     the suggestion sheet opens right above the input, in
+     thumb reach, like the reference. */
+  .page-play .composer-wrap {
     position: fixed;
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 0.6rem 0.75rem;
+    padding: 0.5rem 0.75rem 0.6rem;
     background: var(--color-bg-primary);
     border-top: 1px solid var(--color-card-border);
   }

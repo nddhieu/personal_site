@@ -90,8 +90,9 @@ async function init() {
   }
   show("in");
   try {
-    const books = await apiFetch("/api/books");
-    renderBooks(Array.isArray(books) ? books : []);
+    const data = await apiFetch("/api/books");
+    const books = Array.isArray(data) ? data : (data && data.books) || [];
+    renderBooks(books);
   } catch (err) {
     el("library-error").textContent = friendlyError(err);
     el("library-error").hidden = false;

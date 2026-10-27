@@ -17,6 +17,15 @@ export function resolveApiBase() {
   if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
     return "http://localhost:8001";
   }
+  // serverPC dev GUI: same-origin
+  // /api, proxied by the GUI server to the dev API on 127.0.0.1:8002.
+  if (
+    location.hostname === "100.66.24.109" ||
+    location.hostname === "serverpc" ||
+    location.hostname === "serverpc.tailf1523e.ts.net"
+  ) {
+    return "";
+  }
   return "https://hieupc.tailf1523e.ts.net";
 }
 
