@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign in - AI Storytelling Co-Author</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="login.css">
+
+</head>
+<body class="light-theme page-login">
+<main class="login-wrap">
+  <section class="card login-card">
+    <header class="login-head">
+      <h1>AI Storytelling Co-Author</h1>
+      <p class="login-sub">Sign in to your library and keep writing.</p>
+    </header>
+
+    <form id="loginForm" novalidate>
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input class="input" type="email" id="email" name="email"
+               autocomplete="email" required placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input class="input" type="password" id="password" name="password"
+               autocomplete="current-password" required placeholder="Your password">
+      </div>
+      <p class="form-error" id="formError" role="alert" hidden></p>
+      <button class="btn btn-primary btn-block" type="submit" id="loginBtn">Sign in</button>
+    </form>
+
+    <div class="login-divider"><span>or continue with</span></div>
+
+    <div class="login-alt">
+      <button class="btn btn-secondary btn-block" type="button" id="googleBtn" disabled aria-disabled="true">Google <span class="badge badge-primary">Coming soon</span></button>
+      <button class="btn btn-secondary btn-block" type="button" id="facebookBtn" disabled
+              aria-disabled="true">Facebook <span class="badge badge-primary">Coming soon</span></button>
+      <button class="btn btn-secondary btn-block" type="button" id="guestBtn">Continue as guest</button>
+    </div>
+
+    <p class="login-note" id="statusNote" role="status" hidden></p>
+    <footer class="login-foot">
+      New here? <a href="./signup.html" id="signupLink">Create an account</a>
+    </footer>
+  </section>
+</main>
+<script type="module" src="login.js"></script>
+</body>
+</html>

@@ -1,0 +1,165 @@
+/* ============================================================
+   Level 3 — Page stylesheet: Signup (page-signup)
+   Built on brand-theme.css + brand-components.css tokens ONLY.
+   No hardcoded hex or rgb literals; light theme by default.
+   ============================================================ */
+
+body.page-signup {
+    margin: 0;
+    min-height: 100vh;
+    background-color: var(--color-bg-secondary);
+    color: var(--color-text);
+    font-family: var(--font-body);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 1.5rem;
+    box-sizing: border-box;
+    transition: background-color var(--transition-normal), color var(--transition-normal);
+}
+
+.page-signup *,
+.page-signup *::before,
+.page-signup *::after {
+    box-sizing: border-box;
+}
+
+.page-signup .signup-topbar {
+    width: 100%;
+    max-width: 440px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.page-signup .brand-mark {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1.05rem;
+    color: var(--color-text);
+    text-decoration: none;
+}
+
+.page-signup .brand-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-pill);
+    background-color: var(--color-primary);
+    display: inline-block;
+}
+
+.page-signup .signup-shell {
+    width: 100%;
+    max-width: 440px;
+    background-color: var(--color-bg-primary);
+    border: 1px solid var(--color-card-border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+.page-signup .signup-header {
+    padding: 2rem 2rem 0.5rem;
+    text-align: left;
+}
+
+.page-signup .signup-title {
+    font-family: var(--font-heading);
+    font-size: 1.65rem;
+    font-weight: 700;
+    margin: 0 0 0.35rem;
+    color: var(--color-text);
+}
+
+.page-signup .signup-subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    line-height: 1.45;
+}
+
+.page-signup .signup-body {
+    padding: 1.5rem 2rem 2rem;
+}
+
+.page-signup .form-group {
+    margin-bottom: 1.15rem;
+}
+
+.page-signup .optional-tag {
+    font-weight: 400;
+    color: var(--color-text-muted);
+    font-size: 0.82rem;
+}
+
+.page-signup .signup-submit-btn {
+    margin-top: 0.5rem;
+}
+
+.page-signup .spinner-inline {
+    width: 18px;
+    height: 18px;
+    border-width: 2px;
+}
+
+.page-signup .signup-footer {
+    padding: 1.1rem 2rem;
+    border-top: 1px solid var(--color-card-border);
+    background-color: var(--color-bg-secondary);
+    text-align: center;
+    font-size: 0.92rem;
+    color: var(--color-text-muted);
+}
+
+.page-signup .signup-link {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.page-signup .signup-link:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+}
+
+.page-signup .signup-success-panel {
+    text-align: left;
+}
+
+.page-signup .session-meta {
+    margin: 1rem 0 1.5rem;
+    padding: 0.9rem 1rem;
+    border-radius: var(--radius-sm);
+    background-color: var(--color-bg-secondary);
+    border: 1px solid var(--color-card-border);
+    font-size: 0.88rem;
+}
+
+.page-signup .session-meta-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.25rem 0;
+}
+
+.page-signup .session-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+}
+
+@media (max-width: 480px) {
+    .page-signup .signup-header {
+        padding: 1.5rem 1.25rem 0.5rem;
+    }
+    .page-signup .signup-body {
+        padding: 1.25rem;
+    }
+    .page-signup .signup-footer {
+        padding: 1rem 1.25rem;
+    }
+}

@@ -1,0 +1,71 @@
+/* Storytelling writer app layer (Level 2): shared by the new
+   login/home/book/play pages. Brand files (brand-theme.css,
+   brand-components.css) are never edited for one page; this file
+   is the app's own layer, loaded after the brand files and before
+   the page CSS. */
+
+/* Body font: the brand tokens exist, but no rule applied them on
+   home/book/play, so those pages rendered in the browser default. */
+body.light-theme {
+  font-family: var(--font-body);
+  background: var(--color-bg-primary);
+  color: var(--color-text);
+  margin: 0;
+}
+
+body.light-theme h1,
+body.light-theme h2 {
+  font-family: var(--font-heading);
+}
+
+/* Keyboard focus ring for buttons, matching the input ring. */
+.btn:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-glow);
+}
+
+/* Shared topbar (rendered by app-ui.js into #app-topbar). */
+.app-topbar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-card-border);
+  background: var(--color-bg-primary);
+}
+
+.app-topbar-brand {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: var(--color-text);
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.app-topbar-brand:hover {
+  color: var(--color-primary);
+}
+
+.app-topbar-back {
+  color: var(--color-primary);
+  text-decoration: none;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.app-topbar-spacer {
+  flex: 1;
+}
+
+.app-topbar-logout {
+  padding: 0.5rem 1rem;
+}
+
+/* Loading row: brand spinner + muted label. */
+.loading-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: var(--color-text-muted);
+}

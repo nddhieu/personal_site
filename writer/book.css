@@ -1,0 +1,59 @@
+/* F2 T2 book page: layout only, scoped to .page-book.
+   Colors and components come from the shared brand theme. */
+.page-book {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+}
+.page-book .book-card {
+  width: 100%;
+  max-width: 44rem;
+}
+.page-book .book-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.page-book .book-head h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+.page-book label {
+  display: block;
+  margin: 0.75rem 0;
+  font-weight: 600;
+}
+.page-book input,
+.page-book textarea {
+  display: block;
+  width: 100%;
+  margin-top: 0.3rem;
+  font-weight: 400;
+}
+.page-book fieldset {
+  margin: 1rem 0;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+}
+.page-book .book-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.page-book .book-note {
+  opacity: 0.75;
+}
+.page-book .book-section {
+  margin: 1.25rem 0;
+}
+.page-book .book-section h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+}
+.page-book .book-section legend {
+  font-weight: 600;
+  padding: 0 0.5rem;
+}

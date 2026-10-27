@@ -1,0 +1,147 @@
+/* F3 T0 play screen: layout only, scoped to .page-play.
+   Colors and components come from the shared brand theme.
+   Desktop: prose flows on the left, the player pane sticks in
+   view on the right. Phone: one column, action bar pinned to
+   the bottom of the viewport. */
+.page-play {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+.page-play .play-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--color-card-border);
+}
+.page-play .play-topbar h1 {
+  margin: 0;
+  font-size: 1.3rem;
+}
+.page-play .play-layout {
+  display: flex;
+  gap: 1.25rem;
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1rem;
+}
+.page-play .pane-read {
+  flex: 1;
+  min-width: 0;
+}
+.page-play .prose {
+  line-height: 1.7;
+  font-size: 1.05rem;
+  white-space: pre-wrap;
+  max-width: 65ch;
+}
+.page-play .bible-box summary {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.5rem 0;
+}
+.page-play .bible-list {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.25rem 1rem;
+  margin: 0.75rem 0 0;
+}
+.page-play .bible-list dt {
+  font-weight: 600;
+}
+.page-play .bible-list dd {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+.page-play .bible-box {
+  margin-top: 1.5rem;
+}
+.page-play .pane-play {
+  width: 340px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  position: sticky;
+  top: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.page-play .suggestion-card {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 0.5rem;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  cursor: pointer;
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+}
+.page-play .suggestion-card:hover {
+  border-color: var(--color-primary);
+}
+.page-play .suggestion-card:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-glow);
+}
+.page-play .turn-tools {
+  display: flex;
+  gap: 0.5rem;
+}
+.page-play .action-bar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.page-play .action-bar textarea {
+  flex: 1;
+  resize: none;
+}
+.page-play .play-note {
+  padding: 0 1rem;
+  opacity: 0.75;
+}
+@media (max-width: 899px) {
+  .page-play .play-layout {
+    flex-direction: column;
+  }
+  .page-play .pane-play {
+    width: auto;
+    position: static;
+    padding-bottom: 6.5rem;
+  }
+  .page-play .action-bar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    padding: 0.6rem 0.75rem;
+    background: var(--color-bg-primary);
+    border-top: 1px solid var(--color-card-border);
+  }
+}
+
+/* Diary panel (live wiring): read-only list of the run's diary. */
+.page-play .diary-panel {
+  margin-top: 0.25rem;
+}
+.page-play .diary-panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.page-play .diary-panel ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}

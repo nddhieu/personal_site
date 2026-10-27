@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobileNavLinks = document.querySelectorAll('.mobile-nav-link');
     const navLinks = document.querySelectorAll('.nav-link');
     const scrollIndicator = document.getElementById('scroll-indicator');
+    const typewriterElement = document.getElementById('typewriter');
     
     // Project Filter Elements
     const filterButtons = document.querySelectorAll('.filter-btn');
@@ -97,6 +98,41 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
+    // === Typewriter Text Animation ===
+    const roles = ['Technical Lead', 'Full-Stack Developer', 'Systems Modernizer'];
+    let roleIndex = 0;
+    let charIndex = 0;
+    let isDeleting = false;
+    let typingSpeed = 100;
+
+    function type() {
+        const currentRole = roles[roleIndex];
+        
+        if (isDeleting) {
+            typewriterElement.textContent = currentRole.substring(0, charIndex - 1);
+            charIndex--;
+            typingSpeed = 50; // Deleting is faster
+        } else {
+            typewriterElement.textContent = currentRole.substring(0, charIndex + 1);
+            charIndex++;
+            typingSpeed = 100;
+        }
+
+        if (!isDeleting && charIndex === currentRole.length) {
+            isDeleting = true;
+            typingSpeed = 2000; // Pause at full word
+        } else if (isDeleting && charIndex === 0) {
+            isDeleting = false;
+            roleIndex = (roleIndex + 1) % roles.length;
+            typingSpeed = 500; // Brief pause before next word
+        }
+
+        setTimeout(type, typingSpeed);
+    }
+    
+    // Start typing animation
+    type();
+
     // === Project Filter Logic ===
     filterButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -166,50 +202,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // === Toast Notification System ===
-    const toastContainer = document.getElementById('toast-container');
-    
-    function showToast(title, message, icon = '✦', durationMs = 6000) {
-        if (!toastContainer) return;
-        
-        const toast = document.createElement('div');
-        toast.className = 'toast';
-        toast.innerHTML = `
-            <span class="toast-icon">${icon}</span>
-            <div class="toast-body">
-                <div class="toast-title">${title}</div>
-                <div class="toast-msg">${message}</div>
-            </div>
-            <button class="toast-close" aria-label="Close">&times;</button>
-        `;
-        
-        const closeBtn = toast.querySelector('.toast-close');
-        const removeToast = () => {
-            toast.classList.add('fade-out');
-            setTimeout(() => {
-                if (toast.parentNode) {
-                    toast.parentNode.removeChild(toast);
-                }
-            }, 300);
-        };
-        
-        closeBtn.addEventListener('click', removeToast);
-        toastContainer.appendChild(toast);
-        
-        if (durationMs > 0) {
-            setTimeout(removeToast, durationMs);
-        }
-    }
-
-    // === Placeholder Live Demo Buttons Notification ===
+    // === Live Demo Buttons Notification ===
     demoLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (!href || href === '#') {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                showToast('Interactive Demo Preview', 'A live interactive environment for this project is being set up and will be deployed soon!', '🛠️', 5000);
-            });
-        }
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            alert('This is a preview version of the site. A live interactive environment for this project is being set up and will be deployed soon!');
+        });
     });
 
     // === Local API Demo ===

@@ -1,0 +1,50 @@
+/* Home (library) page: layout only, scoped to .page-home.
+   Colors and components come from the shared brand theme. */
+.page-home {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  padding: 1.5rem 1rem;
+  box-sizing: border-box;
+}
+.page-home .home-card {
+  width: 100%;
+  max-width: 44rem;
+  padding: 2rem;
+}
+.page-home .home-title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+}
+.page-home .home-sub {
+  margin: 0 0 1.25rem;
+  color: var(--color-text-muted);
+}
+.page-home .home-welcome {
+  margin: 0 0 1.25rem;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+.page-home .library-grid {
+  display: grid;
+  gap: 1rem;
+}
+.page-home .book-card-item .card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.page-home .book-premise {
+  margin: 0;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+.page-home .book-card-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+.page-home .home-note {
+  color: var(--color-text-muted);
+}

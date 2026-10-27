@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Play - AI Storytelling Co-Author</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./play.css">
+</head>
+<body class="light-theme">
+<div id="app-topbar"></div>
+<div class="page-play">
+  <header class="play-topbar">
+    <h1 id="book-title">Loading your story...</h1>
+    <button id="diary-btn" data-testid="diary-btn" class="btn btn-secondary" type="button">Diary</button>
+  </header>
+  <div id="play-status" class="loading-row"><span class="spinner" aria-hidden="true"></span><span>Loading the book...</span></div>
+
+  <div id="play-layout" class="play-layout" hidden>
+    <section class="pane-read">
+      <article id="prose" class="prose" data-testid="prose"></article>
+      <details class="bible-box">
+        <summary data-testid="bible-toggle">Story bible summary</summary>
+        <div id="bible-summary"></div>
+      </details>
+    </section>
+
+    <aside class="pane-play">
+      <div class="suggestions">
+        <button class="suggestion-card" data-testid="suggestion-1" type="button" aria-label="Suggestion 1">Loading...</button>
+        <button class="suggestion-card" data-testid="suggestion-2" type="button" aria-label="Suggestion 2">Loading...</button>
+        <button class="suggestion-card" data-testid="suggestion-3" type="button" aria-label="Suggestion 3">Loading...</button>
+      </div>
+      <button id="continue-btn" data-testid="continue-btn" class="btn btn-secondary" type="button">Continue</button>
+      <div class="turn-tools">
+        <button id="retry-btn" data-testid="retry-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Retry <span class="badge">Soon</span></button>
+        <button id="correct-btn" data-testid="correct-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Correct <span class="badge">Soon</span></button>
+      </div>
+      <div id="diary-panel" class="diary-panel" hidden>
+        <h2>Story diary</h2>
+        <ul id="diary-list"></ul>
+        <p id="diary-empty" class="play-note">No diary entries yet - they appear as the story unfolds.</p>
+      </div>
+      <p id="play-note" class="play-note" hidden></p>
+      <div class="action-bar">
+        <textarea id="action-input" data-testid="action-input" class="input" rows="2"
+          placeholder="What do you do?"></textarea>
+        <button id="send-btn" data-testid="send-btn" class="btn btn-primary" type="button">Send</button>
+      </div>
+    </aside>
+  </div>
+
+  <p id="play-out" hidden>You are not signed in.
+    <a href="./login.html">Sign in</a> to play.</p>
+</div>
+<script type="module" src="./play.js"></script>
+</body>
+</html>

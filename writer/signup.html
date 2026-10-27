@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Account | AI Storytelling Co-Author</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+    <!-- Level 1: Shared brand theme & components -->
+    <link rel="stylesheet" href="../brand-theme.css">
+    <link rel="stylesheet" href="../brand-components.css">
+    <!-- Level 3: Page styles -->
+    <link rel="stylesheet" href="signup.css">
+</head>
+
+<body class="light-theme app-storytelling page-signup">
+    <div class="signup-topbar">
+        <a href="./" class="brand-mark" data-testid="signup-brand-link">
+            <span class="brand-dot" aria-hidden="true"></span>
+            <span>AI Storytelling Co-Author</span>
+        </a>
+        <button type="button" id="theme-toggle" class="btn btn-ghost btn-sm" data-testid="theme-toggle" aria-label="Toggle color theme">
+            Theme
+        </button>
+    </div>
+
+    <main class="card signup-shell" aria-labelledby="signup-heading">
+        <header class="signup-header">
+            <h1 id="signup-heading" class="signup-title">Create your account</h1>
+            <p class="signup-subtitle">Start reading and co-writing interactive books. Your playthroughs stay private until you share them.</p>
+        </header>
+
+        <div class="signup-body">
+            <div id="signup-error" class="alert alert-error" role="alert" data-testid="signup-error" hidden></div>
+
+            <form id="signup-form" data-testid="signup-form" novalidate>
+                <div class="form-group">
+                    <label for="signup-email">Email address</label>
+                    <input
+                        type="email"
+                        id="signup-email"
+                        class="input"
+                        name="email"
+                        placeholder="you@example.com"
+                        autocomplete="email"
+                        required
+                        data-testid="signup-email"
+                    >
+                    <span id="signup-email-error" class="form-error" data-testid="signup-email-error" hidden></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-display-name">
+                        Display name <span class="optional-tag">(optional)</span>
+                    </label>
+                    <input
+                        type="text"
+                        id="signup-display-name"
+                        class="input"
+                        name="display_name"
+                        placeholder="How should characters or readers see your name?"
+                        autocomplete="name"
+                        data-testid="signup-display-name"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-password">Password</label>
+                    <input
+                        type="password"
+                        id="signup-password"
+                        class="input"
+                        name="password"
+                        placeholder="At least 6 characters"
+                        autocomplete="new-password"
+                        minlength="6"
+                        required
+                        data-testid="signup-password"
+                    >
+                    <span class="form-help">Use 6 or more characters.</span>
+                    <span id="signup-password-error" class="form-error" data-testid="signup-password-error" hidden></span>
+                </div>
+
+                <div class="form-group">
+                    <label for="signup-confirm">Confirm password</label>
+                    <input
+                        type="password"
+                        id="signup-confirm"
+                        class="input"
+                        name="confirm_password"
+                        placeholder="Re-enter your password"
+                        autocomplete="new-password"
+                        minlength="6"
+                        required
+                        data-testid="signup-confirm"
+                    >
+                    <span id="signup-confirm-error" class="form-error" data-testid="signup-confirm-error" hidden></span>
+                </div>
+
+                <button type="submit" id="signup-submit" class="btn btn-primary btn-block signup-submit-btn" data-testid="signup-submit">
+                    <span id="signup-submit-spinner" class="spinner spinner-inline" hidden aria-hidden="true"></span>
+                    <span id="signup-submit-label">Create account</span>
+                </button>
+            </form>
+
+            <section id="signup-success" class="signup-success-panel" data-testid="signup-success" aria-live="polite" hidden>
+                <div class="alert alert-success">
+                    <div>
+                        <strong>Account created — you are signed in.</strong>
+                        <div class="text-muted">Welcome, <span id="signup-user-name" data-testid="signup-user-name"></span>.</div>
+                    </div>
+                </div>
+                <div class="session-meta">
+                    <div class="session-meta-row">
+                        <span class="text-muted">Email</span>
+                        <span id="signup-user-email" data-testid="signup-user-email"></span>
+                    </div>
+                    <div class="session-meta-row">
+                        <span class="text-muted">User ID</span>
+                        <code id="signup-user-id" data-testid="signup-user-id"></code>
+                    </div>
+                    <div class="session-meta-row">
+                        <span class="text-muted">Status</span>
+                        <span class="badge badge-success" data-testid="signup-session-badge">Logged in</span>
+                    </div>
+                </div>
+                <div class="session-actions">
+                    <a href="./" class="btn btn-primary" data-testid="signup-continue-btn">Continue to Library</a>
+                    <button type="button" id="signup-signout-btn" class="btn btn-secondary" data-testid="signup-signout-btn">Sign out</button>
+                </div>
+            </section>
+        </div>
+
+        <footer class="signup-footer">
+            Already have an account?
+            <a href="./" class="signup-link" data-testid="signup-login-link">Sign in</a>
+        </footer>
+    </main>
+
+    <script type="module" src="js/signup.js"></script>
+</body>
+
+</html>

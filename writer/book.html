@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Book - AI Storytelling Co-Author</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./book.css">
+</head>
+<body class="light-theme">
+<div id="app-topbar"></div>
+<main class="page-book">
+  <section class="card book-card">
+    <div class="book-head">
+      <h1 id="book-heading">Loading your book...</h1>
+      <button id="join-btn" class="btn btn-primary" type="button">Join this book</button>
+    </div>
+    <p id="join-note" class="book-note" hidden></p>
+    <div id="book-status" class="loading-row">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading the book...</span>
+    </div>
+
+    <form id="book-form" hidden>
+      <section class="book-section">
+        <h2>Book</h2>
+        <label>Title <input class="input" id="f-title" type="text"></label>
+        <label>Language <input class="input" id="f-language" type="text"></label>
+        <label>Genre <input class="input" id="f-genre" type="text"></label>
+        <label>Style / tone <input class="input" id="f-tone" type="text"></label>
+      </section>
+
+      <section class="book-section">
+        <h2>World</h2>
+        <label>World <textarea class="input" id="f-world" rows="4"></textarea></label>
+      </section>
+
+      <fieldset class="book-section">
+        <legend>Main character</legend>
+        <label>Name <input class="input" id="f-mc-name" type="text"></label>
+        <label>Identity <textarea class="input" id="f-mc-identity" rows="3"></textarea></label>
+        <label>Traits (comma separated) <input class="input" id="f-mc-traits" type="text"></label>
+        <label>Tone <input class="input" id="f-mc-tone" type="text"></label>
+        <label>Voice <textarea class="input" id="f-mc-voice" rows="2"></textarea></label>
+      </fieldset>
+
+      <section class="book-section">
+        <h2>Opening scene</h2>
+        <label>Opening scene <textarea class="input" id="f-opening" rows="4"></textarea></label>
+      </section>
+
+      <div class="book-actions">
+        <button id="save-btn" class="btn btn-primary" type="submit">Save changes</button>
+        <span id="save-status" class="book-note"></span>
+      </div>
+    </form>
+
+    <p id="book-out" hidden>You are not signed in.
+      <a href="./login.html">Sign in</a> to open the library.</p>
+  </section>
+</main>
+<script type="module" src="./book.js"></script>
+</body>
+</html>
