@@ -126,12 +126,22 @@
   font: inherit;
   font-size: 0.82rem;
   font-weight: 600;
-  padding: 0.35rem 0.6rem;
+  padding: 0.42rem 0.6rem;
   cursor: pointer;
   background: var(--color-bg-primary);
   border: 1px solid var(--color-card-border);
   border-radius: 999px;
   color: var(--color-text);
+}
+.page-play .tool-btn svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 .page-play .tool-btn:hover {
   box-shadow: 0 0 0 2px var(--color-primary);
