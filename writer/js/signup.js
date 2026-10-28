@@ -134,7 +134,6 @@ export function initSignupPage(doc = typeof document !== 'undefined' ? document 
     const successEmail = doc.getElementById('signup-user-email');
     const successUserId = doc.getElementById('signup-user-id');
     const signoutBtn = doc.getElementById('signup-signout-btn');
-    const themeToggle = doc.getElementById('theme-toggle');
 
     if (!form) return;
 
@@ -198,12 +197,6 @@ export function initSignupPage(doc = typeof document !== 'undefined' ? document 
     [emailInput, displayNameInput, passwordInput, confirmInput].forEach((input) => {
         if (input) input.addEventListener('input', clearErrors);
     });
-
-    if (themeToggle) {
-        themeToggle.addEventListener('click', () => {
-            doc.body.classList.toggle('light-theme');
-        });
-    }
 
     if (signoutBtn) {
         signoutBtn.addEventListener('click', () => {

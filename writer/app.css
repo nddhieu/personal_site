@@ -5,16 +5,18 @@
    the page CSS. */
 
 /* Body font: the brand tokens exist, but no rule applied them on
-   home/book/play, so those pages rendered in the browser default. */
-body.light-theme {
+   home/book/play, so those pages rendered in the browser default.
+   Unscoped (not body.light-theme) since theme-toggle: the tokens
+   flip with the class, so one rule serves both themes. */
+body {
   font-family: var(--font-body);
   background: var(--color-bg-primary);
   color: var(--color-text);
   margin: 0;
 }
 
-body.light-theme h1,
-body.light-theme h2 {
+body h1,
+body h2 {
   font-family: var(--font-heading);
 }
 
