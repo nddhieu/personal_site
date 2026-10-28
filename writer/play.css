@@ -309,3 +309,13 @@
   color: var(--color-text-muted);
   line-height: 1.6;
 }
+
+/* Reset button, armed state (Hieu's Oct 28 book test): the
+ * two-step confirm turns the button unmistakably red while it
+ * waits for the second tap, so the armed state cannot be
+ * mistaken for the idle button. */
+.page-play #reset-btn.confirming {
+  border-color: #b3261e;
+  color: #b3261e;
+  font-weight: 600;
+}

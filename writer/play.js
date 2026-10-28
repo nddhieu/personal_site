@@ -251,6 +251,7 @@ function setBusy(b) {
   el("continue-btn").disabled = b;
   el("action-input").disabled = b;
   el("suggest-toggle").disabled = b;
+  el("reset-btn").disabled = b;
   document
     .querySelectorAll(".suggestion-card")
     .forEach((card) => { card.disabled = b; });
@@ -403,6 +404,122 @@ el("diary-btn").addEventListener("click", async () => {
   const panel = el("diary-panel");
   panel.hidden = !panel.hidden;
   if (!panel.hidden) await refreshDiary();
+});
+
+/* Reset (Hieu's Oct 28 book test): wipes the current
+ * playthrough and starts again from the beginning. Two-step
+ * confirmation on the button itself: the first tap arms it
+ * ("Reset story? Tap again to confirm") for 5 seconds; only
+ * the second tap wipes anything, so a stray tap can never
+ * destroy progress. The wipe deletes the run server-side
+ * (not just locally): the resume listing surfaces the most
+ * progressed run, so a local-only reset would be resurrected
+ * on the next visit. After the delete, a fresh run is created
+ * from the book's opening scene and rendered in place. */
+let resetArmed = false;
+let resetTimer = null;
+
+function disarmReset() {
+  resetArmed = false;
+  if (resetTimer) {
+    clearTimeout(resetTimer);
+    resetTimer = null;
+  }
+  const btn = el("reset-btn");
+  btn.textContent = "Reset";
+  btn.setAttribute("aria-label", "Reset the story and start over");
+  btn.classList.remove("confirming");
+}
+
+async function resetPlaythrough() {
+  if (busy || !playthroughId) return;
+  const oldId = playthroughId;
+  setBusy(true);
+  showLoading(el("play-note"), "Starting over...");
+  try {
+    try {
+      await apiFetch(
+        "/api/playthroughs/" + encodeURIComponent(oldId),
+        { method: "DELETE" },
+      );
+    } catch (err) {
+      // Already gone (another tab reset it, or a stale id):
+      // the wipe is done, just start fresh. Anything else -
+      // including a signed-out 401 - aborts the reset.
+      if (err.status === 401) {
+        clearToken();
+        showSignedOut();
+        return;
+      }
+      if (err.status !== 404) throw err;
+    }
+    let state = null;
+    let lastErr = null;
+    for (let attempt = 0; attempt < 2 && !state; attempt++) {
+      try {
+        state = await apiFetch(
+          "/api/books/" + encodeURIComponent(BOOK_ID) + "/playthroughs",
+          { method: "POST" },
+        );
+      } catch (err) {
+        lastErr = err;
+      }
+    }
+    if (!state) throw lastErr;
+    playthroughId = state.id;
+    sessionStorage.setItem(PLAYTHROUGH_KEY, playthroughId);
+    scenes = state.scenes && state.scenes.length
+      ? state.scenes
+      : [{ turn: 0, text: book.opening_scene || "" }];
+    expandedInputs.clear();
+    currentSuggestions = [];
+    loadedSuggestions = [];
+    renderScenes();
+    renderDiary(state.diary);
+    if (state.bible) renderBible(state.bible);
+    renderStarterCards();
+    el("suggest-panel").hidden = true;
+    el("suggest-toggle").setAttribute("aria-expanded", "false");
+    el("action-input").value = "";
+    showPlayNote("Started over from the beginning.");
+    el("prose").scrollIntoView({ block: "start", behavior: "smooth" });
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      showSignedOut();
+      return;
+    }
+    // The old run is already deleted at this point, so the
+    // page must not keep pointing at it: clear the stored id
+    // so the next visit starts fresh instead of 404ing.
+    playthroughId = "";
+    sessionStorage.removeItem(PLAYTHROUGH_KEY);
+    scenes = [{ turn: 0, text: (book && book.opening_scene) || "" }];
+    renderScenes();
+    showPlayError(friendlyError(err));
+  } finally {
+    setBusy(false);
+    disarmReset();
+  }
+}
+
+el("reset-btn").addEventListener("click", () => {
+  if (busy) return;
+  if (!playthroughId) {
+    showPlayNote("No story in progress to reset.");
+    return;
+  }
+  if (!resetArmed) {
+    resetArmed = true;
+    const btn = el("reset-btn");
+    btn.textContent = "Reset story? Tap again to confirm";
+    btn.setAttribute(
+      "aria-label", "Tap again to confirm resetting the story");
+    btn.classList.add("confirming");
+    resetTimer = setTimeout(disarmReset, 5000);
+    return;
+  }
+  resetPlaythrough();
 });
 
 async function init() {
