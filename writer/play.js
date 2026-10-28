@@ -69,6 +69,10 @@ function renderScenes() {
   prose.innerHTML = "";
   for (const scene of scenes) {
     const p = document.createElement("p");
+    // Diary jump target (F3 T3): the opening premise is turn 0.
+    if (typeof scene !== "string" && Number.isInteger(scene && scene.turn)) {
+      p.id = "scene-" + scene.turn;
+    }
     p.textContent = sceneText(scene);
     prose.append(p);
   }
@@ -109,14 +113,42 @@ function renderBible(stateBible) {
   box.append(dl);
 }
 
+/* Diary jump (F3 T3): tapping a diary entry is read-only
+ * navigation - it closes the diary panel, scrolls to that
+ * entry's scene, and briefly highlights it. It changes no
+ * story state; rewind is the separate f3-t4 item. An entry
+ * with no matching rendered scene leaves everything as-is. */
+function jumpToScene(turn) {
+  const scene = document.getElementById("scene-" + turn);
+  if (!scene) return;
+  el("diary-panel").hidden = true;
+  scene.scrollIntoView({ block: "start", behavior: "smooth" });
+  scene.classList.add("scene-jump-highlight");
+  setTimeout(() => scene.classList.remove("scene-jump-highlight"), 2000);
+}
+
 function renderDiary(entries) {
   const list = el("diary-list");
   list.innerHTML = "";
-  const items = (entries || []).map(diaryText).filter(Boolean);
+  const items = (entries || []).filter((entry) => diaryText(entry));
   el("diary-empty").hidden = items.length > 0;
-  for (const text of items) {
+  for (const entry of items) {
     const li = document.createElement("li");
-    li.textContent = text;
+    const turn = typeof entry === "object" && entry !== null
+      ? entry.turn
+      : null;
+    if (Number.isInteger(turn)) {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "diary-entry";
+      btn.setAttribute("data-testid", "diary-entry-" + turn);
+      btn.textContent = diaryText(entry);
+      btn.addEventListener("click", () => jumpToScene(turn));
+      li.append(btn);
+    } else {
+      // Legacy string entry (no turn): plain text, as before.
+      li.textContent = diaryText(entry);
+    }
     list.append(li);
   }
 }
