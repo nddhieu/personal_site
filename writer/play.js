@@ -378,6 +378,29 @@ async function init() {
       }
     }
     if (!state) {
+      // Returning reader, fresh tab or browser: sessionStorage
+      // is gone, but the account's runs live server-side. Resume
+      // the latest one instead of starting fresh while the work
+      // sits on the server. A 404 here means an older backend
+      // without the list endpoint - fall through to a new
+      // playthrough, as before.
+      try {
+        const mine = await apiFetch(
+          "/api/books/" + encodeURIComponent(BOOK_ID) + "/playthroughs",
+        );
+        const latest = (mine.playthroughs || [])[0];
+        if (latest) {
+          state = await apiFetch(
+            "/api/playthroughs/" + encodeURIComponent(latest.id),
+          );
+          playthroughId = state.id;
+          sessionStorage.setItem(PLAYTHROUGH_KEY, playthroughId);
+        }
+      } catch (err) {
+        if (err.status !== 404) throw err;
+      }
+    }
+    if (!state) {
       state = await apiFetch(
         "/api/books/" + encodeURIComponent(BOOK_ID) + "/playthroughs",
         { method: "POST" },
