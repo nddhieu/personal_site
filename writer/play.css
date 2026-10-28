@@ -239,9 +239,28 @@
   }
 }
 
+/* Diary jump target (F3 T3): brief highlight on the scene a
+ * diary entry jumps to; shares the prose scroll margin above. */
+.page-play .prose p.scene-jump-highlight {
+  outline: 2px solid var(--color-accent, #d97706);
+  outline-offset: 2px;
+}
+
 /* Diary panel (live wiring): read-only list of the run's diary. */
 .page-play .diary-panel {
   margin-top: 0.25rem;
+}
+
+/* Diary entries with a scene jump as buttons, not plain text:
+ * inherit the panel's muted list styling, underline on hover. */
+.page-play .diary-panel button.diary-entry {
+  all: unset;
+  cursor: pointer;
+  color: inherit;
+}
+.page-play .diary-panel button.diary-entry:hover,
+.page-play .diary-panel button.diary-entry:focus-visible {
+  text-decoration: underline;
 }
 .page-play .diary-panel h2 {
   margin: 0 0 0.5rem;
