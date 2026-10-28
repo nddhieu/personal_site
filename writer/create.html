@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create a book - AI Storytelling Co-Author</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./home.css">
+</head>
+<body class="light-theme">
+<div id="app-topbar"></div>
+<main class="page-home">
+  <section class="card home-card">
+    <h1 class="home-title">Create a book</h1>
+    <p class="home-sub">Describe your story in plain words. The AI assembles the bible, you review it, then play starts.</p>
+
+    <p id="create-out" hidden>You are not signed in.
+      <a href="./login.html">Sign in</a> to create a book.</p>
+
+    <form id="create-form">
+      <label>Describe your story (leave empty and the AI invents one)
+        <textarea class="input" id="f-description" rows="4" data-testid="create-description"></textarea></label>
+      <div class="book-actions">
+        <button id="assemble-btn" class="btn btn-primary" type="submit" data-testid="create-assemble">Assemble my bible</button>
+        <span id="assemble-status" class="book-note"></span>
+      </div>
+    </form>
+
+    <form id="review-form" hidden>
+      <section class="book-section">
+        <h2>Review your bible</h2>
+        <p class="home-note">Edit anything before you confirm. Nothing is saved until you confirm.</p>
+        <label>Title <input class="input" id="f-title" type="text" data-testid="create-title"></label>
+        <label>Genre <span id="f-genre" class="book-note"></span></label>
+        <label>Cast <span id="f-cast" class="book-note"></span></label>
+      </section>
+      <section class="book-section">
+        <h2>World</h2>
+        <label>World <textarea class="input" id="f-world" rows="4" data-testid="create-world"></textarea></label>
+      </section>
+      <fieldset class="book-section">
+        <legend>Main character</legend>
+        <label>Name <input class="input" id="f-mc-name" type="text" data-testid="create-mc-name"></label>
+        <label>Identity <textarea class="input" id="f-mc-identity" rows="3"></textarea></label>
+        <label>Traits (comma separated) <input class="input" id="f-mc-traits" type="text" data-testid="create-mc-traits"></label>
+        <label>Tone <input class="input" id="f-mc-tone" type="text"></label>
+        <label>Voice <textarea class="input" id="f-mc-voice" rows="2"></textarea></label>
+      </fieldset>
+      <section class="book-section">
+        <h2>Opening scene</h2>
+        <label>Opening scene <textarea class="input" id="f-opening" rows="4" data-testid="create-opening"></textarea></label>
+      </section>
+      <div class="book-actions">
+        <button id="confirm-btn" class="btn btn-primary" type="submit" data-testid="create-confirm">Confirm and start playing</button>
+        <button id="back-btn" class="btn btn-secondary" type="button">Back to description</button>
+        <span id="confirm-status" class="book-note"></span>
+      </div>
+      <p id="create-error" class="form-error" role="alert" hidden></p>
+    </form>
+  </section>
+</main>
+<script type="module" src="./create.js"></script>
+</body>
+</html>
