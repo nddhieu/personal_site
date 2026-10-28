@@ -246,6 +246,41 @@
   outline-offset: 2px;
 }
 
+/* User-input markers (Hieu, Oct 28): a small icon before each
+ * scene that came from a turn; click expands the input text.
+ * App-only: hidden in print so the printed book is clean prose. */
+.page-play .turn-input-marker {
+  display: block;
+  margin: 0.75rem 0 0.1rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+}
+.page-play .turn-input-marker:hover,
+.page-play .turn-input-marker[aria-expanded="true"] {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+.page-play .turn-input {
+  margin: 0 0 0.25rem 0.25rem;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.9rem;
+  font-style: italic;
+  line-height: 1.5;
+  color: var(--color-text-muted);
+  border-left: 2px solid var(--color-card-border);
+}
+@media print {
+  .page-play .turn-input-marker,
+  .page-play .turn-input {
+    display: none !important;
+  }
+}
+
 /* Diary panel (live wiring): read-only list of the run's diary. */
 .page-play .diary-panel {
   margin-top: 0.25rem;

@@ -64,10 +64,47 @@ function diaryText(entry) {
   return typeof entry === "string" ? entry : (entry && entry.text) || "";
 }
 
+/* User-input markers (Hieu, Oct 28): a scene that came from a turn
+ * carries the action the reader typed or picked. A small marker
+ * sits in the book just before that scene; clicking it expands
+ * or collapses the input text. Markers + input text are app-only:
+ * play.css hides them in print, and the book page never renders
+ * them, so printed/exported prose stays clean. Expanded markers
+ * survive re-renders (a landing scene rebuilds the list) via
+ * expandedInputs. The marker precedes its scene paragraph, so
+ * scrollToLatestScene's lastElementChild is still the scene. */
+let expandedInputs = new Set();
+
 function renderScenes() {
   const prose = el("prose");
   prose.innerHTML = "";
-  for (const scene of scenes) {
+  scenes.forEach((scene, i) => {
+    const action = scene && scene.action ? String(scene.action) : "";
+    if (action) {
+      const key = scene.turn ?? i;
+      const marker = document.createElement("button");
+      marker.type = "button";
+      marker.className = "turn-input-marker";
+      marker.dataset.testid = "input-marker-" + key;
+      const expanded = expandedInputs.has(key);
+      marker.setAttribute("aria-expanded", String(expanded));
+      marker.setAttribute("aria-label",
+        "Your input for this scene: " + action);
+      marker.textContent = "\u270e";
+      const input = document.createElement("div");
+      input.className = "turn-input";
+      input.dataset.testid = "input-text-" + key;
+      input.hidden = !expanded;
+      input.textContent = action;
+      marker.addEventListener("click", () => {
+        const open = input.hidden;
+        input.hidden = !open;
+        marker.setAttribute("aria-expanded", String(open));
+        if (open) expandedInputs.add(key);
+        else expandedInputs.delete(key);
+      });
+      prose.append(marker, input);
+    }
     const p = document.createElement("p");
     // Diary jump target (F3 T3): the opening premise is turn 0.
     if (typeof scene !== "string" && Number.isInteger(scene && scene.turn)) {
@@ -75,7 +112,7 @@ function renderScenes() {
     }
     p.textContent = sceneText(scene);
     prose.append(p);
-  }
+  });
 }
 
 function renderBible(stateBible) {
