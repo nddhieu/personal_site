@@ -3,9 +3,15 @@
  * pages share lives here. */
 
 import { logout } from "./app-auth.js";
+// Side effect: applying the saved theme on import puts the theme
+// toggle on every topbar page (home, book, play, create) with no
+// per-page edits; see theme.js.
+import { getTheme, toggleTheme } from "./theme.js";
 
 /* Renders the shared topbar into <div id="app-topbar">: product
- * name (links home), optional Back link, Log out on the right.
+ * name (links home), optional Back link, theme toggle + Log out
+ * on the right. The toggle flips the saved light/dark theme (see
+ * theme.js) and its label names the theme it switches to.
  * Call with { backHref: "./book.html?id=..." } on book/play. */
 export function renderTopbar(options = {}) {
   const host = document.getElementById("app-topbar");
@@ -27,6 +33,17 @@ export function renderTopbar(options = {}) {
   const spacer = document.createElement("span");
   spacer.className = "app-topbar-spacer";
   host.append(spacer);
+  const theme = document.createElement("button");
+  theme.type = "button";
+  theme.className = "btn btn-ghost btn-sm app-topbar-theme";
+  theme.setAttribute("data-testid", "theme-toggle");
+  theme.setAttribute("aria-label", "Switch color theme");
+  theme.textContent = getTheme() === "dark" ? "Light" : "Dark";
+  theme.addEventListener("click", () => {
+    const next = toggleTheme();
+    theme.textContent = next === "dark" ? "Light" : "Dark";
+  });
+  host.append(theme);
   const out = document.createElement("button");
   out.type = "button";
   out.className = "btn btn-ghost btn-sm app-topbar-logout";
