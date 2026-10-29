@@ -319,3 +319,37 @@
   color: #b3261e;
   font-weight: 600;
 }
+
+/* Scene images (todo, @Chubby): one small control under each
+ * scene; the image itself renders inline under its scene once
+ * loaded. The button is app-only (hidden in print, like the
+ * input markers); the image is story content and prints. */
+.page-play .scene-image-wrap {
+  margin: 0.25rem 0 1rem;
+}
+.page-play .scene-image-btn {
+  display: block;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.85rem;
+  line-height: 1.4;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+}
+.page-play .scene-image-btn:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+.page-play .scene-image {
+  display: block;
+  max-width: 100%;
+  margin-top: 0.5rem;
+  border-radius: 8px;
+}
+@media print {
+  .page-play .scene-image-btn {
+    display: none !important;
+  }
+}
