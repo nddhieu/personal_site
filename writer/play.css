@@ -327,8 +327,23 @@
 .page-play .scene-image-wrap {
   margin: 0.25rem 0 1rem;
 }
+/* Scene background (todo, @Chubby): the chosen image sits
+ * behind the whole play page, sized to cover, with a light
+ * wash over it (the wash is the first background layer, set
+ * inline by play.js) so prose stays readable. The wash is
+ * light-theme only for now; dark-theme tuning rides the
+ * theme-toggle item, which owns the palette. */
+.page-play.has-scene-bg {
+  background-size: cover, cover;
+  background-position: center, center;
+  background-attachment: fixed, fixed;
+  background-repeat: no-repeat, no-repeat;
+}
+.page-play .scene-bg-btn {
+  margin-left: 0.5rem;
+}
 .page-play .scene-image-btn {
-  display: block;
+  display: inline-block;
   padding: 0.1rem 0.35rem;
   font-size: 0.85rem;
   line-height: 1.4;
@@ -351,5 +366,9 @@
 @media print {
   .page-play .scene-image-btn {
     display: none !important;
+  }
+  /* Printed prose stays clean: no background image either. */
+  .page-play.has-scene-bg {
+    background-image: none !important;
   }
 }

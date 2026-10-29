@@ -94,6 +94,120 @@ let expandedInputs = new Set();
  * slice: images render inline under their scene here. */
 let sceneImageSrc = new Map();
 
+/* Scene background (todo, @Chubby): the reader can put one
+ * scene's image behind the whole play page. The background
+ * is the same owner-only blob the inline image uses, so it
+ * reuses sceneImageSrc's object URL (never a bare <img src>
+ * that could not carry the bearer token). The choice is
+ * local to the reader: localStorage keeps only the scene
+ * index, keyed by book + playthrough, and restore re-fetches
+ * the bytes on load (object URLs do not survive a reload).
+ * The page background is a light wash over the image, so
+ * prose stays readable; print drops it (see play.css).
+ * Reset clears it first, because clearSceneImages revokes
+ * the object URL the background would otherwise point at;
+ * Regenerate re-applies it to the new URL for the same
+ * reason. A failed restore is silent: the page just stays
+ * plain, and the button still offers the image. */
+let sceneBackground = null; // { index, url } or null
+
+function sceneBackgroundKey() {
+  return "st_scene_bg_" + BOOK_ID + "_" + (playthroughId || "");
+}
+
+function clearSceneBackground() {
+  const page = document.querySelector(".page-play");
+  if (page) {
+    page.style.backgroundImage = "";
+    page.classList.remove("has-scene-bg");
+  }
+  sceneBackground = null;
+  try {
+    localStorage.removeItem(sceneBackgroundKey());
+  } catch {
+    // Private mode or similar: the background still works
+    // for this visit, it just is not remembered.
+  }
+}
+
+function applySceneBackground(index, url) {
+  const page = document.querySelector(".page-play");
+  if (!page) return;
+  page.style.backgroundImage =
+    "linear-gradient(rgba(255,255,255,0.72), " +
+    "rgba(255,255,255,0.72)), url(\"" + url + "\")";
+  page.classList.add("has-scene-bg");
+  sceneBackground = { index, url };
+  try {
+    localStorage.setItem(sceneBackgroundKey(), String(index));
+  } catch {
+    // As above: unremembered, not broken.
+  }
+}
+
+async function toggleSceneBackground(index) {
+  if (busy || !playthroughId) return;
+  if (sceneBackground && sceneBackground.index === index) {
+    clearSceneBackground();
+    renderScenes();
+    return;
+  }
+  const scene = scenes[index];
+  if (!scene || !scene.image_file) return;
+  try {
+    let url = sceneImageSrc.get(index);
+    if (!url) {
+      // Image exists server-side but is not shown inline
+      // yet: load it the same way Show does, and the
+      // re-render below shows it inline too.
+      const blob = await apiFetch(
+        "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+        "/scenes/" + index + "/image",
+        { response: "blob" },
+      );
+      url = URL.createObjectURL(blob);
+      sceneImageSrc.set(index, url);
+    }
+    applySceneBackground(index, url);
+    renderScenes();
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      showSignedOut();
+      return;
+    }
+    showPlayError(friendlyError(err));
+  }
+}
+
+async function restoreSceneBackground() {
+  let stored = null;
+  try {
+    stored = localStorage.getItem(sceneBackgroundKey());
+  } catch {
+    return;
+  }
+  const index = stored === null ? NaN : Number(stored);
+  if (!Number.isInteger(index)) return;
+  const scene = scenes[index];
+  if (!scene || !scene.image_file) return;
+  try {
+    const blob = await apiFetch(
+      "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+      "/scenes/" + index + "/image",
+      { response: "blob" },
+    );
+    const url = URL.createObjectURL(blob);
+    const old = sceneImageSrc.get(index);
+    if (old) URL.revokeObjectURL(old);
+    sceneImageSrc.set(index, url);
+    applySceneBackground(index, url);
+    renderScenes();
+  } catch {
+    // Background restore is a nicety, not story state.
+  }
+}
+
 function clearSceneImages() {
   for (const url of sceneImageSrc.values()) {
     URL.revokeObjectURL(url);
@@ -139,6 +253,19 @@ async function generateSceneImage(index, btn, img) {
     sceneImageSrc.set(index, url);
     img.src = url;
     img.hidden = false;
+    // A regenerate replaces the object URL: a background
+    // pointing at the revoked one would go blank, so it
+    // follows the new URL. A first generate enables the
+    // background button, which was disabled while the scene
+    // had no image (renderScenes is not re-run here).
+    if (sceneBackground && sceneBackground.index === index) {
+      applySceneBackground(index, url);
+    } else {
+      const bgBtn = document.querySelector(
+        '[data-testid="scene-bg-btn-' + index + '"]',
+      );
+      if (bgBtn) bgBtn.disabled = false;
+    }
     btn.textContent = "Regenerate image";
     btn.setAttribute("aria-label",
       "Regenerate the image for this scene");
@@ -231,7 +358,22 @@ function renderScenes() {
       sceneImageLabel(scene, Boolean(shownUrl)) + " for this scene");
     imgBtn.addEventListener("click",
       () => generateSceneImage(i, imgBtn, img));
-    wrap.append(imgBtn, img);
+    // Background control: same pill idiom, disabled until
+    // the scene actually has an image. The active scene
+    // offers Clear instead, so the reader always has a way
+    // back to the plain page from the scene itself.
+    const bgBtn = document.createElement("button");
+    bgBtn.type = "button";
+    bgBtn.className = "scene-image-btn scene-bg-btn";
+    bgBtn.dataset.testid = "scene-bg-btn-" + i;
+    const isBg = sceneBackground && sceneBackground.index === i;
+    bgBtn.textContent = isBg ? "Clear background" : "Use as background";
+    bgBtn.setAttribute("aria-label",
+      (isBg ? "Clear the page background"
+        : "Use this scene's image as the page background"));
+    bgBtn.disabled = busy || !scene.image_file;
+    bgBtn.addEventListener("click", () => toggleSceneBackground(i));
+    wrap.append(imgBtn, bgBtn, img);
     prose.append(wrap);
   });
 }
@@ -379,6 +521,16 @@ function setBusy(b) {
   document
     .querySelectorAll(".scene-image-btn")
     .forEach((btn) => { btn.disabled = b; });
+  // Background buttons are only actionable for scenes that
+  // have an image: a blanket re-enable after a turn would
+  // light up buttons that can do nothing.
+  document
+    .querySelectorAll(".scene-bg-btn")
+    .forEach((btn) => {
+      const m = /scene-bg-btn-(\d+)/.exec(btn.dataset.testid || "");
+      const scene = m ? scenes[Number(m[1])] : null;
+      btn.disabled = b || !scene || !scene.image_file;
+    });
 }
 
 function showPlayNote(text) {
@@ -600,6 +752,7 @@ async function resetPlaythrough() {
     scenes = state.scenes && state.scenes.length
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
+    clearSceneBackground();
     clearSceneImages();
     expandedInputs.clear();
     currentSuggestions = [];
@@ -625,6 +778,7 @@ async function resetPlaythrough() {
     playthroughId = "";
     sessionStorage.removeItem(PLAYTHROUGH_KEY);
     scenes = [{ turn: 0, text: (book && book.opening_scene) || "" }];
+    clearSceneBackground();
     clearSceneImages();
     renderScenes();
     showPlayError(friendlyError(err));
@@ -731,6 +885,7 @@ async function init() {
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
     renderScenes();
+    await restoreSceneBackground();
     renderDiary(state.diary);
     loadedSuggestions = state.suggestions || [];
     if (state.bible) renderBible(state.bible);
