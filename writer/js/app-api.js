@@ -64,12 +64,6 @@ export async function apiFetch(path, options = {}) {
   if (res.status === 401) {
     throw new ApiError("unauthorized", 401);
   }
-  let data = null;
-  try {
-    data = await res.json();
-  } catch {
-    /* non-JSON response; data stays null */
-  }
   if (!res.ok) {
     if (res.status === 404) {
       throw new ApiError(
@@ -84,6 +78,16 @@ export async function apiFetch(path, options = {}) {
       );
     }
     throw new ApiError("Something went wrong. Please try again.", res.status);
+  }
+  /* Binary endpoints (scene images) opt in with
+   * { response: "blob" } and get the raw bytes; every other
+   * caller keeps the parsed-JSON behaviour below. */
+  if (options.response === "blob") return res.blob();
+  let data = null;
+  try {
+    data = await res.json();
+  } catch {
+    /* non-JSON response; data stays null */
   }
   return data;
 }

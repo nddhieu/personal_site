@@ -71,9 +71,100 @@ function diaryText(entry) {
  * play.css hides them in print, and the book page never renders
  * them, so printed/exported prose stays clean. Expanded markers
  * survive re-renders (a landing scene rebuilds the list) via
- * expandedInputs. The marker precedes its scene paragraph, so
- * scrollToLatestScene's lastElementChild is still the scene. */
+ * expandedInputs. The marker precedes its scene paragraph; the
+ * scene-image wrap follows it, so scrollToLatestScene looks for
+ * the last scene paragraph rather than lastElementChild. */
 let expandedInputs = new Set();
+
+/* Scene images (todo, @Chubby; backend slices 1-2): one image
+ * per scene, generated from the scene's stored prompt. The
+ * playthrough state carries what the backend already has for a
+ * scene: image_prompt (prompt written, not yet generated) and
+ * image_file (image generated, served by the backend). The
+ * button under each scene follows that state, so a tap never
+ * pays for a prompt twice: a scene with a prompt skips the
+ * prompt call and goes straight to generation, and a scene
+ * with an image just loads it. Regenerate re-runs generation
+ * from the same stored prompt. The GET is owner-only, so the
+ * bytes come through apiFetch (blob) - a plain <img src> could
+ * not carry the bearer token. Shown images live in
+ * sceneImageSrc (index -> object URL) so a re-render after a
+ * turn keeps them; Reset revokes and clears them. The "use as
+ * background" todo line is a separate item and is NOT this
+ * slice: images render inline under their scene here. */
+let sceneImageSrc = new Map();
+
+function clearSceneImages() {
+  for (const url of sceneImageSrc.values()) {
+    URL.revokeObjectURL(url);
+  }
+  sceneImageSrc.clear();
+}
+
+function sceneImageLabel(scene, shown) {
+  if (shown) return "Regenerate image";
+  if (scene && scene.image_file) return "Show image";
+  return "Generate image";
+}
+
+async function generateSceneImage(index, btn, img) {
+  if (busy || !playthroughId) return;
+  const scene = scenes[index];
+  if (!scene) return;
+  const shown = sceneImageSrc.has(index);
+  btn.disabled = true;
+  const idleLabel = btn.textContent;
+  const base = "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+    "/scenes/" + index;
+  try {
+    if (!scene.image_file || shown) {
+      // Generation (a shown image re-generates from the same
+      // prompt; a first generate writes the prompt first
+      // unless the backend already stored one for the scene).
+      if (!scene.image_prompt) {
+        btn.textContent = "Writing prompt…";
+        const promptRes = await apiFetch(base + "/image-prompt",
+          { method: "POST" });
+        scene.image_prompt = promptRes.image_prompt;
+      }
+      btn.textContent = "Generating…";
+      const genRes = await apiFetch(base + "/image", { method: "POST" });
+      scene.image_file = genRes.image_file;
+    }
+    btn.textContent = "Loading…";
+    const blob = await apiFetch(base + "/image", { response: "blob" });
+    const url = URL.createObjectURL(blob);
+    const old = sceneImageSrc.get(index);
+    if (old) URL.revokeObjectURL(old);
+    sceneImageSrc.set(index, url);
+    img.src = url;
+    img.hidden = false;
+    btn.textContent = "Regenerate image";
+    btn.setAttribute("aria-label",
+      "Regenerate the image for this scene");
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      showSignedOut();
+      return;
+    }
+    // 503 is the backend's "not configured" (no bridge URL);
+    // 502 is the bridge/ComfyUI failing, which includes the
+    // story PC being off. Both need their own sentence, not
+    // the generic busy message.
+    if (err.status === 503) {
+      showPlayError("Scene images aren't set up on this server yet.");
+    } else if (err.status === 502) {
+      showPlayError("Couldn't reach the image generator - the " +
+        "story PC may be off. Try again later.");
+    } else {
+      showPlayError(friendlyError(err));
+    }
+    btn.textContent = idleLabel;
+  } finally {
+    btn.disabled = false;
+  }
+}
 
 function renderScenes() {
   const prose = el("prose");
@@ -112,6 +203,36 @@ function renderScenes() {
     }
     p.textContent = sceneText(scene);
     prose.append(p);
+    // Scene image control (see the block above renderScenes):
+    // the button follows the scene's backend state, and the
+    // image renders inline under its scene once loaded. The
+    // wrap follows the paragraph, so scrollToLatestScene looks
+    // for the last scene paragraph, not lastElementChild.
+    const wrap = document.createElement("div");
+    wrap.className = "scene-image-wrap";
+    wrap.dataset.testid = "scene-image-wrap-" + i;
+    const img = document.createElement("img");
+    img.className = "scene-image";
+    img.dataset.testid = "scene-image-" + i;
+    img.alt = "Illustration for this scene";
+    const shownUrl = sceneImageSrc.get(i);
+    if (shownUrl) {
+      img.src = shownUrl;
+      img.hidden = false;
+    } else {
+      img.hidden = true;
+    }
+    const imgBtn = document.createElement("button");
+    imgBtn.type = "button";
+    imgBtn.className = "scene-image-btn";
+    imgBtn.dataset.testid = "scene-image-btn-" + i;
+    imgBtn.textContent = sceneImageLabel(scene, Boolean(shownUrl));
+    imgBtn.setAttribute("aria-label",
+      sceneImageLabel(scene, Boolean(shownUrl)) + " for this scene");
+    imgBtn.addEventListener("click",
+      () => generateSceneImage(i, imgBtn, img));
+    wrap.append(imgBtn, img);
+    prose.append(wrap);
   });
 }
 
@@ -255,6 +376,9 @@ function setBusy(b) {
   document
     .querySelectorAll(".suggestion-card")
     .forEach((card) => { card.disabled = b; });
+  document
+    .querySelectorAll(".scene-image-btn")
+    .forEach((btn) => { btn.disabled = b; });
 }
 
 function showPlayNote(text) {
@@ -273,9 +397,14 @@ function showPlayError(text) {
 
 /* After a turn lands, bring the reader to the START of the new
  * scene (Hieu, Oct 27) - they read it from its first line, not
- * from wherever the page happened to be sitting. */
+ * from wherever the page happened to be sitting. The last
+ * scene paragraph, not lastElementChild: each scene is followed
+ * by its image wrap. */
 function scrollToLatestScene() {
-  const last = el("prose").lastElementChild;
+  const paragraphs = el("prose").querySelectorAll("p");
+  const last = paragraphs.length
+    ? paragraphs[paragraphs.length - 1]
+    : el("prose").lastElementChild;
   if (last) last.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
@@ -471,6 +600,7 @@ async function resetPlaythrough() {
     scenes = state.scenes && state.scenes.length
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
+    clearSceneImages();
     expandedInputs.clear();
     currentSuggestions = [];
     loadedSuggestions = [];
@@ -495,6 +625,7 @@ async function resetPlaythrough() {
     playthroughId = "";
     sessionStorage.removeItem(PLAYTHROUGH_KEY);
     scenes = [{ turn: 0, text: (book && book.opening_scene) || "" }];
+    clearSceneImages();
     renderScenes();
     showPlayError(friendlyError(err));
   } finally {
