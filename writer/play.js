@@ -76,6 +76,32 @@ function diaryText(entry) {
  * the last scene paragraph rather than lastElementChild. */
 let expandedInputs = new Set();
 
+/* Instruction mode (Hieu, Oct 29): asterisk-wrapped text
+ * (*...*) in the play input is a direction FOR the AI, not
+ * story text. splitInstruction pulls those segments out of
+ * the action and joins them into one direction string; the
+ * turn sends {action, instruction} so the backend can pass
+ * the direction to the pipeline without ever storing it in
+ * the scene action, the diary, or the prose. An unmatched
+ * asterisk is left alone (it is just a character, not an
+ * instruction), and an empty segment contributes nothing.
+ * The marker above still shows only the story action, so
+ * instructions never appear in print/export either - they
+ * are absent from the stored scene entirely, not merely
+ * hidden like the markers. */
+function splitInstruction(text) {
+  const instructions = [];
+  const action = String(text || "")
+    .replace(/\*([^*]+)\*/g, (_match, inner) => {
+      const trimmed = inner.trim();
+      if (trimmed) instructions.push(trimmed);
+      return " ";
+    })
+    .replace(/\s+/g, " ")
+    .trim();
+  return { action, instruction: instructions.join(" ") };
+}
+
 /* Beat images (Hieu, Oct 29): one image per paragraph (beat)
  * of a scene, generated ON DEMAND from its own button under
  * that paragraph - never all beats at once. The playthrough
@@ -711,13 +737,23 @@ function sceneActionText(result) {
 }
 
 async function runTurn(action) {
-  const text = (action || "").trim();
+  const { action: text, instruction } = splitInstruction(action);
   if (!text) {
-    showPlayNote("Write what you do next, or pick a suggestion.");
+    // An instruction alone is not a turn: there is no story
+    // action for the AI to write from, so say so instead of
+    // sending an empty action (or the raw asterisks).
+    if (instruction) {
+      showPlayNote("An instruction in *asterisks* needs a " +
+        "story action with it - write what you do next too.");
+    } else {
+      showPlayNote("Write what you do next, or pick a suggestion.");
+    }
     el("action-input").focus();
     return;
   }
-  await runTurnBody({ action: text }, text);
+  const body = { action: text };
+  if (instruction) body.instruction = instruction;
+  await runTurnBody(body, text);
 }
 
 /* The input starts at one row and grows with the text, up
