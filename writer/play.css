@@ -34,8 +34,8 @@
   min-width: 0;
 }
 .page-play .prose {
-  line-height: 1.7;
-  font-size: 1.05rem;
+  line-height: 1.8;
+  font-size: 1.15rem;
   white-space: pre-wrap;
   max-width: 65ch;
 }
@@ -207,6 +207,7 @@
    scrollIntoView); keep that line clear of the top edge. */
 .page-play .prose p {
   scroll-margin-top: 5.5rem;
+  margin: 0 0 1.25rem;
 }
 .page-play .turn-tools {
   display: flex;
