@@ -76,40 +76,75 @@ function diaryText(entry) {
  * the last scene paragraph rather than lastElementChild. */
 let expandedInputs = new Set();
 
-/* Scene images (todo, @Chubby; backend slices 1-2): one image
- * per scene, generated from the scene's stored prompt. The
- * playthrough state carries what the backend already has for a
- * scene: image_prompt (prompt written, not yet generated) and
- * image_file (image generated, served by the backend). The
- * button under each scene follows that state, so a tap never
- * pays for a prompt twice: a scene with a prompt skips the
- * prompt call and goes straight to generation, and a scene
- * with an image just loads it. Regenerate re-runs generation
- * from the same stored prompt. The GET is owner-only, so the
- * bytes come through apiFetch (blob) - a plain <img src> could
- * not carry the bearer token. Shown images live in
- * sceneImageSrc (index -> object URL) so a re-render after a
- * turn keeps them; Reset revokes and clears them. The "use as
- * background" todo line is a separate item and is NOT this
- * slice: images render inline under their scene here. */
+/* Beat images (Hieu, Oct 29): one image per paragraph (beat)
+ * of a scene, generated ON DEMAND from its own button under
+ * that paragraph - never all beats at once. The playthrough
+ * state carries what the backend already has for a beat:
+ * scene.beat_images[beat] = { image_prompt, image_file }.
+ * The button under each paragraph follows that state, so a
+ * tap never pays for a prompt twice: a beat with a prompt
+ * skips the prompt call and goes straight to generation, and
+ * a beat with an image just loads it. Regenerate re-runs
+ * generation from the same stored prompt. The GET is
+ * owner-only, so the bytes come through apiFetch (blob) - a
+ * plain <img src> could not carry the bearer token. Shown
+ * images live in sceneImageSrc ("scene:beat" -> object URL)
+ * so a re-render after a turn keeps them; Reset revokes and
+ * clears them. A failed generation never blocks reading:
+ * the slot just stays empty and the button stays retriable.
+ * Legacy: a scene's old per-scene image_file (pre-beat) still
+ * shows under its first paragraph via beatImageState's beat-0
+ * fallback, and the backend's beat GET serves that sidecar. */
 let sceneImageSrc = new Map();
 
+/* A scene's beats are its paragraphs, blank-line separated -
+ * the same rule the backend splits with, so beat indexes
+ * agree on both sides. A scene with no blank lines is one
+ * beat; an empty scene renders one empty paragraph. */
+function splitBeats(text) {
+  const parts = String(text || "").replace(/\r\n?/g, "\n")
+    .split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean);
+  return parts.length ? parts : [""];
+}
+
+function beatKey(sceneIndex, beatIndex) {
+  return sceneIndex + ":" + beatIndex;
+}
+
+/* What the backend already has for one beat: its own entry
+ * wins; beat 0 additionally falls back to the scene's legacy
+ * per-scene image (NOT its legacy prompt - that prompt was
+ * written for the whole scene, and reusing it for one
+ * paragraph would reproduce the mismatch this slice fixes,
+ * so a beat-0 Generate always writes a fresh beat prompt
+ * unless the beat already has one). */
+function beatImageState(scene, beatIndex) {
+  const entries = (scene && scene.beat_images) || {};
+  const entry = entries[String(beatIndex)] || {};
+  return {
+    prompt: entry.image_prompt || null,
+    file: entry.image_file ||
+      (beatIndex === 0 && scene ? scene.image_file || null : null),
+  };
+}
+
 /* Scene background (todo, @Chubby): the reader can put one
- * scene's image behind the whole play page. The background
+ * beat's image behind the whole play page. The background
  * is the same owner-only blob the inline image uses, so it
  * reuses sceneImageSrc's object URL (never a bare <img src>
  * that could not carry the bearer token). The choice is
- * local to the reader: localStorage keeps only the scene
- * index, keyed by book + playthrough, and restore re-fetches
- * the bytes on load (object URLs do not survive a reload).
- * The page background is a light wash over the image, so
- * prose stays readable; print drops it (see play.css).
- * Reset clears it first, because clearSceneImages revokes
- * the object URL the background would otherwise point at;
- * Regenerate re-applies it to the new URL for the same
- * reason. A failed restore is silent: the page just stays
- * plain, and the button still offers the image. */
-let sceneBackground = null; // { index, url } or null
+ * local to the reader: localStorage keeps only the beat key
+ * ("scene:beat"), keyed by book + playthrough, and restore
+ * re-fetches the bytes on load (object URLs do not survive
+ * a reload). The page background is a light wash over the
+ * image, so prose stays readable; print drops it (see
+ * play.css). Reset clears it first, because
+ * clearSceneImages revokes the object URL the background
+ * would otherwise point at; Regenerate re-applies it to the
+ * new URL for the same reason. A failed restore is silent:
+ * the page just stays plain, and the button still offers
+ * the image. */
+let sceneBackground = null; // { key, url } or null
 
 function sceneBackgroundKey() {
   return "st_scene_bg_" + BOOK_ID + "_" + (playthroughId || "");
@@ -130,45 +165,52 @@ function clearSceneBackground() {
   }
 }
 
-function applySceneBackground(index, url) {
+function applySceneBackground(key, url) {
   const page = document.querySelector(".page-play");
   if (!page) return;
   page.style.backgroundImage =
     "linear-gradient(rgba(255,255,255,0.72), " +
     "rgba(255,255,255,0.72)), url(\"" + url + "\")";
   page.classList.add("has-scene-bg");
-  sceneBackground = { index, url };
+  sceneBackground = { key, url };
   try {
-    localStorage.setItem(sceneBackgroundKey(), String(index));
+    localStorage.setItem(sceneBackgroundKey(), String(key));
   } catch {
     // As above: unremembered, not broken.
   }
 }
 
-async function toggleSceneBackground(index) {
+/* Beat image URL path for one beat: the beat GET route,
+ * which also serves a scene's legacy image for beat 0. */
+function beatImagePath(sceneIndex, beatIndex) {
+  return "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+    "/scenes/" + sceneIndex + "/beats/" + beatIndex + "/image";
+}
+
+async function toggleSceneBackground(sceneIndex, beatIndex) {
   if (busy || !playthroughId) return;
-  if (sceneBackground && sceneBackground.index === index) {
+  const key = beatKey(sceneIndex, beatIndex);
+  if (sceneBackground && sceneBackground.key === key) {
     clearSceneBackground();
     renderScenes();
     return;
   }
-  const scene = scenes[index];
-  if (!scene || !scene.image_file) return;
+  const scene = scenes[sceneIndex];
+  if (!scene || !beatImageState(scene, beatIndex).file) return;
   try {
-    let url = sceneImageSrc.get(index);
+    let url = sceneImageSrc.get(key);
     if (!url) {
       // Image exists server-side but is not shown inline
       // yet: load it the same way Show does, and the
       // re-render below shows it inline too.
       const blob = await apiFetch(
-        "/api/playthroughs/" + encodeURIComponent(playthroughId) +
-        "/scenes/" + index + "/image",
+        beatImagePath(sceneIndex, beatIndex),
         { response: "blob" },
       );
       url = URL.createObjectURL(blob);
-      sceneImageSrc.set(index, url);
+      sceneImageSrc.set(key, url);
     }
-    applySceneBackground(index, url);
+    applySceneBackground(key, url);
     renderScenes();
   } catch (err) {
     if (err.status === 401) {
@@ -187,21 +229,35 @@ async function restoreSceneBackground() {
   } catch {
     return;
   }
-  const index = stored === null ? NaN : Number(stored);
-  if (!Number.isInteger(index)) return;
-  const scene = scenes[index];
-  if (!scene || !scene.image_file) return;
+  if (stored === null) return;
+  // Current shape: "scene:beat". Pre-beat values stored a
+  // bare scene index; those restore as that scene's beat 0
+  // through the legacy per-scene GET, which still serves.
+  let sceneIndex;
+  let beatIndex;
+  let path;
+  if (String(stored).includes(":")) {
+    const parts = String(stored).split(":");
+    sceneIndex = Number(parts[0]);
+    beatIndex = Number(parts[1]);
+    path = beatImagePath(sceneIndex, beatIndex);
+  } else {
+    sceneIndex = Number(stored);
+    beatIndex = 0;
+    path = "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+      "/scenes/" + sceneIndex + "/image";
+  }
+  if (!Number.isInteger(sceneIndex) || !Number.isInteger(beatIndex)) return;
+  const scene = scenes[sceneIndex];
+  if (!scene || !beatImageState(scene, beatIndex).file) return;
   try {
-    const blob = await apiFetch(
-      "/api/playthroughs/" + encodeURIComponent(playthroughId) +
-      "/scenes/" + index + "/image",
-      { response: "blob" },
-    );
+    const blob = await apiFetch(path, { response: "blob" });
     const url = URL.createObjectURL(blob);
-    const old = sceneImageSrc.get(index);
+    const key = beatKey(sceneIndex, beatIndex);
+    const old = sceneImageSrc.get(key);
     if (old) URL.revokeObjectURL(old);
-    sceneImageSrc.set(index, url);
-    applySceneBackground(index, url);
+    sceneImageSrc.set(key, url);
+    applySceneBackground(key, url);
     renderScenes();
   } catch {
     // Background restore is a nicety, not story state.
@@ -215,60 +271,70 @@ function clearSceneImages() {
   sceneImageSrc.clear();
 }
 
-function sceneImageLabel(scene, shown) {
+function beatImageLabel(scene, beatIndex, shown) {
   if (shown) return "Regenerate image";
-  if (scene && scene.image_file) return "Show image";
+  if (beatImageState(scene, beatIndex).file) return "Show image";
   return "Generate image";
 }
 
-async function generateSceneImage(index, btn, img) {
+async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
   if (busy || !playthroughId) return;
-  const scene = scenes[index];
+  const scene = scenes[sceneIndex];
   if (!scene) return;
-  const shown = sceneImageSrc.has(index);
+  const key = beatKey(sceneIndex, beatIndex);
+  const shown = sceneImageSrc.has(key);
   btn.disabled = true;
   const idleLabel = btn.textContent;
   const base = "/api/playthroughs/" + encodeURIComponent(playthroughId) +
-    "/scenes/" + index;
+    "/scenes/" + sceneIndex + "/beats/" + beatIndex;
   try {
-    if (!scene.image_file || shown) {
+    const state = beatImageState(scene, beatIndex);
+    if (!state.file || shown) {
       // Generation (a shown image re-generates from the same
       // prompt; a first generate writes the prompt first
-      // unless the backend already stored one for the scene).
-      if (!scene.image_prompt) {
+      // unless the backend already stored one for the beat).
+      if (!state.prompt) {
         btn.textContent = "Writing prompt…";
         const promptRes = await apiFetch(base + "/image-prompt",
           { method: "POST" });
-        scene.image_prompt = promptRes.image_prompt;
+        scene.beat_images = scene.beat_images || {};
+        scene.beat_images[String(beatIndex)] =
+          scene.beat_images[String(beatIndex)] || {};
+        scene.beat_images[String(beatIndex)].image_prompt =
+          promptRes.image_prompt;
       }
       btn.textContent = "Generating…";
       const genRes = await apiFetch(base + "/image", { method: "POST" });
-      scene.image_file = genRes.image_file;
+      scene.beat_images = scene.beat_images || {};
+      scene.beat_images[String(beatIndex)] =
+        scene.beat_images[String(beatIndex)] || {};
+      scene.beat_images[String(beatIndex)].image_file =
+        genRes.image_file;
     }
     btn.textContent = "Loading…";
     const blob = await apiFetch(base + "/image", { response: "blob" });
     const url = URL.createObjectURL(blob);
-    const old = sceneImageSrc.get(index);
+    const old = sceneImageSrc.get(key);
     if (old) URL.revokeObjectURL(old);
-    sceneImageSrc.set(index, url);
+    sceneImageSrc.set(key, url);
     img.src = url;
     img.hidden = false;
     // A regenerate replaces the object URL: a background
     // pointing at the revoked one would go blank, so it
     // follows the new URL. A first generate enables the
-    // background button, which was disabled while the scene
+    // background button, which was disabled while the beat
     // had no image (renderScenes is not re-run here).
-    if (sceneBackground && sceneBackground.index === index) {
-      applySceneBackground(index, url);
+    if (sceneBackground && sceneBackground.key === key) {
+      applySceneBackground(key, url);
     } else {
       const bgBtn = document.querySelector(
-        '[data-testid="scene-bg-btn-' + index + '"]',
+        '[data-testid="scene-bg-btn-' + key + '"]',
       );
       if (bgBtn) bgBtn.disabled = false;
     }
     btn.textContent = "Regenerate image";
     btn.setAttribute("aria-label",
-      "Regenerate the image for this scene");
+      "Regenerate the image for this paragraph");
   } catch (err) {
     if (err.status === 401) {
       clearToken();
@@ -323,58 +389,68 @@ function renderScenes() {
       });
       prose.append(marker, input);
     }
-    const p = document.createElement("p");
-    // Diary jump target (F3 T3): the opening premise is turn 0.
-    if (typeof scene !== "string" && Number.isInteger(scene && scene.turn)) {
-      p.id = "scene-" + scene.turn;
-    }
-    p.textContent = sceneText(scene);
-    prose.append(p);
-    // Scene image control (see the block above renderScenes):
-    // the button follows the scene's backend state, and the
-    // image renders inline under its scene once loaded. The
-    // wrap follows the paragraph, so scrollToLatestScene looks
-    // for the last scene paragraph, not lastElementChild.
-    const wrap = document.createElement("div");
-    wrap.className = "scene-image-wrap";
-    wrap.dataset.testid = "scene-image-wrap-" + i;
-    const img = document.createElement("img");
-    img.className = "scene-image";
-    img.dataset.testid = "scene-image-" + i;
-    img.alt = "Illustration for this scene";
-    const shownUrl = sceneImageSrc.get(i);
-    if (shownUrl) {
-      img.src = shownUrl;
-      img.hidden = false;
-    } else {
-      img.hidden = true;
-    }
-    const imgBtn = document.createElement("button");
-    imgBtn.type = "button";
-    imgBtn.className = "scene-image-btn";
-    imgBtn.dataset.testid = "scene-image-btn-" + i;
-    imgBtn.textContent = sceneImageLabel(scene, Boolean(shownUrl));
-    imgBtn.setAttribute("aria-label",
-      sceneImageLabel(scene, Boolean(shownUrl)) + " for this scene");
-    imgBtn.addEventListener("click",
-      () => generateSceneImage(i, imgBtn, img));
-    // Background control: same pill idiom, disabled until
-    // the scene actually has an image. The active scene
-    // offers Clear instead, so the reader always has a way
-    // back to the plain page from the scene itself.
-    const bgBtn = document.createElement("button");
-    bgBtn.type = "button";
-    bgBtn.className = "scene-image-btn scene-bg-btn";
-    bgBtn.dataset.testid = "scene-bg-btn-" + i;
-    const isBg = sceneBackground && sceneBackground.index === i;
-    bgBtn.textContent = isBg ? "Clear background" : "Use as background";
-    bgBtn.setAttribute("aria-label",
-      (isBg ? "Clear the page background"
-        : "Use this scene's image as the page background"));
-    bgBtn.disabled = busy || !scene.image_file;
-    bgBtn.addEventListener("click", () => toggleSceneBackground(i));
-    wrap.append(imgBtn, bgBtn, img);
-    prose.append(wrap);
+    // Beat rendering (Hieu, Oct 29): a scene is its
+    // paragraphs, and each paragraph carries its own image
+    // control right under it - one image per beat, never one
+    // image at the end of the whole scene. The diary jump
+    // target (F3 T3) stays on the first paragraph: the
+    // opening premise is turn 0.
+    splitBeats(sceneText(scene)).forEach((beatText, j) => {
+      const key = beatKey(i, j);
+      const p = document.createElement("p");
+      if (j === 0 && typeof scene !== "string" &&
+          Number.isInteger(scene && scene.turn)) {
+        p.id = "scene-" + scene.turn;
+      }
+      p.textContent = beatText;
+      prose.append(p);
+      // Beat image control (see the block above
+      // renderScenes): the button follows the beat's backend
+      // state, and the image renders inline under its
+      // paragraph once loaded.
+      const wrap = document.createElement("div");
+      wrap.className = "scene-image-wrap";
+      wrap.dataset.testid = "scene-image-wrap-" + key;
+      const img = document.createElement("img");
+      img.className = "scene-image";
+      img.dataset.testid = "scene-image-" + key;
+      img.alt = "Illustration for this paragraph";
+      const shownUrl = sceneImageSrc.get(key);
+      if (shownUrl) {
+        img.src = shownUrl;
+        img.hidden = false;
+      } else {
+        img.hidden = true;
+      }
+      const imgBtn = document.createElement("button");
+      imgBtn.type = "button";
+      imgBtn.className = "scene-image-btn";
+      imgBtn.dataset.testid = "scene-image-btn-" + key;
+      imgBtn.textContent = beatImageLabel(scene, j, Boolean(shownUrl));
+      imgBtn.setAttribute("aria-label",
+        beatImageLabel(scene, j, Boolean(shownUrl)) +
+        " for this paragraph");
+      imgBtn.addEventListener("click",
+        () => generateBeatImage(i, j, imgBtn, img));
+      // Background control: same pill idiom, disabled until
+      // this beat actually has an image. The active beat
+      // offers Clear instead, so the reader always has a way
+      // back to the plain page from the beat itself.
+      const bgBtn = document.createElement("button");
+      bgBtn.type = "button";
+      bgBtn.className = "scene-image-btn scene-bg-btn";
+      bgBtn.dataset.testid = "scene-bg-btn-" + key;
+      const isBg = sceneBackground && sceneBackground.key === key;
+      bgBtn.textContent = isBg ? "Clear background" : "Use as background";
+      bgBtn.setAttribute("aria-label",
+        (isBg ? "Clear the page background"
+          : "Use this paragraph's image as the page background"));
+      bgBtn.disabled = busy || !beatImageState(scene, j).file;
+      bgBtn.addEventListener("click",
+        () => toggleSceneBackground(i, j));
+      wrap.append(imgBtn, bgBtn, img);
+      prose.append(wrap);
+    });
   });
 }
 
@@ -521,15 +597,16 @@ function setBusy(b) {
   document
     .querySelectorAll(".scene-image-btn")
     .forEach((btn) => { btn.disabled = b; });
-  // Background buttons are only actionable for scenes that
+  // Background buttons are only actionable for beats that
   // have an image: a blanket re-enable after a turn would
   // light up buttons that can do nothing.
   document
     .querySelectorAll(".scene-bg-btn")
     .forEach((btn) => {
-      const m = /scene-bg-btn-(\d+)/.exec(btn.dataset.testid || "");
+      const m = /scene-bg-btn-(\d+)-(\d+)/.exec(btn.dataset.testid || "");
       const scene = m ? scenes[Number(m[1])] : null;
-      btn.disabled = b || !scene || !scene.image_file;
+      btn.disabled = b || !scene ||
+        !beatImageState(scene, m ? Number(m[2]) : -1).file;
     });
 }
 
@@ -549,15 +626,20 @@ function showPlayError(text) {
 
 /* After a turn lands, bring the reader to the START of the new
  * scene (Hieu, Oct 27) - they read it from its first line, not
- * from wherever the page happened to be sitting. The last
- * scene paragraph, not lastElementChild: each scene is followed
- * by its image wrap. */
+ * from wherever the page happened to be sitting. The first
+ * paragraph of the last scene carries its diary-jump id, so
+ * it is the target; with per-beat rendering the LAST
+ * paragraph would be the scene's last beat, not its start. */
 function scrollToLatestScene() {
+  const lastScene = scenes.length ? scenes[scenes.length - 1] : null;
+  const first = lastScene && Number.isInteger(lastScene.turn)
+    ? document.getElementById("scene-" + lastScene.turn)
+    : null;
   const paragraphs = el("prose").querySelectorAll("p");
-  const last = paragraphs.length
+  const target = first || (paragraphs.length
     ? paragraphs[paragraphs.length - 1]
-    : el("prose").lastElementChild;
-  if (last) last.scrollIntoView({ block: "start", behavior: "smooth" });
+    : el("prose").lastElementChild);
+  if (target) target.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
 /* One turn, however it was played: a typed action, a tapped
