@@ -1,0 +1,218 @@
+/* The Feed page — layered on top of ../style.css (same theme variables). */
+
+.feed-hero {
+    padding: 9rem 0 2.5rem;
+    text-align: center;
+}
+
+.feed-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2.6rem, 6vw, 4rem);
+    font-weight: 800;
+    margin: 1rem 0 0.75rem;
+    color: var(--color-text);
+}
+
+.feed-subtitle {
+    max-width: 640px;
+    margin: 0 auto;
+    color: var(--color-text-muted);
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+.feed-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 1.75rem;
+}
+
+.feed-filter-btn {
+    font-family: var(--font-body);
+    font-size: 0.85rem;
+    font-weight: 500;
+    padding: 0.45rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--color-card-border);
+    background: var(--color-card-bg);
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: var(--transition-fast);
+}
+
+.feed-filter-btn:hover {
+    color: var(--color-text);
+    border-color: var(--color-primary);
+}
+
+.feed-filter-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: #0b0f19;
+    font-weight: 600;
+}
+
+.feed-main {
+    padding: 1rem 0 5rem;
+}
+
+.feed-loading {
+    text-align: center;
+    color: var(--color-text-muted);
+    padding: 3rem 0;
+}
+
+.feed-day {
+    margin-bottom: 3rem;
+}
+
+.feed-day-header {
+    display: flex;
+    align-items: baseline;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+}
+
+.feed-day-title {
+    font-family: var(--font-heading);
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: var(--color-text);
+    white-space: nowrap;
+}
+
+.feed-day-line {
+    flex: 1;
+    height: 1px;
+    background: var(--color-card-border);
+}
+
+.feed-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.feed-card {
+    background: var(--color-card-bg);
+    border: 1px solid var(--color-card-border);
+    border-radius: 16px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    backdrop-filter: blur(var(--glass-blur));
+    transition: var(--transition-normal);
+}
+
+.feed-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--color-primary);
+}
+
+.feed-card-img {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    background: var(--color-bg-secondary);
+}
+
+.feed-card-body {
+    padding: 1.25rem 1.4rem 1.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    flex: 1;
+}
+
+.feed-card-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+}
+
+.feed-kicker {
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--color-primary);
+}
+
+.feed-category {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    background: var(--color-glow);
+    color: var(--color-primary);
+    white-space: nowrap;
+}
+
+.feed-card-title {
+    font-family: var(--font-heading);
+    font-size: 1.2rem;
+    font-weight: 700;
+    line-height: 1.35;
+    color: var(--color-text);
+}
+
+.feed-card-text {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+
+.feed-card-text p { margin-bottom: 0.6rem; }
+.feed-card-text p:last-child { margin-bottom: 0; }
+.feed-card-text ul { margin: 0 0 0.6rem 1.2rem; }
+.feed-card-text a {
+    color: var(--color-primary);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: var(--transition-fast);
+}
+.feed-card-text a:hover { border-bottom-color: var(--color-primary); }
+.feed-card-text code {
+    font-size: 0.85em;
+    background: var(--color-bg-secondary);
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+}
+
+.feed-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.2rem;
+}
+
+.feed-stat {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.7rem;
+    border-radius: 8px;
+    background: var(--color-bg-secondary);
+    color: var(--color-text-muted);
+}
+
+.feed-stat strong { color: var(--color-accent); font-weight: 600; }
+
+.feed-why {
+    margin-top: auto;
+    padding-top: 0.7rem;
+    border-top: 1px solid var(--color-card-border);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+@media (max-width: 640px) {
+    .feed-hero { padding-top: 7.5rem; }
+    .feed-grid { grid-template-columns: 1fr; }
+    .feed-day-title { white-space: normal; }
+}
