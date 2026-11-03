@@ -541,6 +541,45 @@ body.detail-open {
     font-weight: 800;
 }
 
+/* First-steps checklist — same box family as the takeaways. */
+.detail-checklist-section {
+    margin-top: 1rem;
+    border: 1px solid var(--color-card-border);
+    border-radius: 16px;
+    background: var(--color-card-bg);
+    padding: 1.25rem 1.35rem;
+}
+
+.detail-checklist-section h2 {
+    font-family: var(--font-heading);
+    font-size: 1.05rem;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--color-text);
+    margin-bottom: 0.6rem;
+}
+
+.detail-checklist {
+    list-style: none;
+    display: grid;
+    gap: 0.5rem;
+}
+
+.detail-checklist li {
+    color: var(--color-text-muted);
+    line-height: 1.65;
+    padding-left: 1.5rem;
+    position: relative;
+}
+
+.detail-checklist li::before {
+    content: "☐";
+    position: absolute;
+    left: 0;
+    color: var(--color-primary);
+    font-weight: 800;
+}
+
 /* Numbered section eyebrows, in the sample artifact's style. */
 .detail-section-num {
     color: var(--color-primary);
