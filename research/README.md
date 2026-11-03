@@ -35,6 +35,13 @@ team's research files. To publish another research finding:
      "solution": "The proposed or discovered solution.",
      "benefit": "Why it matters.",
      "apply": "How our team or the reader can apply it.",
+     "stats": [
+       { "value": "19.67%", "label": "What this number measures" }
+     ],
+     "details": [
+       { "heading": "How it works", "body": "A deeper explanation section." }
+     ],
+     "caveats": "What is unverified, vendor-claimed, or still an open question.",
      "source_name": "Source name",
      "source_url": "https://example.com/source"
    }
@@ -43,6 +50,22 @@ team's research files. To publish another research finding:
    Categories used by the filters are `Tools`, `Models`, and `Opportunities`.
    If an article has no public source URL, set `source_url` to an empty string;
    the page will show the source name without a link.
+
+   Three optional fields make the explainer richer, in the style of the team's
+   research artifacts:
+
+   - `stats` — up to 4 headline numbers, each `{ "value", "label" }`. They
+     render as a stat row under the article's lede in the detail view (big
+     number, small label), and the first stat also appears on the card. Only
+     use numbers that are actually in the research notes — never invent a
+     benchmark, price, or date to fill the row. Omit the field (or use an
+     empty array) when an article has no real numbers.
+   - `details` — 2–4 extra explanation sections, each `{ "heading", "body" }`,
+     rendered after "How to apply". Use them for how it works, why it matters,
+     trade-offs, or a worked example built from the article's own facts.
+   - `caveats` — one short paragraph rendered in a distinct "What we could not
+     verify — open questions" box before the source line. Say plainly what is
+     vendor-claimed, single-sourced, or still untested by the team.
 
 2. Add one illustrative image with the same slug at
    `img/<slug>.jpg` (max width 1200, JPEG quality around 78).

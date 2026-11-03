@@ -86,10 +86,23 @@ document.addEventListener('DOMContentLoaded', () => {
     let articles = [];
     let lastFocusedCard = null;
 
+    function statsHtml(article, className) {
+        const stats = Array.isArray(article.stats) ? article.stats.slice(0, 4) : [];
+        if (!stats.length) return '';
+        return '<div class="' + className + '">' + stats.map(stat =>
+            '<div class="stat"><span class="stat-value">' + escapeHtml(stat.value) +
+            '</span><span class="stat-label">' + escapeHtml(stat.label) + '</span></div>'
+        ).join('') + '</div>';
+    }
+
     function cardHtml(article) {
         const image = article.image
             ? '<img class="research-card-img" src="' + escapeHtml(article.image) +
               '" alt="' + escapeHtml(article.title) + '" loading="lazy" onerror="this.remove()">'
+            : '';
+        const firstStat = Array.isArray(article.stats) && article.stats.length
+            ? '<span class="research-card-stat"><strong>' + escapeHtml(article.stats[0].value) +
+              '</strong> ' + escapeHtml(article.stats[0].label) + '</span>'
             : '';
         return '<button class="research-card" type="button" data-slug="' +
             escapeHtml(article.slug) + '" data-category="' + escapeHtml(article.category) +
@@ -101,6 +114,7 @@ document.addEventListener('DOMContentLoaded', () => {
             escapeHtml(article.category) + '</span></span>'
             + '<span class="research-card-title">' + escapeHtml(article.title) + '</span>'
             + '<span class="research-card-summary">' + escapeHtml(article.summary) + '</span>'
+            + firstStat
             + '<span class="research-card-footer"><time datetime="' + escapeHtml(article.date) +
             '">' + escapeHtml(formatDate(article.date)) + '</time>' +
             '<span class="research-read-link">Read explainer →</span></span>'
@@ -137,16 +151,27 @@ document.addEventListener('DOMContentLoaded', () => {
             ['Benefit', article.benefit],
             ['How to apply', article.apply]
         ];
-        return image
-            + '<div class="detail-meta"><span class="research-kicker">' +
+        const extras = Array.isArray(article.details) ? article.details : [];
+        const extraSections = extras.map(detail =>
+            '<section class="detail-section detail-extra"><h2>' +
+            escapeHtml(detail.heading) + '</h2>' + paragraphs(detail.body) + '</section>'
+        ).join('');
+        const caveats = article.caveats
+            ? '<section class="detail-caveats"><h2>What we could not verify — open questions</h2>' +
+              paragraphs(article.caveats) + '</section>'
+            : '';
+        return '<div class="detail-meta"><span class="research-kicker">' +
             escapeHtml(article.kicker) + '</span><span class="research-category">' +
             escapeHtml(article.category) + '</span><time datetime="' + escapeHtml(article.date) +
             '">' + escapeHtml(formatDate(article.date)) + '</time></div>'
             + '<h1 id="detail-title" class="detail-title">' + escapeHtml(article.title) + '</h1>'
+            + image
             + '<p class="detail-summary">' + escapeHtml(article.summary) + '</p>'
+            + statsHtml(article, 'detail-stats')
             + '<div class="detail-sections">' + sections.map(section =>
                 '<section class="detail-section"><h2>' + escapeHtml(section[0]) + '</h2>' +
-                paragraphs(section[1]) + '</section>').join('') + '</div>'
+                paragraphs(section[1]) + '</section>').join('') + extraSections + '</div>'
+            + caveats
             + sourceHtml(article);
     }
 
