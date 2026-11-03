@@ -122,24 +122,36 @@ document.addEventListener('DOMContentLoaded', () => {
             : '';
         const cardClass = featured ? 'research-card research-featured-card' : 'research-card';
         const bodyClass = featured ? 'research-card-body research-featured-body' : 'research-card-body';
-        return '<button class="' + cardClass + '" type="button" data-slug="' +
-            escapeHtml(article.slug) + '" data-category="' + escapeHtml(article.category) +
-            '" aria-label="Read: ' + escapeHtml(article.title) + '">'
-            + image
-            + '<span class="' + bodyClass + '">'
-            + '<span class="research-card-meta"><span class="research-kicker">' +
+        const textHtml =
+            '<span class="research-card-meta"><span class="research-kicker">' +
             escapeHtml(article.kicker) + '</span><span class="research-category">' +
             escapeHtml(article.category) + '</span></span>'
             + '<span class="research-card-title">' + escapeHtml(article.title) + '</span>'
             + (article.hook
                 ? '<span class="research-card-hook">' + escapeHtml(article.hook) + '</span>'
                 : '<span class="research-card-summary">' + escapeHtml(article.summary) + '</span>')
-            + firstStat
-            + '<span class="research-card-footer"><span><time datetime="' + escapeHtml(article.date) +
+            + firstStat;
+        const footerHtml =
+            '<span class="research-card-footer"><span><time datetime="' + escapeHtml(article.date) +
             '">' + escapeHtml(formatDate(article.date)) + '</time> · ' +
             readTimeMinutes(article) + ' min read</span>' +
-            '<span class="research-read-link">Read explainer →</span></span>'
-            + '</span></button>';
+            '<span class="research-read-link">Read explainer →</span></span>';
+        const openTag = '<button class="' + cardClass + '" type="button" data-slug="' +
+            escapeHtml(article.slug) + '" data-category="' + escapeHtml(article.category) +
+            '" aria-label="Read: ' + escapeHtml(article.title) + '">';
+        if (featured) {
+            // Featured keeps its split layout: image left, copy right,
+            // with the footer inside the copy column.
+            return openTag + image
+                + '<span class="' + bodyClass + '">' + textHtml + footerHtml + '</span></button>';
+        }
+        // Grid cards follow the Feed template: text first, then the
+        // inset rounded image, then a quiet meta/footer row.
+        return openTag
+            + '<span class="' + bodyClass + '">' + textHtml + '</span>'
+            + image
+            + footerHtml
+            + '</button>';
     }
 
     // Featured behaviour (see DESIGN-NOTES.md): the featured card is shown

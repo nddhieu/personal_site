@@ -82,3 +82,15 @@ and detail sections — never new information. No number, price, date, or
 claim appears in a hook or takeaway unless it already appears in that
 article's content. When a hook needed a number, it reused the article's own
 stat (e.g. 48.8 tok/s, 19.67%, $600–$2,500).
+
+## Card type scale — Feed-template pass (2026-11-02)
+
+Per Hieu's direction ("make the font smaller, make it similar this
+template", with screenshots of the Muse Feed app), grid cards now follow
+the Feed card: smaller semibold title (~17px), muted ~14.5px hook at 1.45
+line height (clamped to 3 lines), ~11px kicker, a quiet ~12.5px
+date · read-time footer with no divider, text above an inset 16:10 image
+with 14px radius, tighter padding/gaps, and a flat hover (small shadow,
+no lift or glow). The featured card keeps its image-left split layout on
+the same scale (title capped at ~20px). Detail overlay structure is
+unchanged; only its lede/benefit text came down one notch to ~16px.
