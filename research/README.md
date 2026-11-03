@@ -6,11 +6,13 @@ Public research library for Hieu's personal website, served by GitHub Pages at
 ## Files
 
 - `index.html` — page shell (header/nav mirror the home page)
-- `research.css` — card, filter, and article-detail styles, layered on
-  `../style.css` theme variables
-- `research.js` — theme/menu handling, card rendering, category filters, and
-  the full article explainer view
+- `research.css` — card, filter, featured-story, and article-detail styles,
+  layered on `../style.css` theme variables
+- `research.js` — theme/menu handling, card rendering, category filters,
+  featured story, read-time computation, and the full article explainer view
 - `research-data.json` — the article library (newest first)
+- `DESIGN-NOTES.md` — the news-site design patterns behind the layout and
+  which ones were adopted (see also the facts-only rule for hooks/takeaways)
 - `img/` — one illustrative image per article, compressed to max 1200px wide
   JPEG
 
@@ -29,7 +31,9 @@ team's research files. To publish another research finding:
      "category": "Tools",
      "kicker": "Short framing line",
      "title": "Article title",
-     "summary": "Two or three sentences shown on the card.",
+     "summary": "Two or three sentences shown as the lede in the detail view.",
+     "hook": "One punchy line (max ~18 words) shown on the card — the stakes or payoff, rewritten from the article's own facts only, never a new claim or number.",
+     "takeaways": ["Three short bullets for the Key takeaways box, facts-only from the article's own content."],
      "image": "img/short-url-safe-name.jpg",
      "problem": "The problem statement.",
      "solution": "The proposed or discovered solution.",
@@ -70,6 +74,10 @@ team's research files. To publish another research finding:
 2. Add one illustrative image with the same slug at
    `img/<slug>.jpg` (max width 1200, JPEG quality around 78).
 3. Validate `research-data.json` as JSON and check `research.js` syntax.
+   Every article must have a `hook` (≤ ~18 words) and exactly 3
+   `takeaways`; the newest article automatically becomes the featured lead
+   card (shown only under the "All" filter — see `DESIGN-NOTES.md`).
+   Read time is computed by the page from word count, not stored.
 4. Commit and push to `main`; GitHub Pages redeploys automatically.
 
 Asking Chubby to "add this research to Tech News" runs exactly this flow.
