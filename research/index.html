@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech News | Hieu Nguyen</title>
+    <meta name="description" content="Tech News — a research library of tools, models, and opportunities, explained through the problem, solution, benefit, and how to apply each idea.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../style.css">
+    <link rel="stylesheet" href="research.css">
+</head>
+<body class="dark-theme">
+    <div id="scroll-indicator" class="scroll-indicator"></div>
+
+    <!-- Header / Navigation (mirrors the home page) -->
+    <header class="header">
+        <div class="nav-container">
+            <a href="../index.html" class="logo">
+                <span class="logo-accent">&lt;</span>Hieu<span class="logo-accent"> /&gt;</span>
+            </a>
+            <nav class="nav-links">
+                <a href="../index.html#home" class="nav-link">Home</a>
+                <a href="../index.html#about" class="nav-link">About</a>
+                <a href="../index.html#projects" class="nav-link">Projects</a>
+                <a href="../index.html#resume" class="nav-link">Resume</a>
+                <a href="../index.html#contact" class="nav-link">Contact</a>
+                <a href="../feed/" class="nav-link">Feed</a>
+                <a href="./" class="nav-link active">Research</a>
+            </nav>
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-toggle-btn" aria-label="Toggle dark/light theme">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+                <button id="mobile-menu-toggle" class="mobile-menu-btn" aria-label="Toggle menu">
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                    <span class="bar"></span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Navigation Overlay -->
+    <div id="mobile-nav" class="mobile-nav-overlay">
+        <nav class="mobile-nav-links">
+            <a href="../index.html#home" class="mobile-nav-link">Home</a>
+            <a href="../index.html#about" class="mobile-nav-link">About</a>
+            <a href="../index.html#projects" class="mobile-nav-link">Projects</a>
+            <a href="../index.html#resume" class="mobile-nav-link">Resume</a>
+            <a href="../index.html#contact" class="mobile-nav-link">Contact</a>
+            <a href="../feed/" class="mobile-nav-link">Feed</a>
+            <a href="./" class="mobile-nav-link">Research</a>
+        </nav>
+    </div>
+
+    <main>
+        <section class="research-hero">
+            <div class="container">
+                <div class="badge">Research library · Updated <span id="research-updated">…</span></div>
+                <h1 class="research-title">Tech <span class="text-gradient">News</span></h1>
+                <p class="research-subtitle">
+                    A growing library of research on tools, models, and product opportunities.
+                    Every card opens a practical explainer: the problem, the solution, the benefit,
+                    and how to apply the idea.
+                </p>
+                <div id="research-filters" class="research-filters" aria-label="Filter articles by category"></div>
+            </div>
+        </section>
+
+        <section class="research-main">
+            <div class="container">
+                <div id="research-grid" class="research-grid" aria-live="polite">
+                    <p class="research-loading">Loading the research library…</p>
+                </div>
+                <noscript><p class="research-loading">Tech News needs JavaScript to load its articles.</p></noscript>
+            </div>
+        </section>
+    </main>
+
+    <!-- Full article explainer -->
+    <div id="article-detail" class="article-detail" hidden role="dialog" aria-modal="true" aria-labelledby="detail-title">
+        <div class="article-detail-backdrop" data-close-detail></div>
+        <article class="article-detail-panel">
+            <button id="detail-back" class="detail-back" type="button">← Back to Tech News</button>
+            <div id="detail-content"></div>
+        </article>
+    </div>
+
+    <footer class="footer">
+        <div class="container footer-container">
+            <p>&copy; 2026 Hieu Nguyen. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="../index.html#home">Home</a>
+                <a href="../index.html#about">About</a>
+                <a href="../index.html#projects">Projects</a>
+                <a href="../index.html#resume">Resume</a>
+                <a href="../index.html#contact">Contact</a>
+                <a href="../feed/">Feed</a>
+                <a href="./">Research</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="research.js"></script>
+</body>
+</html>
