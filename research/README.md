@@ -45,6 +45,7 @@ team's research files. To publish another research finding:
      "details": [
        { "heading": "How it works", "body": "A deeper explanation section." }
      ],
+     "checklist": ["First concrete step a reader can take.", "Second concrete step."],
      "caveats": "What is unverified, vendor-claimed, or still an open question.",
      "source_name": "Source name",
      "source_url": "https://example.com/source"
@@ -64,9 +65,17 @@ team's research files. To publish another research finding:
      use numbers that are actually in the research notes — never invent a
      benchmark, price, or date to fill the row. Omit the field (or use an
      empty array) when an article has no real numbers.
-   - `details` — 2–4 extra explanation sections, each `{ "heading", "body" }`,
-     rendered after "How to apply". Use them for how it works, why it matters,
-     trade-offs, or a worked example built from the article's own facts.
+   - `details` — 5–7 extra explanation sections, each `{ "heading", "body" }`,
+     rendered after "How to apply". They are freeform: give each article the
+     sections its topic actually needs — background, how it works, a
+     comparison against the alternatives in the research record, trade-offs,
+     what to watch next, or a worked example built from the article's own
+     facts. Core sections (benefit, Problem, Solution, How to apply) are only
+     part of the content, not a template the extras must mirror.
+   - `checklist` — 4–5 short, concrete first-step items, rendered as a
+     "First steps — a checklist" box after the detail sections and before
+     the caveats. Derive them from the article's own "How to apply" text and
+     the research first-step notes; no new claims or numbers.
    - `caveats` — one short paragraph rendered in a distinct "What we could not
      verify — open questions" box before the source line. Say plainly what is
      vendor-claimed, single-sourced, or still untested by the team.
@@ -75,7 +84,8 @@ team's research files. To publish another research finding:
    `img/<slug>.jpg` (max width 1200, JPEG quality around 78).
 3. Validate `research-data.json` as JSON and check `research.js` syntax.
    Every article must have a `hook` (≤ ~18 words) and exactly 3
-   `takeaways`; the newest article automatically becomes the featured lead
+   `takeaways`, and should carry 5–7 `details` sections plus a 4–5 item
+   `checklist`; the newest article automatically becomes the featured lead
    card (shown only under the "All" filter — see `DESIGN-NOTES.md`).
    Read time is computed by the page from word count, not stored.
 4. Commit and push to `main`; GitHub Pages redeploys automatically.

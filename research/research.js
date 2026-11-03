@@ -214,6 +214,12 @@ document.addEventListener('DOMContentLoaded', () => {
               article.takeaways.slice(0, 3).map(takeaway =>
                 '<li>' + escapeHtml(takeaway) + '</li>').join('') + '</ul></section>'
             : '';
+        const checklist = Array.isArray(article.checklist) && article.checklist.length
+            ? '<section class="detail-checklist-section"><h2>First steps — a checklist</h2>' +
+              '<ul class="detail-checklist">' +
+              article.checklist.map(item =>
+                '<li>' + escapeHtml(item) + '</li>').join('') + '</ul></section>'
+            : '';
         const caveats = article.caveats
             ? '<section class="detail-caveats"><h2>What we could not verify — open questions</h2>' +
               paragraphs(article.caveats) + '</section>'
@@ -230,6 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
             + takeaways
             + statsHtml(article, 'detail-stats')
             + '<div class="detail-sections">' + numberedSections + extraSections + '</div>'
+            + checklist
             + caveats
             + sourceHtml(article);
     }
