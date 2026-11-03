@@ -2,6 +2,54 @@
   "generated_at": "2026-11-02",
   "articles": [
     {
+      "slug": "codex-ollama-qwen3-coder",
+      "date": "2026-11-02",
+      "category": "Models",
+      "kicker": "Run it on your own box",
+      "title": "Codex With Ollama: Local Coding Models, Benchmarked",
+      "summary": "Codex can run local coding models through Ollama; a published Ollama test puts Qwen3-Coder 30B at 48.8 tokens per second, and llm-bench.io's model benchmarks give a fuller reference picture.",
+      "image": "img/codex-ollama-qwen3-coder.jpg",
+      "problem": "Cloud coding models cost money per token, and your code leaves your machine with every request. Switching to a local model raises a practical question — is it fast and good enough? — and answering it requires trustworthy reference numbers before you commit to hardware and setup time.",
+      "solution": "Pair Codex with Ollama to run open coding models locally, and use published benchmark suites — the Ollama test and llm-bench.io's model benchmarks — as the baseline before testing on your own hardware.",
+      "benefit": "Free, private, offline-capable coding assistance, with a reference point for what speed and quality to expect before you spend anything on your own setup.",
+      "apply": "We are about to put the 30B model against the 14B one on our own box. These published numbers are the baseline to check our own results against before drawing any conclusions — that is the stated purpose of the test.",
+      "stats": [
+        {
+          "value": "48.8 tok/s",
+          "label": "Qwen3-Coder 30B, published Ollama test"
+        },
+        {
+          "value": "240.2",
+          "label": "Peak tok/s (llm-bench.io)"
+        },
+        {
+          "value": "61.1",
+          "label": "Avg quality (llm-bench.io)"
+        },
+        {
+          "value": "59.1",
+          "label": "Code quality by task"
+        }
+      ],
+      "details": [
+        {
+          "heading": "Quality by task, not just one score",
+          "body": "llm-bench.io's benchmarks for qwen3-coder:30b break quality down by task: Agent 56.9, Code 59.1, Roleplay 66.4, Research 62.0 — across 6 benchmark runs on 4 GPUs tested. The spread is the useful part: the same model reads noticeably stronger at roleplay-style generation than at agent work, so a single average score hides exactly where it will feel weak."
+        },
+        {
+          "heading": "Two speed numbers, two different meanings",
+          "body": "The 48.8 tokens per second comes from the published Ollama test — a sustained generation speed on that test's setup. The 240.2 figure from llm-bench.io is a peak rate, not a sustained one. Comparing one model's peak against another's sustained speed overstates the gap, so know which number you are quoting before comparing anything."
+        },
+        {
+          "heading": "Why the baseline comes before your own test",
+          "body": "When we run the 30B against the 14B on our own box, our numbers will mix three things together: the model, our hardware, and our prompts and runtime. The published baseline separates them. If our 30B lands far from 48.8 tok/s on similar work, the difference is our setup — not evidence about the model itself."
+        }
+      ],
+      "caveats": "The piece itself warns that the rankings are tied to that test's prompts, runtime, and hardware — read them as a reference point, not a promise for your own box. llm-bench.io's figures (6 benchmark runs, 4 GPUs tested) carry the same limitation, and our own 30B-vs-14B comparison on team hardware has not been run yet.",
+      "source_name": "Feed — published Ollama test / llm-bench.io",
+      "source_url": ""
+    },
+    {
       "slug": "deepseek-superagent",
       "date": "2026-11-02",
       "category": "Tools",
@@ -13,6 +61,31 @@
       "solution": "DeepSeek's MIT-licensed dsh-superagent-prototype separates those jobs. A long-running Router handles interaction and dispatch, while isolated Worker sessions execute individual work items and return results to the original conversation.",
       "benefit": "The pattern gives parallel work cleaner boundaries: the router stays responsive, workers can be isolated by task, and results can be merged back without turning one session into a bottleneck.",
       "apply": "Treat it as a design reference for our own hourly todo-check automation, not as production software. Borrow the router/worker split, narrow worker authority, and the rule that the system should speak only when a person must act or can use a result.",
+      "stats": [
+        {
+          "value": "MIT",
+          "label": "License — free to study and adapt"
+        },
+        {
+          "value": "2 roles",
+          "label": "Router + Worker — one dispatches, the other executes"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How the split works",
+          "body": "The Router holds the conversation and the queue. When work arrives it dispatches one item to a fresh Worker session, giving that worker only the context the item needs. The worker executes and returns a compact result to the original conversation, where the Router decides what happens next."
+        },
+        {
+          "heading": "Why isolation matters",
+          "body": "In a single-session agent, one long or failing task blocks everything behind it, and its intermediate state leaks into later decisions. Isolated workers fail independently: a stuck item does not stall the router, and each item can be given narrow authority — only the tools and scope that item genuinely needs."
+        },
+        {
+          "heading": "A worked example from our own automation",
+          "body": "Our hourly todo check follows this shape. The standing routine only notices the shared list; the work itself — continue one claimed item, verify what is blocking it, record the result — is a bounded unit that either finishes quietly or escalates to a person. The router/worker lens explains the rule baked into it: the system speaks only when a person must act or can use a result."
+        }
+      ],
+      "caveats": "This is a research prototype, not production software. We have not run it, and everything here is evaluated from the project's own description of its design. Whether the implementation is reliable, maintained, or a good fit for our stack is unverified — the pattern is borrowed as a reference, not adopted as a dependency.",
       "source_name": "DeepSeek on GitHub",
       "source_url": "https://github.com/deepseek-ai/dsh-superagent-prototype"
     },
@@ -28,6 +101,31 @@
       "solution": "Build a layout tool specifically for image-fixed interiors — picture books, cookbooks, manuals, and other designed pages — instead of adapting a prose formatter after the fact.",
       "benefit": "Authors could get print-ready files at a fraction of the human price and turnaround, while the product focuses on a segment existing tools serve poorly.",
       "apply": "Start with one narrow MVP: fixed-layout picture books, a small set of dependable page templates, and a clean print-ready export. Charge per book and expand to adjacent complex formats only after authors validate the first workflow.",
+      "stats": [
+        {
+          "value": "$600–$2,500",
+          "label": "What human formatting costs per book"
+        },
+        {
+          "value": "1 niche first",
+          "label": "MVP scope: fixed-layout picture books"
+        }
+      ],
+      "details": [
+        {
+          "heading": "Why prose tools can't just add this",
+          "body": "Flowable-text formatters assume content can reflow to any page size. In an illustrated book the layout is the content: an image must sit beside a specific passage, a caption belongs to one picture, and a two-page spread is composed as a unit. Bolting fixed layout onto a reflow engine fights that assumption on every single page."
+        },
+        {
+          "heading": "What the MVP has to get right",
+          "body": "A small template set that never breaks — cover, single-image page, image-plus-text page, spread — exact page-size and bleed handling for print, and an export a printer accepts without hand-fixing. A few templates that always work beat a flexible tool that occasionally produces a broken file."
+        },
+        {
+          "heading": "How we would validate before building more",
+          "body": "Put the picture-book workflow in front of a few real authors, watch where they get stuck, and only then expand toward cookbooks or manuals. Per-book pricing keeps the test honest: authors pay when the output is genuinely print-ready, so payment itself is the validation signal."
+        }
+      ],
+      "caveats": "The $600–$2,500 figure is what human formatters charge, from our market scan — it is not proof that authors will pay a tool any specific price, and we have not interviewed authors in this niche yet. Real demand, willingness to pay, and which complex format complains loudest are all still open questions.",
       "source_name": "Team research",
       "source_url": ""
     },
@@ -43,6 +141,35 @@
       "solution": "claude-mem (Apache 2.0) hooks the agent lifecycle, compresses what happened into observations stored in SQLite + FTS5 with vector search, and retrieves them with progressive disclosure: compact index first, then timeline, then full detail only for chosen items.",
       "benefit": "Continuity without stuffing huge context into every session; cheaper, faster restarts.",
       "apply": "Our team is running a scoped trial — storytelling repo only, offline opt-in, Gemini (free) as the compression provider, 3–5 sessions, then a fresh-session recall test; curated memory files stay the authority during the trial.",
+      "stats": [
+        {
+          "value": "~108k",
+          "label": "GitHub stars"
+        },
+        {
+          "value": "3 layers",
+          "label": "Retrieval: index → timeline → full detail"
+        },
+        {
+          "value": "Apache 2.0",
+          "label": "License"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How the memory is built",
+          "body": "Hooks watch the agent's lifecycle — prompts, tool calls, session ends — and a local worker compresses what happened into short observations. Those observations land in SQLite with full-text search (FTS5) plus a vector index, so recall can be keyword-based, semantic, or both."
+        },
+        {
+          "heading": "Why progressive disclosure saves tokens",
+          "body": "Most recall systems dump everything relevant into the context window. claude-mem inverts that: the agent first sees a compact index, pulls a timeline around a promising hit, and fetches full detail only for the few items it actually chooses. You pay tokens for detail only when the index says it is worth it."
+        },
+        {
+          "heading": "How this compares to our current setup",
+          "body": "Our team already runs the same idea by hand: curated memory files as the authority, a local RAG for search, and topic annexes loaded on demand. The trial question is therefore narrow — does automatic capture beat careful curation on recall quality — not whether agent memory itself is a good idea."
+        }
+      ],
+      "caveats": "A star count is popularity, not proof of quality. The team's scoped trial is queued with an owner and a definition of done, but no recall-test result has been posted yet, so claude-mem's benefit for our work is still unverified. Behavior described here comes from the project's own documentation.",
       "source_name": "GitHub — thedotmack/claude-mem",
       "source_url": "https://github.com/thedotmack/claude-mem"
     },
@@ -58,6 +185,35 @@
       "solution": "LFM2.5-24B-A2B uses mixture-of-experts efficiency: a 24B model with only about 2.45B active parameters per token, post-trained for reasoning and tool use on local devices.",
       "benefit": "It offers a plausible free local brain for PC-side agent roles, with big-model capacity at a much smaller active running cost. Its published benchmark results are Liquid AI's own, so they still need independent confirmation.",
       "apply": "Use it first as a candidate for testbed roles on the team PC. Check real task quality against our current models, and read the LFM 1.0 license carefully before adoption because it has a $10M revenue condition.",
+      "stats": [
+        {
+          "value": "24B",
+          "label": "Total parameters"
+        },
+        {
+          "value": "~2.45B",
+          "label": "Active parameters per token"
+        },
+        {
+          "value": "$10M",
+          "label": "Revenue condition in the LFM 1.0 license"
+        }
+      ],
+      "details": [
+        {
+          "heading": "What mixture-of-experts means here",
+          "body": "Instead of one dense network doing all the work for every token, the model holds many specialist sub-networks and routes each token to only a few of them. Its total knowledge is 24B parameters wide, but the compute spent per token is roughly that of a ~2.45B model — which is what makes running it on a local device plausible."
+        },
+        {
+          "heading": "Why local matters for agent roles",
+          "body": "A local brain means no per-token bill, no code or data leaving the machine, and no dependency on a provider's uptime — the same reasons the team keeps a local LLM testbed. The trade-off is that quality on hard reasoning still has to be proven task by task against the cloud models it would replace."
+        },
+        {
+          "heading": "Read the license before the benchmarks",
+          "body": "The LFM 1.0 license carries a revenue condition at the $10M threshold, so 'open weights' does not mean 'no strings'. For internal testbed roles it changes little; for anything productized, the license has to be read before the model is built into an offer."
+        }
+      ],
+      "caveats": "All performance figures are Liquid AI's own published benchmarks; no independent evaluation has been checked for this article, and we have not run the model on our hardware. Whether it is strong enough for real agent roles on the team PC is exactly the open question the testbed exists to answer.",
       "source_name": "Liquid AI",
       "source_url": "https://www.liquid.ai/blog/lfm2-5-24b-a2b"
     },
@@ -73,6 +229,35 @@
       "solution": "Layer AI-drafted, escalating reminder sequences — polite first, then progressively firmer — on top of the free invoicing tools freelancers already use.",
       "benefit": "Freelancers can get paid on time without personally carrying the social cost of chasing clients, and without paying enterprise AR prices.",
       "apply": "The smallest MVP connects an invoice list, generates the reminder sequence for approval, and sends it on schedule. Price it as a small monthly subscription positioned clearly under the $49–$1,500+/month enterprise tools.",
+      "stats": [
+        {
+          "value": "64%",
+          "label": "Freelancers who report late payments"
+        },
+        {
+          "value": "~$5,600",
+          "label": "Average outstanding per freelancer"
+        },
+        {
+          "value": "$49–$1,500+",
+          "label": "What enterprise AR tools cost per month"
+        }
+      ],
+      "details": [
+        {
+          "heading": "Why the gap exists",
+          "body": "Enterprise accounts-receivable tools are priced and built for finance departments — onboarding, integrations, seats. A solo freelancer needs exactly one slice of that: reminders that go out on time and escalate gracefully. Nobody sells just that slice cheaply, and that absence is the opening."
+        },
+        {
+          "heading": "What the product actually does",
+          "body": "It watches due dates on invoices the freelancer already issued, drafts the reminder sequence in their voice — friendly nudge before the due date, firmer note after, final notice later — and sends on schedule after a one-tap approval. The AI's job is tone and timing, not collections aggression."
+        },
+        {
+          "heading": "The pricing logic",
+          "body": "Anchor against the pain, not the software category: one recovered invoice at the ~$5,600 average pays for years of a small subscription. Pricing must sit clearly under the $49/month floor of enterprise tools so the decision stays an easy yes for a one-person business."
+        }
+      ],
+      "caveats": "The 64% and ~$5,600 figures come from the survey evidence gathered in our research scan; survey populations vary by country and trade, and we have not interviewed freelancers directly or tested willingness to pay. Treat this as a researched hypothesis, not a validated product.",
       "source_name": "Team research",
       "source_url": ""
     },
@@ -88,6 +273,31 @@
       "solution": "GitHub Agentic Workflows let an AI agent investigate a failure, gather evidence, and report as part of the pipeline itself. Teams define the automation in natural-language Markdown, which is compiled into standard GitHub Actions YAML.",
       "benefit": "A broken build can get a faster first diagnosis without a person babysitting the run or manually collecting the first round of evidence.",
       "apply": "The natural candidate for our deploy pipeline is an auto-investigation of failed “Deploy dev” runs, with findings posted back to the team. The default Copilot engine needs a paid license, so choose the workflow engine deliberately in a free-first setup.",
+      "stats": [
+        {
+          "value": "Oct 28, 2026",
+          "label": "Generally available"
+        },
+        {
+          "value": "Markdown → YAML",
+          "label": "Authored in natural language, compiled to Actions"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works, conceptually",
+          "body": "You describe the automation in a Markdown file — what should happen and what the agent may touch — and GitHub compiles that into a standard Actions workflow. The agent runs inside the pipeline's permissions, investigates with the run's logs and the repository as context, and reports back on the run or the pull request."
+        },
+        {
+          "heading": "Why failure investigation is the right first job",
+          "body": "It is high-value and low-risk: read-only evidence gathering (logs, diffs, recent changes) aimed at one bounded question — why did this run fail? — while a human still decides the fix. That is a far safer first agentic job than letting an agent change code unattended."
+        },
+        {
+          "heading": "The free-first catch",
+          "body": "The default engine is Copilot, which needs a paid license. A free-first team has to check which engines are supported and what each one costs before adopting, or the 'free' automation quietly becomes a subscription."
+        }
+      ],
+      "caveats": "We have not run an agentic workflow on our own repositories yet; this assessment rests on GitHub's GA announcement and documentation. Engine options, real-world report quality, and the actual cost on our pipeline remain unverified until we trial a single failed-run investigation.",
       "source_name": "GitHub Changelog",
       "source_url": "https://github.blog/changelog/2026-10-28-github-agentic-workflows-generally-available/"
     },
@@ -103,6 +313,31 @@
       "solution": "EmbeddingGemma 2 is a small open-weight embedder that can run locally and map different content types into a shared retrieval space.",
       "benefit": "It could provide free, private, fast embeddings for our local RAG over team documents, keeping the corpus and queries on our own machine.",
       "apply": "Do not switch on the announcement alone. A/B test EmbeddingGemma 2 against our current bge-small-en-v1.5 plus MiniLM reranker on the same corpus, compare retrieval quality and speed, and only then decide whether it earns the replacement.",
+      "stats": [
+        {
+          "value": "Apache 2.0",
+          "label": "License — free to run locally"
+        },
+        {
+          "value": "bge-small-en-v1.5",
+          "label": "Our current embedder — the bar it must beat"
+        }
+      ],
+      "details": [
+        {
+          "heading": "What an embedding model does in RAG",
+          "body": "It turns text — and, for a multimodal model, other content types — into vectors: lists of numbers where similar meanings sit close together. Search then becomes geometry. Embed the question, find the nearest passages, and hand those to the answering model. If the embeddings are wrong, the best generator in the world answers from the wrong passages."
+        },
+        {
+          "heading": "Why the reranker pairing matters",
+          "body": "Our current stack is two-stage: bge-small retrieves broadly, then a MiniLM reranker re-reads the top candidates and reorders them by actual relevance. A new embedder has to beat the pair, not just the embedder alone — a slightly better first stage can still lose if it hands the reranker a worse candidate pool."
+        },
+        {
+          "heading": "How we would A/B it fairly",
+          "body": "Same corpus, same chunks, same set of questions with known-good answers. Measure whether the right passages surface in the top results, and the speed on our own hardware. Only a clear quality win at comparable speed earns the swap; otherwise the incumbent stays."
+        }
+      ],
+      "caveats": "No independent benchmark on a corpus like ours has been checked, and when this library was first built we could not pin down one exact official model page — so the source is named without a link rather than guessed. Which content types are usable in the open release, beyond text, is also an open question for the A/B test itself.",
       "source_name": "Google / Hugging Face",
       "source_url": ""
     },
@@ -118,6 +353,35 @@
       "solution": "agent-token-saver uses small, standard-library hooks and bounded projections to strip or compress that noise before it reaches the model, while preserving the evidence needed for the task.",
       "benefit": "In the project's real Codex A/B, provider-reported tokens fell 19.67% in aggregate — the same work for fewer tokens, aligned with our standing token-discipline goal.",
       "apply": "Trial it on a non-critical workflow and measure before/after by task. One task in the A/B used 32.16% more tokens, so never assume a universal saving or roll it out without per-task evidence.",
+      "stats": [
+        {
+          "value": "19.67%",
+          "label": "Provider tokens saved in a real Codex A/B"
+        },
+        {
+          "value": "+32%",
+          "label": "One task in the A/B regressed by that much"
+        },
+        {
+          "value": "MIT",
+          "label": "License — stdlib-only hooks"
+        }
+      ],
+      "details": [
+        {
+          "heading": "Where agent tokens actually go",
+          "body": "Most people picture the model's answer as the cost. In agentic work the input dwarfs it: file dumps, build logs, test output, tool catalogs, and skill descriptions are re-sent turn after turn. Trimming that stream — bounded projections instead of whole files, compressed logs instead of raw ones — is where an aggregate saving around 20% comes from."
+        },
+        {
+          "heading": "Why 'stdlib-only' matters",
+          "body": "The hooks are plain standard-library scripts, so there is nothing to install, vendor, or audit beyond reading small scripts. For a team that adopts cautiously that lowers the trial risk considerably: worst case, you delete the hooks and nothing else changes."
+        },
+        {
+          "heading": "How to trial it without fooling yourself",
+          "body": "Pick one repeatable workflow. Log provider-reported tokens per task for a baseline period, turn the hooks on, and compare task by task — never just the total. The A/B's own regression case shows exactly why: an average can hide a workflow that quietly gets worse."
+        }
+      ],
+      "caveats": "The 19.67% figure is the project's own single A/B run on Codex — one workload, one run. It is evidence worth trialing, not a guaranteed saving, and the effect on other harnesses, including ours, is unverified until we measure it ourselves.",
       "source_name": "GitHub — Supersynergy/agent-token-saver",
       "source_url": "https://github.com/Supersynergy/agent-token-saver"
     }
