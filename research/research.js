@@ -76,8 +76,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return '<p>' + escapeHtml(value).replace(/\n+/g, '<br>') + '</p>';
     }
 
+    // === Read time: ~200 words per minute over the article's text ===
+    function readTimeMinutes(article) {
+        let text = [article.summary, article.problem, article.solution,
+                    article.benefit, article.apply, article.caveats].join(' ');
+        (Array.isArray(article.details) ? article.details : []).forEach(detail => {
+            text += ' ' + (detail.body || '');
+        });
+        (Array.isArray(article.takeaways) ? article.takeaways : []).forEach(takeaway => {
+            text += ' ' + takeaway;
+        });
+        const words = text.split(/\s+/).filter(Boolean).length;
+        return Math.max(1, Math.ceil(words / 200));
+    }
+
     // === Render the library and article detail ===
     const gridEl = document.getElementById('research-grid');
+    const featuredEl = document.getElementById('research-featured');
     const filtersEl = document.getElementById('research-filters');
     const updatedEl = document.getElementById('research-updated');
     const detailEl = document.getElementById('article-detail');
@@ -95,37 +110,52 @@ document.addEventListener('DOMContentLoaded', () => {
         ).join('') + '</div>';
     }
 
-    function cardHtml(article) {
+    function cardHtml(article, featured) {
         const image = article.image
-            ? '<img class="research-card-img" src="' + escapeHtml(article.image) +
+            ? '<img class="' + (featured ? 'research-featured-img' : 'research-card-img') +
+              '" src="' + escapeHtml(article.image) +
               '" alt="' + escapeHtml(article.title) + '" loading="lazy" onerror="this.remove()">'
             : '';
         const firstStat = Array.isArray(article.stats) && article.stats.length
             ? '<span class="research-card-stat"><strong>' + escapeHtml(article.stats[0].value) +
               '</strong> ' + escapeHtml(article.stats[0].label) + '</span>'
             : '';
-        return '<button class="research-card" type="button" data-slug="' +
+        const cardClass = featured ? 'research-card research-featured-card' : 'research-card';
+        const bodyClass = featured ? 'research-card-body research-featured-body' : 'research-card-body';
+        return '<button class="' + cardClass + '" type="button" data-slug="' +
             escapeHtml(article.slug) + '" data-category="' + escapeHtml(article.category) +
             '" aria-label="Read: ' + escapeHtml(article.title) + '">'
             + image
-            + '<span class="research-card-body">'
+            + '<span class="' + bodyClass + '">'
             + '<span class="research-card-meta"><span class="research-kicker">' +
             escapeHtml(article.kicker) + '</span><span class="research-category">' +
             escapeHtml(article.category) + '</span></span>'
             + '<span class="research-card-title">' + escapeHtml(article.title) + '</span>'
-            + '<span class="research-card-summary">' + escapeHtml(article.summary) + '</span>'
+            + (article.hook
+                ? '<span class="research-card-hook">' + escapeHtml(article.hook) + '</span>'
+                : '<span class="research-card-summary">' + escapeHtml(article.summary) + '</span>')
             + firstStat
-            + '<span class="research-card-footer"><time datetime="' + escapeHtml(article.date) +
-            '">' + escapeHtml(formatDate(article.date)) + '</time>' +
+            + '<span class="research-card-footer"><span><time datetime="' + escapeHtml(article.date) +
+            '">' + escapeHtml(formatDate(article.date)) + '</time> · ' +
+            readTimeMinutes(article) + ' min read</span>' +
             '<span class="research-read-link">Read explainer →</span></span>'
             + '</span></button>';
     }
 
+    // Featured behaviour (see DESIGN-NOTES.md): the featured card is shown
+    // only under the "All" filter. Under a category filter it hides, and the
+    // grid shows that category's cards — including the featured article when
+    // it matches the category — so nothing is ever hidden from a filter.
+    let featuredSlug = '';
     function applyFilter(category) {
         document.querySelectorAll('.research-filter-btn').forEach(btn =>
             btn.classList.toggle('active', btn.dataset.filter === category));
-        document.querySelectorAll('.research-card').forEach(card => {
-            const show = category === 'all' || card.dataset.category === category;
+        if (featuredEl) featuredEl.style.display = category === 'all' ? '' : 'none';
+        // Only the grid's cards are filtered here; the featured card lives
+        // in featuredEl and is governed by the display rule above.
+        if (gridEl) gridEl.querySelectorAll('.research-card').forEach(card => {
+            const isFeatured = card.dataset.slug === featuredSlug;
+            const show = category === 'all' ? !isFeatured : card.dataset.category === category;
             card.style.display = show ? '' : 'none';
         });
     }
@@ -145,17 +175,33 @@ document.addEventListener('DOMContentLoaded', () => {
             ? '<img class="detail-hero-img" src="' + escapeHtml(article.image) +
               '" alt="' + escapeHtml(article.title) + '" onerror="this.remove()">'
             : '';
+        // Benefit is NOT repeated in the numbered sections below: it already
+        // leads the article as the benefit callout, so the sections run
+        // Problem → Solution → How to apply.
         const sections = [
             ['Problem', article.problem],
             ['Solution', article.solution],
-            ['Benefit', article.benefit],
             ['How to apply', article.apply]
         ];
         const extras = Array.isArray(article.details) ? article.details : [];
-        const extraSections = extras.map(detail =>
-            '<section class="detail-section detail-extra"><h2>' +
+        const numberedSections = sections.map((section, index) =>
+            '<section class="detail-section"><h2><span class="detail-section-num">' +
+            String(index + 1).padStart(2, '0') + '</span> ' + escapeHtml(section[0]) + '</h2>' +
+            paragraphs(section[1]) + '</section>').join('');
+        const extraSections = extras.map((detail, index) =>
+            '<section class="detail-section detail-extra"><h2><span class="detail-section-num">' +
+            String(sections.length + index + 1).padStart(2, '0') + '</span> ' +
             escapeHtml(detail.heading) + '</h2>' + paragraphs(detail.body) + '</section>'
         ).join('');
+        const benefitCallout = article.benefit
+            ? '<section class="detail-benefit-callout"><span class="detail-callout-eyebrow">' +
+              'Why it matters · What you get</span>' + paragraphs(article.benefit) + '</section>'
+            : '';
+        const takeaways = Array.isArray(article.takeaways) && article.takeaways.length
+            ? '<section class="detail-takeaways"><h2>Key takeaways</h2><ul>' +
+              article.takeaways.slice(0, 3).map(takeaway =>
+                '<li>' + escapeHtml(takeaway) + '</li>').join('') + '</ul></section>'
+            : '';
         const caveats = article.caveats
             ? '<section class="detail-caveats"><h2>What we could not verify — open questions</h2>' +
               paragraphs(article.caveats) + '</section>'
@@ -163,14 +209,15 @@ document.addEventListener('DOMContentLoaded', () => {
         return '<div class="detail-meta"><span class="research-kicker">' +
             escapeHtml(article.kicker) + '</span><span class="research-category">' +
             escapeHtml(article.category) + '</span><time datetime="' + escapeHtml(article.date) +
-            '">' + escapeHtml(formatDate(article.date)) + '</time></div>'
+            '">' + escapeHtml(formatDate(article.date)) + '</time><span>' +
+            readTimeMinutes(article) + ' min read</span></div>'
             + '<h1 id="detail-title" class="detail-title">' + escapeHtml(article.title) + '</h1>'
             + image
             + '<p class="detail-summary">' + escapeHtml(article.summary) + '</p>'
+            + benefitCallout
+            + takeaways
             + statsHtml(article, 'detail-stats')
-            + '<div class="detail-sections">' + sections.map(section =>
-                '<section class="detail-section"><h2>' + escapeHtml(section[0]) + '</h2>' +
-                paragraphs(section[1]) + '</section>').join('') + extraSections + '</div>'
+            + '<div class="detail-sections">' + numberedSections + extraSections + '</div>'
             + caveats
             + sourceHtml(article);
     }
@@ -225,9 +272,20 @@ document.addEventListener('DOMContentLoaded', () => {
             filtersEl.querySelectorAll('.research-filter-btn').forEach(btn =>
                 btn.addEventListener('click', () => applyFilter(btn.dataset.filter)));
 
-            gridEl.innerHTML = articles.map(cardHtml).join('');
+            // Featured story: the newest article gets a larger lead card.
+            // The grid still contains every article; applyFilter hides the
+            // featured article's grid card under "All" so it is not duplicated.
+            featuredSlug = articles.length ? articles[0].slug : '';
+            if (featuredEl && articles.length) {
+                featuredEl.innerHTML = '<span class="research-featured-label">Featured · Latest research</span>' +
+                    cardHtml(articles[0], true);
+                featuredEl.querySelectorAll('.research-card').forEach(card =>
+                    card.addEventListener('click', () => openDetail(card.dataset.slug, card)));
+            }
+            gridEl.innerHTML = articles.map(article => cardHtml(article, false)).join('');
             gridEl.querySelectorAll('.research-card').forEach(card =>
                 card.addEventListener('click', () => openDetail(card.dataset.slug, card)));
+            applyFilter('all');
         })
         .catch(err => {
             gridEl.innerHTML = '<p class="research-loading">The research library could not be loaded (' +

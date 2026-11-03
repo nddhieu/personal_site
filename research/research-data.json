@@ -8,6 +8,12 @@
       "kicker": "Run it on your own box",
       "title": "Codex With Ollama: Local Coding Models, Benchmarked",
       "summary": "Codex can run local coding models through Ollama; a published Ollama test puts Qwen3-Coder 30B at 48.8 tokens per second, and llm-bench.io's model benchmarks give a fuller reference picture.",
+      "hook": "A 30B coding model at 48.8 tokens per second — without sending your code to the cloud.",
+      "takeaways": [
+        "Codex + Ollama runs open coding models locally, so your code stays on your machine.",
+        "Published baseline: 48.8 tok/s sustained for Qwen3-Coder 30B — check your own numbers against it.",
+        "Peak (240.2) is not sustained speed — compare like with like, and note task scores vary (Agent 56.9 vs Roleplay 66.4)."
+      ],
       "image": "img/codex-ollama-qwen3-coder.jpg",
       "problem": "Cloud coding models cost money per token, and your code leaves your machine with every request. Switching to a local model raises a practical question — is it fast and good enough? — and answering it requires trustworthy reference numbers before you commit to hardware and setup time.",
       "solution": "Pair Codex with Ollama to run open coding models locally, and use published benchmark suites — the Ollama test and llm-bench.io's model benchmarks — as the baseline before testing on your own hardware.",
@@ -56,6 +62,12 @@
       "kicker": "Router + workers",
       "title": "DeepSeek's Super-Agent Prototype: Router + Workers",
       "summary": "An MIT-licensed research prototype showing a router agent decomposing work for small worker agents.",
+      "hook": "One router stays responsive while isolated workers do the work — no single task jams the queue.",
+      "takeaways": [
+        "Router dispatches; isolated Worker sessions execute one item each and return compact results.",
+        "Isolation means one stuck task doesn't stall the router or leak state into later decisions.",
+        "Research prototype only — borrow the pattern for todo automation, not the code as a dependency."
+      ],
       "image": "img/deepseek-superagent.jpg",
       "problem": "One agent doing everything in one context gets tangled on multi-step work. Conversation, task selection, execution, and follow-up compete for the same attention, so routine work can stall behind a single long task.",
       "solution": "DeepSeek's MIT-licensed dsh-superagent-prototype separates those jobs. A long-running Router handles interaction and dispatch, while isolated Worker sessions execute individual work items and return results to the original conversation.",
@@ -96,6 +108,12 @@
       "kicker": "Beyond flowing prose",
       "title": "Opportunity: Layout for Illustrated & Complex Books",
       "summary": "Formatting tools handle plain prose; image-fixed books still need a human, at $600–$2,500 per book.",
+      "hook": "Image-fixed books cost $600–$2,500 to format by hand — prose tools simply can't reflow them.",
+      "takeaways": [
+        "Prose formatters reflow text; illustrated books need fixed pages, captions and spreads composed as units.",
+        "MVP: fixed-layout picture books, a few templates that never break, print-ready export.",
+        "Per-book pricing is the validation signal — authors pay only when output is genuinely print-ready."
+      ],
       "image": "img/illustrated-book-layout.jpg",
       "problem": "Authors of illustrated and complex-layout books have no affordable self-serve option. Their images, captions, sidebars, and page-specific compositions cannot simply reflow like ordinary prose.",
       "solution": "Build a layout tool specifically for image-fixed interiors — picture books, cookbooks, manuals, and other designed pages — instead of adapting a prose formatter after the fact.",
@@ -136,6 +154,12 @@
       "kicker": "Memory that survives the session",
       "title": "claude-mem: Persistent Memory for AI Coding Agents",
       "summary": "An open-source system that gives coding agents a memory across sessions, so they stop starting from zero.",
+      "hook": "Your agent forgets everything between sessions — this one remembers, without stuffing context full.",
+      "takeaways": [
+        "Hooks capture sessions; a local worker compresses them into searchable observations (SQLite + FTS5 + vectors).",
+        "Progressive disclosure: compact index first, timeline next, full detail only for chosen items.",
+        "Trial is narrow and scoped: storytelling repo only, 3–5 sessions, curated files stay the authority."
+      ],
       "image": "img/claude-mem.jpg",
       "problem": "AI agents forget everything between sessions; re-briefing them burns time and tokens, and context is lost.",
       "solution": "claude-mem (Apache 2.0) hooks the agent lifecycle, compresses what happened into observations stored in SQLite + FTS5 with vector search, and retrieves them with progressive disclosure: compact index first, then timeline, then full detail only for chosen items.",
@@ -180,6 +204,12 @@
       "kicker": "Big capacity, small active cost",
       "title": "LFM2.5-24B-A2B: A Serious Local Agent Brain",
       "summary": "Liquid AI's open-weight 24B mixture-of-experts model with only ~2.45B active parameters, aimed at agent work.",
+      "hook": "24B of capacity, only ~2.45B working per token: a local brain that could actually run.",
+      "takeaways": [
+        "Mixture-of-experts routes each token to a few specialists, so running cost tracks ~2.45B, not 24B.",
+        "Local means no per-token bill and no data leaving the machine — if task quality proves out.",
+        "Check the license first: LFM 1.0 carries a $10M revenue condition; benchmarks are the vendor's own."
+      ],
       "image": "img/lfm2-agent-model.jpg",
       "problem": "Local models have been too weak for real agent tasks, pushing teams to paid APIs.",
       "solution": "LFM2.5-24B-A2B uses mixture-of-experts efficiency: a 24B model with only about 2.45B active parameters per token, post-trained for reasoning and tool use on local devices.",
@@ -224,6 +254,12 @@
       "kicker": "Cash flow without the awkward chase",
       "title": "Opportunity: AI Invoice Chasing for Solo Freelancers",
       "summary": "64% of freelancers report late payments with ~$5,600 outstanding on average, while serious AR tools cost $49–$1,500+/month.",
+      "hook": "64% of freelancers are paid late, averaging ~$5,600 outstanding — and chasing payment yourself is awkward, manual work.",
+      "takeaways": [
+        "The gap: enterprise AR tools cost $49–$1,500+/month and are built for finance departments, not solo workers.",
+        "Product: AI-drafted reminders that escalate politely → firmly on the freelancer's existing invoicing tools.",
+        "MVP pricing sits clearly under $49/month; one recovered invoice at the average pays for years."
+      ],
       "image": "img/late-invoice-chasing.jpg",
       "problem": "Solo freelancers lose cash flow and hours to awkward manual payment chasing. Enterprise accounts-receivable products are too expensive and heavy for a one-person business.",
       "solution": "Layer AI-drafted, escalating reminder sequences — polite first, then progressively firmer — on top of the free invoicing tools freelancers already use.",
@@ -268,6 +304,12 @@
       "kicker": "Agents in the pipeline",
       "title": "GitHub Agentic Workflows: Agents Inside GitHub Actions",
       "summary": "Write a Markdown file and get an agent-powered GitHub Actions workflow (generally available Oct 28, 2026).",
+      "hook": "Write automation in Markdown, and let an agent investigate your next red pipeline run for you.",
+      "takeaways": [
+        "Markdown compiles to standard Actions YAML; the agent investigates inside the pipeline's permissions.",
+        "Failure investigation is the safe first job: read-only evidence gathering, human still decides the fix.",
+        "Free-first catch: the default Copilot engine needs a paid license — choose the engine deliberately."
+      ],
       "image": "img/github-agentic-workflows.jpg",
       "problem": "When a CI pipeline goes red, a human has to read logs and triage before anyone learns anything.",
       "solution": "GitHub Agentic Workflows let an AI agent investigate a failure, gather evidence, and report as part of the pipeline itself. Teams define the automation in natural-language Markdown, which is compiled into standard GitHub Actions YAML.",
@@ -308,6 +350,12 @@
       "kicker": "Local, multimodal retrieval",
       "title": "EmbeddingGemma 2: Open Embeddings for Local RAG",
       "summary": "Google's open (Apache 2.0) multimodal embedding model, a candidate to power local search.",
+      "hook": "Bad embeddings mean the right answer never reaches the model: test a free local embedder against your incumbent.",
+      "takeaways": [
+        "RAG search is geometry: embed the question, find nearest passages — wrong embeddings, wrong passages.",
+        "Our bar is the pair, not the embedder alone: bge-small retrieval plus MiniLM reranking.",
+        "Fair A/B: same corpus, same chunks, same questions with known-good answers — then decide."
+      ],
       "image": "img/embeddinggemma-2.jpg",
       "problem": "RAG quality stands or falls on the embedding model, and cloud embedding APIs cost money and add latency.",
       "solution": "EmbeddingGemma 2 is a small open-weight embedder that can run locally and map different content types into a shared retrieval space.",
@@ -348,6 +396,12 @@
       "kicker": "Measure the waste",
       "title": "agent-token-saver: Cut Agent Token Spend With Hooks",
       "summary": "MIT, stdlib-only hooks that trimmed 19.67% of provider tokens in a real Codex A/B run.",
+      "hook": "19.67% fewer tokens in a real A/B — but one task got 32% worse. Measure per task.",
+      "takeaways": [
+        "Input dwarfs output cost in agentic work: file dumps, logs, and catalogs re-sent every turn.",
+        "Hooks are stdlib-only scripts — nothing to install or vendor, easy to remove if they don't help.",
+        "Trial rule: baseline per task first, then compare task by task — averages hide regressions."
+      ],
       "image": "img/agent-token-saver.jpg",
       "problem": "Agent sessions waste tokens on verbose, repeated tool output, oversized files, long logs, and broad skill or tool catalogs that are not needed for the current decision.",
       "solution": "agent-token-saver uses small, standard-library hooks and bounded projections to strip or compress that noise before it reaches the model, while preserving the evidence needed for the task.",
