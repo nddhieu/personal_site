@@ -2,23 +2,246 @@
   "generated_at": "2026-11-02",
   "articles": [
     {
+      "apply": "Start where the cost is visible: pick a handful of pages your crawlers or agents already visit and run them through Lightpanda's fetch command with markdown output, comparing output quality and elapsed time against your current route. If the dumps hold up, try the CDP server with an existing automation script before committing to the agent mode or the MCP server. Treat it as a trial until your own numbers confirm the project's claims.",
+      "benefit": "For teams running agents and crawlers, the payoff is a much cheaper fleet: less memory per page means more pages in parallel on the same machine, and faster runs mean shorter pipelines. Markdown dumps feed language-model workflows directly without a separate extraction step, and the agent mode's recorded scripts let a team prototype with a model and then ship a deterministic script that runs with no model at runtime.",
+      "category": "Tools",
+      "caveats": "The speed and memory figures are the project's own benchmark, not independently verified, and they cover the project's workload on one instance type. Version 1.0 is recent, site coverage will not match Chromium everywhere, and the star count of more than 41,000 reflects popularity, not correctness. Telemetry defaults to on, so switch it off explicitly if your policy requires it.",
+      "checklist": [
+        "Install a nightly binary or Docker image in a scratch environment, not on your production crawler.",
+        "Run fetch with markdown output on five pages your collectors already crawl.",
+        "Compare the dumps against your current output for missing content, broken tables, and lost links.",
+        "Time both routes and measure peak memory on the same machine before believing the benchmark.",
+        "Only then try the CDP server with an existing script, and the agent mode for a repeatable flow."
+      ],
+      "date": "2026-11-04",
+      "details": [
+        {
+          "body": "Lightpanda loads pages with libcurl, parses HTML with html5ever, builds a DOM tree, and executes JavaScript with V8, the same engine behind Chrome. It supports the DOM APIs agents rely on \u2014 clicks, form input, cookies, custom headers, proxy support, network interception, and an adblocker \u2014 and it respects robots.txt when the fetch or serve command is given the obey-robots flag. What it deliberately skips is painting pixels: there is no graphical rendering engine, so a screenshot-style dump is a text-only rendering, not a photograph of the page.",
+          "heading": "How it works"
+        },
+        {
+          "body": "The project's argument is that Chromium is a desktop browser pressed into server duty. It carries a rendering pipeline, a user interface stack, and decades of features that a headless job never touches, and all of that costs memory and startup time at scale. Building from scratch let the authors keep only the headless path: load, parse, execute, automate, dump. The trade-off is coverage \u2014 a young engine will not match Chromium's behavior on every site \u2014 so the project publishes daily Web Platform Test results and tracks its implemented features openly, including CORS, Ajax, fetch, cookies, and CDP and BiDi support.",
+          "heading": "Why not just run Chromium?"
+        },
+        {
+          "body": "The headline numbers come from the project's own test: requesting 933 real web pages over the network on an AWS EC2 m5.large instance. For 100 pages at a time, Lightpanda peaked at 123MB of memory against 2GB for headless Chrome, and finished in 5 seconds against 46 seconds \u2014 roughly 16 times lighter and 9 times faster, in the project's words. Those are vendor numbers on the project's chosen workload, not an independent audit, and your pages may differ. The honest read is that the gap is large enough to be worth measuring on your own workload, not large enough to take on faith. A single benchmark also cannot capture the long tail of awkward pages \u2014 heavy single-page apps, unusual authentication flows, and sites that fight automation \u2014 so treat the headline as a reason to run your own comparison, not as a result.",
+          "heading": "The benchmark, read honestly"
+        },
+        {
+          "body": "The agent mode lets you drive the browser with plain-English instructions or slash commands: it navigates, clicks through flows, fills forms, and extracts structured data, running inside the same process as the browser so each tool call is a direct operation. A session's output is a PandaScript \u2014 vanilla JavaScript with a small set of native browser primitives \u2014 which you can export with a save command and replay later with a run command. Because the recorded script is deterministic and token-free, the intended workflow is to prototype with a language model and ship the script to production without a model at runtime. It works with Anthropic, OpenAI, Gemini, Mistral, OpenRouter, Ollama, local models, and other OpenAI-compatible endpoints, or with no model at all in a basic read-eval-print mode.",
+          "heading": "Agent mode and token-free scripts"
+        },
+        {
+          "body": "Lightpanda starts a CDP server that Puppeteer scripts can connect to by pointing at its WebSocket endpoint, and it supports WebDriver BiDi alongside CDP. Its native MCP server speaks JSON-RPC over stdio or HTTP, and over HTTP each connection gets its own browsing session \u2014 its own page, cookies, and memory \u2014 so agents sharing one process no longer clobber each other's pages. A companion skill is available for agent setups. Installation is through Homebrew, the Arch User Repository, nightly binaries for Linux and macOS on both x86_64 and ARM64, or official Docker images.",
+          "heading": "Fitting into existing tooling"
+        },
+        {
+          "body": "There is no native Windows binary yet \u2014 Windows users run it inside WSL2 \u2014 and no Android or Termux build, since the Linux binaries need the glibc loader. Linux release binaries require glibc 2.35 on x86_64 and 2.38 on ARM64, which rules out some older or musl-based images. Telemetry is collected by default and can be switched off with an environment variable. The AGPL-3.0 license matters if you plan to run it as a network service, so check the license terms for your deployment. And because the engine is young, expect sites where behavior diverges from Chromium; that is exactly what a side-by-side trial on your own pages is for.",
+          "heading": "Limits worth knowing before you switch"
+        },
+        {
+          "heading": "How mature is the engine, really?",
+          "body": "Lightpanda is honest about being young: its status section lists implemented features rather than claiming full browser parity, and it runs the standardized Web Platform Tests with results published daily, so gaps are visible instead of hidden. Building from source needs Zig 0.17.0 plus V8, libcurl, and html5ever, and fetching a prebuilt V8 archive is the recommended path \u2014 compiling V8 from source takes several minutes. For a trial that hardly matters, since nightly binaries and Docker images exist, but it matters if you ever need to patch or embed the engine yourself. Judge maturity by your own pages' results, not by the feature list alone."
+        }
+      ],
+      "hook": "A from-scratch browser that runs agents' web work for a fraction of Chromium's weight.",
+      "image": "img/lightpanda-browser.jpg",
+      "kicker": "Headless Browsing \u00b7 Tools",
+      "problem": "Simple HTTP requests used to be enough for web automation, but the modern web is driven by JavaScript: Ajax calls, single-page apps, infinite loading, and frameworks such as React, Vue, and Angular. Running a full desktop browser on a server works, but it does not scale well. Hundreds or thousands of headless Chrome instances are heavy on memory and CPU, hard to package and maintain, and carry many features a headless job never needs.",
+      "slug": "lightpanda-browser",
+      "solution": "Lightpanda rebuilds the headless browser for this one job. It is written in Zig, a low-level language with explicit memory control, and pairs a real JavaScript engine (V8) with an HTML parser and HTTP loader, while leaving out the graphical rendering engine entirely. It exposes the standard automation surfaces \u2014 a Chrome DevTools Protocol server, WebDriver BiDi, and a native MCP server \u2014 so existing Puppeteer and Playwright-style workflows can talk to it, and it adds a fetch command that dumps pages as markdown, structured data, or text-only images and documents.",
+      "source_name": "lightpanda-io/browser on GitHub",
+      "source_url": "https://github.com/lightpanda-io/browser",
+      "stats": [
+        {
+          "label": "Peak memory for 100 pages, vs 2GB for headless Chrome (project benchmark)",
+          "value": "123MB"
+        },
+        {
+          "label": "Time for 100 pages, vs 46s for headless Chrome (project benchmark)",
+          "value": "5s"
+        },
+        {
+          "label": "Real web pages fetched in the project's benchmark",
+          "value": "933"
+        }
+      ],
+      "summary": "Lightpanda is a headless browser written from scratch in Zig for AI agents and automation, not a fork of Chromium or a patch on WebKit. It runs JavaScript through V8, speaks the automation protocols existing tools already use, and, on the project's own benchmark, uses a fraction of the memory and time of headless Chrome. Version 1.0 shipped on October 2, 2026, and the project is open source under AGPL-3.0.",
+      "takeaways": [
+        "Built from scratch in Zig with V8 JavaScript, not a Chromium fork, and no graphical rendering engine.",
+        "The project's benchmark claims about 16 times less memory and 9 times faster page runs than headless Chrome.",
+        "Agent mode records sessions as replayable, token-free scripts, and a native MCP server plugs it into agent tools."
+      ],
+      "title": "Lightpanda: A Headless Browser Built From Scratch for AI Agents"
+    },
+    {
+      "apply": "Use it for the work it is built for: bounded, repeated subtasks such as triage, summarising, and document analysis, with a frontier model handling the planning and the judgment calls. Run the same small task suite against it and against your current free baseline, scoring quality and latency side by side, and keep the model behind an interface you can swap. Do not build a dependency on it while it is a stealth alpha with free pricing that can change.",
+      "benefit": "The immediate benefit is cost: routine agent subtasks that currently burn paid tokens or hit free-tier rate limits can run free, with a context window large enough to hold whole documents and long tool transcripts in one call. Tool calling and structured outputs mean it can slot into agentic pipelines rather than just answering chat prompts. The strategic benefit is headroom \u2014 a cheap tier for the high-volume steps, reserving frontier models for the steps where their judgment earns its price.",
+      "category": "Models",
+      "caveats": "Crouton Alpha is a stealth model: its provider is undisclosed, no benchmarks have been published, and there is no independent verification of its reasoning quality. Free pricing applies during alpha and can change or vanish, so treat it as a trial candidate, not a dependency. The throughput and latency figures are OpenRouter's recent observed measurements and will vary. It is also not available through EU in-region routing.",
+      "checklist": [
+        "Call it on a small, non-sensitive harness task suite with the same prompts as your current free baseline.",
+        "Score output quality and latency, not just cost, before using it on real work.",
+        "Test tool calling and structured outputs against your actual agent loop, not a toy prompt.",
+        "Feed it a long document plus tool transcript to confirm the large context behaves in practice.",
+        "Keep the provider swappable behind your own interface so an alpha pricing or availability change cannot strand you."
+      ],
+      "date": "2026-11-04",
+      "details": [
+        {
+          "body": "Crouton Alpha appeared on OpenRouter on November 3, 2026, listed as a stealth model: OpenRouter forwards requests directly to a single provider, but does not name it. OpenRouter describes it as a lightweight model built for scalable coding, agentic, and multimodal workflows, and says it is ideal for executing agentic sub-tasks, tool use, and document analysis in high-volume, repeated work. The intended pattern is explicit: pair it with frontier reasoning models, letting the frontier model plan while Crouton executes the bounded steps that turn plans and information into action.",
+          "heading": "What it is"
+        },
+        {
+          "body": "The model accepts text, images, video, files such as PDFs, and audio as input, and returns text. It supports tool calling \u2014 accepting tools and tool choice for function calling \u2014 and structured outputs through a JSON schema in the response format. That combination matters because it means the model can participate in an agent loop that calls functions and expects machine-readable results, rather than being limited to free-form chat. Its context window is 1,048,576 tokens, about a million, so long documents and extended transcripts fit in a single call.",
+          "heading": "What it can take in and give back"
+        },
+        {
+          "body": "OpenRouter lists the price for both prompt and completion tokens as zero: during alpha, you are not charged for tokens. That is the whole pitch for teams whose routine subtasks hit free-tier rate limits on their current models \u2014 a free tier built for high-volume repeated work. But alpha pricing is, by definition, temporary. It can change, gain limits, or disappear, and a stealth model can be renamed, replaced, or withdrawn without the transparency a named release would carry. The right mental model is a free trial with an unknown end date, not a permanent cost floor.",
+          "heading": "Free during alpha \u2014 and what that means"
+        },
+        {
+          "body": "A million-token context sounds abstract until it meets a real workflow: a long contract, a full log dump, or a multi-step agent transcript can go in whole instead of being chunked, summarised, and re-fetched. Tool calling plus structured output means the model can be the worker that files, extracts, and routes, while a stronger model checks the result. That division of labour is where a lightweight model earns its place \u2014 not by replacing the frontier model, but by keeping the frontier model out of the repetitive middle of the job.",
+          "heading": "Where it fits in a pipeline"
+        },
+        {
+          "body": "OpenRouter's recent measurements put throughput at 32 tokens per second with a median latency of 4.12 seconds, and three-day availability at about 97 percent. Those are observed snapshots from a live service, not guarantees, and they describe a lightweight model doing routine work \u2014 fast enough for background subtasks, not a speed demon for interactive use. No published benchmarks exist yet, so claims about reasoning quality rest on the provider's positioning and on whatever you measure yourself. Until independent results appear, your own harness scores are the only quality evidence worth trusting. That also sets expectations for interactive use: a median latency above four seconds means it belongs in background queues and batch jobs, not in a chat box where a user is waiting for each reply.",
+          "heading": "Speed, honestly measured"
+        },
+        {
+          "body": "The unknowns are the story as much as the specs. An undisclosed provider means you cannot judge the model's lineage, training, or safety posture from its maker, and you cannot predict its roadmap. There is no public benchmark to compare against the models you already use, and the free tier could narrow at any time. None of that disqualifies it for a trial \u2014 it disqualifies it for a hard dependency. Try it where a failure is cheap and visible, measure it like any other vendor claim, and keep your exit open.",
+          "heading": "What is still unknown"
+        },
+        {
+          "heading": "How to tell whether it works for you",
+          "body": "Because no published benchmarks exist, the trial design is the article. Pick a fixed set of real subtasks your pipeline already runs, run them through Crouton and through your current baseline with identical prompts, and score the outputs blind where you can \u2014 a reviewer who does not know which model produced which answer. Track latency percentiles alongside quality, since a free model that stalls your pipeline is not free, and log where it fails so you know which task shapes to route elsewhere. The decision rule should be written before the trial: what quality bar, at what latency, earns it a permanent lane in your pipeline, and what failure sends a task back to a frontier model automatically."
+        }
+      ],
+      "hook": "A free, stealth reasoning model for high-volume agent subtasks \u2014 with an alpha price tag.",
+      "image": "img/crouton-alpha.jpg",
+      "kicker": "Free Tier \u00b7 Models",
+      "problem": "Routine agent subtasks \u2014 triage, summarising, document analysis \u2014 are cheap individually and expensive in aggregate. Run them on a frontier model and you pay frontier prices for bounded work; run them on a free tier and you hit rate limits that stall the pipeline. Teams need a tier built for high-volume, repeated steps: good enough for the bounded middle of a job, cheap enough to run thousands of times, and able to call tools and return structured results.",
+      "slug": "crouton-alpha",
+      "solution": "Crouton Alpha, released on OpenRouter on November 3, 2026, is a lightweight stealth reasoning model aimed squarely at that tier. It offers a 1,048,576-token context window, accepts text, image, video, file, and audio inputs, supports tool calling and structured outputs, and is free for both prompt and completion tokens during its alpha period. OpenRouter describes it as built for scalable coding, agentic, and multimodal workflows, and ideal for executing agentic sub-tasks in high-volume, repeated work.",
+      "source_name": "Crouton Alpha on OpenRouter",
+      "source_url": "https://openrouter.ai/models/stealth/crouton-alpha",
+      "stats": [
+        {
+          "label": "Token context window",
+          "value": "1,048,576"
+        },
+        {
+          "label": "Price for prompt and completion tokens during alpha",
+          "value": "$0"
+        },
+        {
+          "label": "Throughput in OpenRouter's recent measurements",
+          "value": "32 tok/s"
+        }
+      ],
+      "summary": "Crouton Alpha is a free stealth reasoning model on OpenRouter, released on November 3, 2026, built for the high-volume, repeated subtasks that sit between a plan and an outcome. It pairs a million-token context window with tool calling, structured outputs, and multimodal inputs, and costs nothing for prompt or completion tokens while it remains in alpha. Its provider is undisclosed and no benchmarks have been published, so it is a trial candidate, not a dependency.",
+      "takeaways": [
+        "Free during alpha, with a 1,048,576-token context window and multimodal inputs.",
+        "Built for bounded, high-volume agent subtasks: tool use and document analysis alongside frontier planners.",
+        "Stealth model with an undisclosed provider and no published benchmarks \u2014 measure it yourself before depending on it."
+      ],
+      "title": "Crouton Alpha: A Free Stealth Model With a Million-Token Context"
+    },
+    {
+      "apply": "If you write, the cheapest version of this idea starts before any code: take one finished manuscript you control, pull out its tropes, comparable titles, categories, and quotable scenes by hand, and draft the 90-day plan yourself to learn which parts are genuinely mechanical. That manual pass tells you what an automated version must get right \u2014 and whether authors would pay for it \u2014 before you build ingestion, outreach lists, or a posting calendar.",
+      "benefit": "For authors, the benefit is a launch plan shaped by their actual book instead of generic advice, at a price below the hand-written services that exist today. For a builder, the benefit is a product aimed at the largest, most willing pain point in the indie-author market, with a natural upsell: a storytelling app's publishing step could offer the plan at the moment a manuscript is finished, when the author's next question is always how anyone will find it.",
+      "category": "Opportunities",
+      "caveats": "This opportunity rests on a single analysis: 600 high-visibility threads, sampled with ChatGPT's help, from two subreddits over three years. High-visibility threads reflect what gets upvoted, not a census of all authors, and the $75 to $100 subscription and $210 plan value describe one vendor's offer, not a market price. The $49 to $99 per-plan price is a proposal in the team's research, not a market-tested figure, and no launch plan guarantees sales.",
+      "checklist": [
+        "Talk to five indie authors and ask what their last launch actually cost and what they would pay for a manuscript-based plan.",
+        "Build one plan by hand from a finished manuscript to find which sections are mechanical and which need judgment.",
+        "Prototype ingestion that extracts tropes, comparable titles, and quotable scenes from a manuscript.",
+        "Draft the 90-day calendar format and test it against a real launch window before automating it.",
+        "Price a pilot against the $210 hand-written plan value and the under-$200 budget authors say they want."
+      ],
+      "date": "2026-11-04",
+      "details": [
+        {
+          "body": "The analysis sampled 600 high-visibility threads from r/selfpublish and r/selfpublishing, covering up to three years of discussion, and sorted every post into a theme. Nearly one third of the posts revolved around getting seen: authors kept asking for practical launch plans that cost less than $200 and do not require a mailing list of 10,000 readers. That combination \u2014 a concrete budget ceiling and a concrete audience floor \u2014 is unusually specific for forum advice, and it is what makes the pain point actionable rather than just sympathetic.",
+          "heading": "What 600 threads actually say"
+        },
+        {
+          "body": "Publication logistics \u2014 ISBNs, trim sizes, print files \u2014 made up only 6 percent of the sample, a surprise the analysis attributes to three causes: Amazon, Draft2Digital, and IngramSpark have turned upload into a guided wizard; r/selfpublish's detailed wiki answers the standard questions before they are asked; and every hour spent on gutters is an hour not spent on visibility, so the forums reward marketing talk with higher votes. The lesson is not that logistics are trivial \u2014 a file formatted for Amazon alone will not always play nicely with Ingram, and ISBN mistakes can lock an author out of bookstores \u2014 but that authors feel the visibility problem first and loudest.",
+          "heading": "Why logistics lost the argument"
+        },
+        {
+          "body": "After visibility, the ranking runs through cover design (the analysis headlines it as the $400 cover dilemma), scam avoidance, editing costs, and the Kindle Unlimited debate, which took 7 percent of discussion. Authors also want a truth test for covers \u2014 does it shout its genre and survive as an Amazon thumbnail \u2014 and a way to settle the Kindle Unlimited question with evidence, treating the first 90-day exclusivity window as a controlled experiment. A launch plan that ignores covers and the Kindle Unlimited decision would feel incomplete to exactly the authors it targets.",
+          "heading": "What else authors are asking about"
+        },
+        {
+          "body": "One existing offer shows the shape of the market: an annual subscription, currently $75 and soon rising to $100, includes a custom 6-to-10-page marketing plan tailored to the author's book, valued at $210. That plan is hand-written, which caps how many an author-service can produce and sets the price anchor. Nothing in the analysis auto-builds a plan from the manuscript itself \u2014 its tropes, comparable titles, categories and keywords, and quotable scenes. That gap between a generic advice post and a hand-written plan is where an automated product fits.",
+          "heading": "What already exists \u2014 and the gap beside it"
+        },
+        {
+          "body": "The product writes itself from the gap: ingest a manuscript and output a 90-day launch plan with positioning, comparable titles, keyword and category picks, an ARC (advance reader copy) outreach list, and a content calendar of posts and clips drawn from the book's own scenes. The team's research notes this as a natural upsell to a storytelling app's publishing step, where the manuscript already lives. The proposed pricing in that research is $49 to $99 per launch plan, under the $210 hand-written plan value, or a per-book subscription \u2014 a proposal to test, not a proven price. A plan that only lists tasks is easy to copy; a plan whose comparable titles, keywords, and scene-derived posts could only fit one book is the defensible part.",
+          "heading": "The manuscript-derived plan, as a product"
+        },
+        {
+          "body": "Three risks deserve plain language. First, the evidence is one ChatGPT-assisted sample of high-visibility threads: popular posts overstate what the average author experiences, and the shares are rounded. Second, a plan is not a promise \u2014 discoverability also depends on the book, the cover, the category, and luck, and a tool that implies otherwise will disappoint. Third, the hand-written $210 plan competes on judgment, not just pages: an automated plan must prove its comparable titles and keyword picks are genuinely tailored, or it is just generic advice with the author's title pasted on top.",
+          "heading": "Risks and honest limits"
+        },
+        {
+          "heading": "Who pays first",
+          "body": "The first buyers are most likely debut authors staring at a finished manuscript and an empty audience \u2014 the exact authors filling those 600 threads \u2014 followed by backlist authors relaunching a book that never found readers. Both groups have a manuscript in hand, a budget ceiling in mind, and a deadline that makes a 90-day plan concrete rather than aspirational. A storytelling app's publishing step is a natural distribution point, since the manuscript is already there and the author's next question is always what happens after the last page. The pitch writes itself only if the plan visibly draws on the book: show the author their own scenes, tropes, and comparable titles in the first page, or the product reads as generic advice with better formatting."
+        }
+      ],
+      "hook": "Indie authors' biggest pain is not writing the book \u2014 it is getting anyone to see it.",
+      "image": "img/indie-author-launch-plans.jpg",
+      "kicker": "Indie Publishing \u00b7 Opportunities",
+      "problem": "Indie and self-published authors finish the book and hit the harder problem: visibility. An analysis of 600 high-visibility threads in r/selfpublish and r/selfpublishing found nearly one third revolve around getting seen, with authors asking for practical launch plans costing under $200 that do not require a 10,000-reader mailing list. Existing advice is generic \u2014 post two or three times a week, pick one platform \u2014 and existing plan services are hand-written, slow, and priced around a $210 value for a 6-to-10-page plan.",
+      "slug": "indie-author-launch-plans",
+      "solution": "Build the plan from the manuscript itself. A tool that ingests a finished book could output a 90-day launch plan grounded in that book: its positioning, comparable titles, keyword and category picks, an ARC outreach list, and a content calendar of posts and clips drawn from its own scenes. Instead of generic posting advice, the author gets a plan that could only belong to their book \u2014 at a proposed $49 to $99 per plan, under the hand-written plan's value, or as a per-book subscription.",
+      "source_name": "Beyond Hourly (Author Growth) on Substack",
+      "source_url": "https://beyondhourly.substack.com/p/i-analysed-reddits-self-publishing",
+      "stats": [
+        {
+          "label": "High-visibility Reddit threads analysed across two self-publishing subreddits",
+          "value": "600"
+        },
+        {
+          "label": "Share of discussion revolving around visibility",
+          "value": "Nearly one-third"
+        },
+        {
+          "label": "Value placed on a hand-written 6-to-10-page marketing plan",
+          "value": "$210"
+        },
+        {
+          "label": "Annual subscription that includes that plan, rising from $75",
+          "value": "$100"
+        }
+      ],
+      "summary": "Indie authors' biggest pain is visibility, not writing: nearly a third of 600 high-visibility threads in two self-publishing subreddits revolve around getting seen. Authors want practical launch plans under $200 that do not require a 10,000-reader mailing list, while today's tailored plans are hand-written and valued at $210. The opportunity is a product that builds a 90-day launch plan from the manuscript itself \u2014 its tropes, comparable titles, keywords, and quotable scenes.",
+      "takeaways": [
+        "Nearly one third of 600 analysed self-publishing threads revolve around visibility.",
+        "Authors want launch plans under $200 that do not need a 10,000-reader mailing list.",
+        "A manuscript-derived 90-day plan fills the gap between generic advice and a $210 hand-written plan."
+      ],
+      "title": "Opportunity: Launch Plans Built From the Manuscript, Not From Generic Advice"
+    },
+    {
       "slug": "codex-ollama-qwen3-coder",
       "date": "2026-11-02",
       "category": "Models",
       "kicker": "Run it on your own box",
       "title": "Codex With Ollama: Local Coding Models, Benchmarked",
       "summary": "Codex can run local coding models through Ollama; a published Ollama test puts Qwen3-Coder 30B at 48.8 tokens per second, and llm-bench.io's model benchmarks give a fuller reference picture.",
-      "hook": "A 30B coding model at 48.8 tokens per second — without sending your code to the cloud.",
+      "hook": "A 30B coding model at 48.8 tokens per second \u2014 without sending your code to the cloud.",
       "takeaways": [
         "Codex + Ollama runs open coding models locally, so your code stays on your machine.",
-        "Published baseline: 48.8 tok/s sustained for Qwen3-Coder 30B — check your own numbers against it.",
-        "Peak (240.2) is not sustained speed — compare like with like, and note task scores vary (Agent 56.9 vs Roleplay 66.4)."
+        "Published baseline: 48.8 tok/s sustained for Qwen3-Coder 30B \u2014 check your own numbers against it.",
+        "Peak (240.2) is not sustained speed \u2014 compare like with like, and note task scores vary (Agent 56.9 vs Roleplay 66.4)."
       ],
       "image": "img/codex-ollama-qwen3-coder.jpg",
-      "problem": "Cloud coding models cost money per token, and your code leaves your machine with every request. Switching to a local model raises a practical question — is it fast and good enough? — and answering it requires trustworthy reference numbers before you commit to hardware and setup time.\n\nThere is a subtler problem underneath the cost: a cloud model's quality is judged on the provider's terms. You see the answer, not the conditions that produced it — the hardware, the runtime, the exact prompts behind the evaluations that sold you on it. When a local model then disappoints, you cannot tell whether the model is weak, your machine is the bottleneck, or your task simply differs from the benchmark's task. Without a reference point measured outside your own setup, every local experiment is three unknowns wearing one result.",
-      "solution": "Pair Codex with Ollama to run open coding models locally, and use published benchmark suites — the Ollama test and llm-bench.io's model benchmarks — as the baseline before testing on your own hardware.\n\nThe pairing matters as much as the pieces. Codex supplies the agent workflow — reading the codebase, proposing edits, running the loop a coding assistant runs — while Ollama supplies the local runtime that serves the open model on your own machine. The benchmark suites then play a different role than marketing: calibration. The published Ollama test fixes one model's sustained speed on a known setup, and llm-bench.io's runs add a task-by-task quality picture, so your own results have something external to be compared against instead of floating alone.",
-      "benefit": "Free, private, offline-capable coding assistance, with a reference point for what speed and quality to expect before you spend anything on your own setup. It also turns model choice into an experiment you control: the same prompts, on your hardware, measured against a published reference — instead of trusting a leaderboard you cannot reproduce.",
-      "apply": "We are about to put the 30B model against the 14B one on our own box. These published numbers are the baseline to check our own results against before drawing any conclusions — that is the stated purpose of the test.\n\nRun the comparison like an experiment, not a vibe. Keep the prompts and the work identical between the 30B and the 14B, note the speed you actually observe next to the published 48.8 tok/s reference, and judge quality on the tasks you really do — the by-task scores exist precisely because a model can be adequate at one kind of work and weak at another. Only after that comparison means something should the bigger question — local as the default, or local for some work only — be decided.",
+      "problem": "Cloud coding models cost money per token, and your code leaves your machine with every request. Switching to a local model raises a practical question \u2014 is it fast and good enough? \u2014 and answering it requires trustworthy reference numbers before you commit to hardware and setup time.\n\nThere is a subtler problem underneath the cost: a cloud model's quality is judged on the provider's terms. You see the answer, not the conditions that produced it \u2014 the hardware, the runtime, the exact prompts behind the evaluations that sold you on it. When a local model then disappoints, you cannot tell whether the model is weak, your machine is the bottleneck, or your task simply differs from the benchmark's task. Without a reference point measured outside your own setup, every local experiment is three unknowns wearing one result.",
+      "solution": "Pair Codex with Ollama to run open coding models locally, and use published benchmark suites \u2014 the Ollama test and llm-bench.io's model benchmarks \u2014 as the baseline before testing on your own hardware.\n\nThe pairing matters as much as the pieces. Codex supplies the agent workflow \u2014 reading the codebase, proposing edits, running the loop a coding assistant runs \u2014 while Ollama supplies the local runtime that serves the open model on your own machine. The benchmark suites then play a different role than marketing: calibration. The published Ollama test fixes one model's sustained speed on a known setup, and llm-bench.io's runs add a task-by-task quality picture, so your own results have something external to be compared against instead of floating alone.",
+      "benefit": "Free, private, offline-capable coding assistance, with a reference point for what speed and quality to expect before you spend anything on your own setup. It also turns model choice into an experiment you control: the same prompts, on your hardware, measured against a published reference \u2014 instead of trusting a leaderboard you cannot reproduce.",
+      "apply": "We are about to put the 30B model against the 14B one on our own box. These published numbers are the baseline to check our own results against before drawing any conclusions \u2014 that is the stated purpose of the test.\n\nRun the comparison like an experiment, not a vibe. Keep the prompts and the work identical between the 30B and the 14B, note the speed you actually observe next to the published 48.8 tok/s reference, and judge quality on the tasks you really do \u2014 the by-task scores exist precisely because a model can be adequate at one kind of work and weak at another. Only after that comparison means something should the bigger question \u2014 local as the default, or local for some work only \u2014 be decided.",
       "stats": [
         {
           "value": "48.8 tok/s",
@@ -40,38 +263,38 @@
       "details": [
         {
           "heading": "Quality by task, not just one score",
-          "body": "llm-bench.io's benchmarks for qwen3-coder:30b break quality down by task: Agent 56.9, Code 59.1, Roleplay 66.4, Research 62.0 — across 6 benchmark runs on 4 GPUs tested. The spread is the useful part: the same model reads noticeably stronger at roleplay-style generation than at agent work, so a single average score hides exactly where it will feel weak."
+          "body": "llm-bench.io's benchmarks for qwen3-coder:30b break quality down by task: Agent 56.9, Code 59.1, Roleplay 66.4, Research 62.0 \u2014 across 6 benchmark runs on 4 GPUs tested. The spread is the useful part: the same model reads noticeably stronger at roleplay-style generation than at agent work, so a single average score hides exactly where it will feel weak."
         },
         {
           "heading": "Two speed numbers, two different meanings",
-          "body": "The 48.8 tokens per second comes from the published Ollama test — a sustained generation speed on that test's setup. The 240.2 figure from llm-bench.io is a peak rate, not a sustained one. Comparing one model's peak against another's sustained speed overstates the gap, so know which number you are quoting before comparing anything."
+          "body": "The 48.8 tokens per second comes from the published Ollama test \u2014 a sustained generation speed on that test's setup. The 240.2 figure from llm-bench.io is a peak rate, not a sustained one. Comparing one model's peak against another's sustained speed overstates the gap, so know which number you are quoting before comparing anything."
         },
         {
           "heading": "Why the baseline comes before your own test",
-          "body": "When we run the 30B against the 14B on our own box, our numbers will mix three things together: the model, our hardware, and our prompts and runtime. The published baseline separates them. If our 30B lands far from 48.8 tok/s on similar work, the difference is our setup — not evidence about the model itself."
+          "body": "When we run the 30B against the 14B on our own box, our numbers will mix three things together: the model, our hardware, and our prompts and runtime. The published baseline separates them. If our 30B lands far from 48.8 tok/s on similar work, the difference is our setup \u2014 not evidence about the model itself."
         },
         {
           "heading": "Background: why local coding models are suddenly practical",
-          "body": "Not long ago, running it yourself meant accepting a toy. Open coding models have closed much of the gap for everyday work, and runtimes like Ollama removed the serving friction that used to make local inference a project in itself. What did not arrive with them is trustworthy expectations: every model advertises, and every leaderboard ranks under its own conditions. That is why this piece is really about calibration. The interesting development is not only that a 30B model runs locally — it is that published reference points now exist to judge your own run against, before you spend anything on hardware or setup time."
+          "body": "Not long ago, running it yourself meant accepting a toy. Open coding models have closed much of the gap for everyday work, and runtimes like Ollama removed the serving friction that used to make local inference a project in itself. What did not arrive with them is trustworthy expectations: every model advertises, and every leaderboard ranks under its own conditions. That is why this piece is really about calibration. The interesting development is not only that a 30B model runs locally \u2014 it is that published reference points now exist to judge your own run against, before you spend anything on hardware or setup time."
         },
         {
           "heading": "Peak versus sustained: the number you actually feel",
-          "body": "Think of the two speed figures as measuring different moments. A peak rate is the fastest the model generates at the most favourable instant of a run; a sustained rate is what you live with across a long answer. At the keyboard, sustained speed is the experience: it decides whether a long code explanation arrives in a breath or in a wait. That is why the published Ollama test's sustained 48.8 tok/s leads this article, while llm-bench.io's 240.2 peak is context about headroom — not a speed anyone should expect to feel minute to minute."
+          "body": "Think of the two speed figures as measuring different moments. A peak rate is the fastest the model generates at the most favourable instant of a run; a sustained rate is what you live with across a long answer. At the keyboard, sustained speed is the experience: it decides whether a long code explanation arrives in a breath or in a wait. That is why the published Ollama test's sustained 48.8 tok/s leads this article, while llm-bench.io's 240.2 peak is context about headroom \u2014 not a speed anyone should expect to feel minute to minute."
         },
         {
           "heading": "A worked example: reading a test we have not run yet",
-          "body": "An illustrative scenario, built only from this article's figures. Suppose our own box runs the 30B and we observe generation clearly below the published 48.8 tok/s on similar work, while the 14B feels close to the larger model on everyday tasks. The baseline tells us how to read that: the gap to 48.8 points at our setup — hardware, runtime, or configuration — not at the model. And the by-task spread (Code 59.1 against Agent 56.9) warns us to check agent-style work separately from plain code generation before concluding the smaller model is just as good. Without the published reference, both observations are anecdotes; with it, they are a diagnosis."
+          "body": "An illustrative scenario, built only from this article's figures. Suppose our own box runs the 30B and we observe generation clearly below the published 48.8 tok/s on similar work, while the 14B feels close to the larger model on everyday tasks. The baseline tells us how to read that: the gap to 48.8 points at our setup \u2014 hardware, runtime, or configuration \u2014 not at the model. And the by-task spread (Code 59.1 against Agent 56.9) warns us to check agent-style work separately from plain code generation before concluding the smaller model is just as good. Without the published reference, both observations are anecdotes; with it, they are a diagnosis."
         }
       ],
       "checklist": [
         "Pull the 30B and 14B models in Ollama on our own box",
         "Fix one shared set of prompts and real tasks for both models",
         "Record observed speed next to the published 48.8 tok/s reference",
-        "Judge quality task by task — agent work separately from code generation",
+        "Judge quality task by task \u2014 agent work separately from code generation",
         "Decide local-as-default vs local-for-some-work from those results only"
       ],
-      "caveats": "The piece itself warns that the rankings are tied to that test's prompts, runtime, and hardware — read them as a reference point, not a promise for your own box. llm-bench.io's figures (6 benchmark runs, 4 GPUs tested) carry the same limitation, and our own 30B-vs-14B comparison on team hardware has not been run yet.",
-      "source_name": "Feed — published Ollama test / llm-bench.io",
+      "caveats": "The piece itself warns that the rankings are tied to that test's prompts, runtime, and hardware \u2014 read them as a reference point, not a promise for your own box. llm-bench.io's figures (6 benchmark runs, 4 GPUs tested) carry the same limitation, and our own 30B-vs-14B comparison on team hardware has not been run yet.",
+      "source_name": "Feed \u2014 published Ollama test / llm-bench.io",
       "source_url": ""
     },
     {
@@ -81,25 +304,25 @@
       "kicker": "Router + workers",
       "title": "DeepSeek's Super-Agent Prototype: Router + Workers",
       "summary": "An MIT-licensed research prototype showing a router agent decomposing work for small worker agents.",
-      "hook": "One router stays responsive while isolated workers do the work — no single task jams the queue.",
+      "hook": "One router stays responsive while isolated workers do the work \u2014 no single task jams the queue.",
       "takeaways": [
         "Router dispatches; isolated Worker sessions execute one item each and return compact results.",
         "Isolation means one stuck task doesn't stall the router or leak state into later decisions.",
-        "Research prototype only — borrow the pattern for todo automation, not the code as a dependency."
+        "Research prototype only \u2014 borrow the pattern for todo automation, not the code as a dependency."
       ],
       "image": "img/deepseek-superagent.jpg",
-      "problem": "One agent doing everything in one context gets tangled on multi-step work. Conversation, task selection, execution, and follow-up compete for the same attention, so routine work can stall behind a single long task.\n\nThe failure mode compounds over time. As the single session's context grows, the agent spends more of its attention re-reading its own history; a task picked early can be distorted by the debris of the tasks before it, and a failure mid-item can poison the follow-up that shares the same session. The result is not just slowness — it is unpredictability. The same routine behaves differently depending on what happened to precede it, which makes automation hard to trust and harder to debug.",
+      "problem": "One agent doing everything in one context gets tangled on multi-step work. Conversation, task selection, execution, and follow-up compete for the same attention, so routine work can stall behind a single long task.\n\nThe failure mode compounds over time. As the single session's context grows, the agent spends more of its attention re-reading its own history; a task picked early can be distorted by the debris of the tasks before it, and a failure mid-item can poison the follow-up that shares the same session. The result is not just slowness \u2014 it is unpredictability. The same routine behaves differently depending on what happened to precede it, which makes automation hard to trust and harder to debug.",
       "solution": "DeepSeek's MIT-licensed dsh-superagent-prototype separates those jobs. A long-running Router handles interaction and dispatch, while isolated Worker sessions execute individual work items and return results to the original conversation.\n\nThe prototype's discipline is in what the Router refuses to do. It does not execute; it holds the interaction, chooses the next item, hands it over with bounded context, and receives a compact result. Each Worker is disposable: it starts fresh on one item, with only the authority that item needs, and its intermediate mess dies with the session. Results return to the original conversation, so the human still sees one coherent thread even though the work fanned out behind it.",
       "benefit": "The pattern gives parallel work cleaner boundaries: the router stays responsive, workers can be isolated by task, and results can be merged back without turning one session into a bottleneck. It also matches how good scheduled automation should behave: quiet by default, and visible only when a result is ready or a person must act.",
       "apply": "Treat it as a design reference for our own hourly todo-check automation, not as production software. Borrow the router/worker split, narrow worker authority, and the rule that the system should speak only when a person must act or can use a result.\n\nBorrow it as a checklist for any automation we design, not just the todo check. Ask of each routine: who holds the conversation, what is the smallest unit of work a worker can own end to end, what authority does that unit truly need, and what compact result must it return? If a proposed automation cannot answer those questions cleanly, it is probably a single-session design that will tangle in exactly the way this prototype was built to avoid.",
       "stats": [
         {
           "value": "MIT",
-          "label": "License — free to study and adapt"
+          "label": "License \u2014 free to study and adapt"
         },
         {
           "value": "2 roles",
-          "label": "Router + Worker — one dispatches, the other executes"
+          "label": "Router + Worker \u2014 one dispatches, the other executes"
         }
       ],
       "details": [
@@ -109,33 +332,33 @@
         },
         {
           "heading": "Why isolation matters",
-          "body": "In a single-session agent, one long or failing task blocks everything behind it, and its intermediate state leaks into later decisions. Isolated workers fail independently: a stuck item does not stall the router, and each item can be given narrow authority — only the tools and scope that item genuinely needs."
+          "body": "In a single-session agent, one long or failing task blocks everything behind it, and its intermediate state leaks into later decisions. Isolated workers fail independently: a stuck item does not stall the router, and each item can be given narrow authority \u2014 only the tools and scope that item genuinely needs."
         },
         {
           "heading": "A worked example from our own automation",
-          "body": "Our hourly todo check follows this shape. The standing routine only notices the shared list; the work itself — continue one claimed item, verify what is blocking it, record the result — is a bounded unit that either finishes quietly or escalates to a person. The router/worker lens explains the rule baked into it: the system speaks only when a person must act or can use a result."
+          "body": "Our hourly todo check follows this shape. The standing routine only notices the shared list; the work itself \u2014 continue one claimed item, verify what is blocking it, record the result \u2014 is a bounded unit that either finishes quietly or escalates to a person. The router/worker lens explains the rule baked into it: the system speaks only when a person must act or can use a result."
         },
         {
           "heading": "Background: why one context tangles",
-          "body": "A single agent session uses its context as both memory and workspace. Everything it has seen — earlier tasks, failed attempts, half-finished reasoning — sits in the same space it must now think in. That is comfortable for a conversation and corrosive for a queue: selection, execution, and follow-up all compete for the same attention, and each item inherits the previous items' state whether it wants it or not. Separating the roles is an old answer to that shape of problem; this MIT-licensed prototype packages the answer for agent work, which is why it is worth studying even though it is research code, not a product."
+          "body": "A single agent session uses its context as both memory and workspace. Everything it has seen \u2014 earlier tasks, failed attempts, half-finished reasoning \u2014 sits in the same space it must now think in. That is comfortable for a conversation and corrosive for a queue: selection, execution, and follow-up all compete for the same attention, and each item inherits the previous items' state whether it wants it or not. Separating the roles is an old answer to that shape of problem; this MIT-licensed prototype packages the answer for agent work, which is why it is worth studying even though it is research code, not a product."
         },
         {
           "heading": "Trade-offs: what the split costs",
-          "body": "Isolation is not free, and the honest reading of the pattern includes its price. A fresh worker starts cold, so the context it needs must be chosen and handed over deliberately — too little and it flounders, too much and you have rebuilt the tangle one level down. Compact results can also hide detail a human would have wanted, which puts pressure on deciding, in advance, what a result must contain. And the Router itself can quietly become the bottleneck if it starts doing work instead of dispatching it. The pattern pays when items are genuinely independent; it is overhead when they are not."
+          "body": "Isolation is not free, and the honest reading of the pattern includes its price. A fresh worker starts cold, so the context it needs must be chosen and handed over deliberately \u2014 too little and it flounders, too much and you have rebuilt the tangle one level down. Compact results can also hide detail a human would have wanted, which puts pressure on deciding, in advance, what a result must contain. And the Router itself can quietly become the bottleneck if it starts doing work instead of dispatching it. The pattern pays when items are genuinely independent; it is overhead when they are not."
         },
         {
           "heading": "A worked example: pipeline triage, split by role",
-          "body": "Take the other job the research share named for this pattern: triage. Picture a failed pipeline run arriving as one work item. In a single-session design, the agent investigating it also owns every later alert, so one deep investigation delays everything queued behind it — and its findings bleed into the next investigation's context. Split by role, the Router simply dispatches the failure as one isolated item; the Worker examines that run and returns a compact verdict — what failed, and whether a person must act — while the Router stays free to dispatch the next item. The next failure's Worker starts from a clean slate, owing nothing to the previous one."
+          "body": "Take the other job the research share named for this pattern: triage. Picture a failed pipeline run arriving as one work item. In a single-session design, the agent investigating it also owns every later alert, so one deep investigation delays everything queued behind it \u2014 and its findings bleed into the next investigation's context. Split by role, the Router simply dispatches the failure as one isolated item; the Worker examines that run and returns a compact verdict \u2014 what failed, and whether a person must act \u2014 while the Router stays free to dispatch the next item. The next failure's Worker starts from a clean slate, owing nothing to the previous one."
         }
       ],
       "checklist": [
         "Map one existing routine into Router duties vs Worker duties on paper",
         "Define the smallest work item a Worker can own end to end",
         "Write down the exact compact result each Worker must return",
-        "List the tools and scope each item needs — and cut the rest",
+        "List the tools and scope each item needs \u2014 and cut the rest",
         "Keep it a design reference: no prototype code as a dependency"
       ],
-      "caveats": "This is a research prototype, not production software. We have not run it, and everything here is evaluated from the project's own description of its design. Whether the implementation is reliable, maintained, or a good fit for our stack is unverified — the pattern is borrowed as a reference, not adopted as a dependency.",
+      "caveats": "This is a research prototype, not production software. We have not run it, and everything here is evaluated from the project's own description of its design. Whether the implementation is reliable, maintained, or a good fit for our stack is unverified \u2014 the pattern is borrowed as a reference, not adopted as a dependency.",
       "source_name": "DeepSeek on GitHub",
       "source_url": "https://github.com/deepseek-ai/dsh-superagent-prototype"
     },
@@ -145,21 +368,21 @@
       "category": "Opportunities",
       "kicker": "Beyond flowing prose",
       "title": "Opportunity: Layout for Illustrated & Complex Books",
-      "summary": "Formatting tools handle plain prose; image-fixed books still need a human, at $600–$2,500 per book.",
-      "hook": "Image-fixed books cost $600–$2,500 to format by hand — prose tools simply can't reflow them.",
+      "summary": "Formatting tools handle plain prose; image-fixed books still need a human, at $600\u2013$2,500 per book.",
+      "hook": "Image-fixed books cost $600\u2013$2,500 to format by hand \u2014 prose tools simply can't reflow them.",
       "takeaways": [
         "Prose formatters reflow text; illustrated books need fixed pages, captions and spreads composed as units.",
         "MVP: fixed-layout picture books, a few templates that never break, print-ready export.",
-        "Per-book pricing is the validation signal — authors pay only when output is genuinely print-ready."
+        "Per-book pricing is the validation signal \u2014 authors pay only when output is genuinely print-ready."
       ],
       "image": "img/illustrated-book-layout.jpg",
-      "problem": "Authors of illustrated and complex-layout books have no affordable self-serve option. Their images, captions, sidebars, and page-specific compositions cannot simply reflow like ordinary prose.\n\nThe pain lands at the worst moment: the end of the project. The author has finished the words and the artwork, and only then discovers that turning them into a print-ready interior is a specialist job at a specialist price. Delay is part of the cost too — booking a human formatter means queueing for their schedule and then rounds of corrections — and every correction round risks disturbing the composed pages the author and illustrator arranged deliberately.",
-      "solution": "Build a layout tool specifically for image-fixed interiors — picture books, cookbooks, manuals, and other designed pages — instead of adapting a prose formatter after the fact.\n\nThe tool's job is narrower than formatting in general, and that narrowness is the point. Instead of understanding every possible book, it understands a small family of page compositions deeply: where the image sits, where the caption belongs, how a spread is built as one unit, and what the printer needs the final file to be. Software is good at exactly this kind of repetition — applying a proven composition perfectly, page after page, without drifting or tiring.",
-      "benefit": "Authors could get print-ready files at a fraction of the human price and turnaround, while the product focuses on a segment existing tools serve poorly. Because the pricing is per book, an author risks one title rather than a subscription — the first paid book proves the workflow before anyone commits to more.",
-      "apply": "Start with one narrow MVP: fixed-layout picture books, a small set of dependable page templates, and a clean print-ready export. Charge per book and expand to adjacent complex formats only after authors validate the first workflow.\n\nValidation should be designed as carefully as the tool. The first authors are not just customers; their books are the test corpus. If a real picture book cannot pass through the templates without hand-fixing, that failure list is the product roadmap, in priority order. Only a workflow that survives real manuscripts earns expansion into cookbooks or manuals — each adjacent format carries its own composition rules and should be added one at a time, not promised all at once.",
+      "problem": "Authors of illustrated and complex-layout books have no affordable self-serve option. Their images, captions, sidebars, and page-specific compositions cannot simply reflow like ordinary prose.\n\nThe pain lands at the worst moment: the end of the project. The author has finished the words and the artwork, and only then discovers that turning them into a print-ready interior is a specialist job at a specialist price. Delay is part of the cost too \u2014 booking a human formatter means queueing for their schedule and then rounds of corrections \u2014 and every correction round risks disturbing the composed pages the author and illustrator arranged deliberately.",
+      "solution": "Build a layout tool specifically for image-fixed interiors \u2014 picture books, cookbooks, manuals, and other designed pages \u2014 instead of adapting a prose formatter after the fact.\n\nThe tool's job is narrower than formatting in general, and that narrowness is the point. Instead of understanding every possible book, it understands a small family of page compositions deeply: where the image sits, where the caption belongs, how a spread is built as one unit, and what the printer needs the final file to be. Software is good at exactly this kind of repetition \u2014 applying a proven composition perfectly, page after page, without drifting or tiring.",
+      "benefit": "Authors could get print-ready files at a fraction of the human price and turnaround, while the product focuses on a segment existing tools serve poorly. Because the pricing is per book, an author risks one title rather than a subscription \u2014 the first paid book proves the workflow before anyone commits to more.",
+      "apply": "Start with one narrow MVP: fixed-layout picture books, a small set of dependable page templates, and a clean print-ready export. Charge per book and expand to adjacent complex formats only after authors validate the first workflow.\n\nValidation should be designed as carefully as the tool. The first authors are not just customers; their books are the test corpus. If a real picture book cannot pass through the templates without hand-fixing, that failure list is the product roadmap, in priority order. Only a workflow that survives real manuscripts earns expansion into cookbooks or manuals \u2014 each adjacent format carries its own composition rules and should be added one at a time, not promised all at once.",
       "stats": [
         {
-          "value": "$600–$2,500",
+          "value": "$600\u2013$2,500",
           "label": "What human formatting costs per book"
         },
         {
@@ -174,23 +397,23 @@
         },
         {
           "heading": "What the MVP has to get right",
-          "body": "A small template set that never breaks — cover, single-image page, image-plus-text page, spread — exact page-size and bleed handling for print, and an export a printer accepts without hand-fixing. A few templates that always work beat a flexible tool that occasionally produces a broken file."
+          "body": "A small template set that never breaks \u2014 cover, single-image page, image-plus-text page, spread \u2014 exact page-size and bleed handling for print, and an export a printer accepts without hand-fixing. A few templates that always work beat a flexible tool that occasionally produces a broken file."
         },
         {
           "heading": "How we would validate before building more",
           "body": "Put the picture-book workflow in front of a few real authors, watch where they get stuck, and only then expand toward cookbooks or manuals. Per-book pricing keeps the test honest: authors pay when the output is genuinely print-ready, so payment itself is the validation signal."
         },
         {
-          "heading": "The market, in the record’s numbers",
-          "body": "What the scan actually established is a price gap, not a proven product. Human formatting for these books runs $600–$2,500 per book, because the work is manual composition, page by page. Prose formatters serve the other end of the market — flowing text that reflows to any page — and charge accordingly for a problem illustrated books do not have. Between those two sits the opening: authors who cannot justify the human price for every title, facing tools that structurally cannot do their book. Per-book pricing fits that gap because the author's own decision is per book too: each title either justifies the spend or it does not."
+          "heading": "The market, in the record\u2019s numbers",
+          "body": "What the scan actually established is a price gap, not a proven product. Human formatting for these books runs $600\u2013$2,500 per book, because the work is manual composition, page by page. Prose formatters serve the other end of the market \u2014 flowing text that reflows to any page \u2014 and charge accordingly for a problem illustrated books do not have. Between those two sits the opening: authors who cannot justify the human price for every title, facing tools that structurally cannot do their book. Per-book pricing fits that gap because the author's own decision is per book too: each title either justifies the spend or it does not."
         },
         {
           "heading": "Why spreads and captions break naive tools",
-          "body": "Three bindings make an illustrated page different from a prose page. First, image-to-passage: a picture belongs beside specific words, and if the text moves, the picture must move with it or the page lies. Second, caption-to-image: a caption is part of its picture, not a paragraph that happens to sit nearby. Third, page-to-spread: two facing pages are composed as a single canvas, so a change on the left page is a change to the right one. A reflow engine treats all three bindings as accidents to be recomputed; a fixed-layout tool treats them as the content itself. Add print's exactness — page size and bleed are physical facts, not preferences — and it is clear why this is a different product, not a feature."
+          "body": "Three bindings make an illustrated page different from a prose page. First, image-to-passage: a picture belongs beside specific words, and if the text moves, the picture must move with it or the page lies. Second, caption-to-image: a caption is part of its picture, not a paragraph that happens to sit nearby. Third, page-to-spread: two facing pages are composed as a single canvas, so a change on the left page is a change to the right one. A reflow engine treats all three bindings as accidents to be recomputed; a fixed-layout tool treats them as the content itself. Add print's exactness \u2014 page size and bleed are physical facts, not preferences \u2014 and it is clear why this is a different product, not a feature."
         },
         {
           "heading": "Risks and trade-offs to watch",
-          "body": "The template bet cuts both ways. Templates that never break are dependable precisely because they refuse unusual pages — and some authors' styles live on unusual pages, so the tool will simply be wrong for them. Print readiness is also unforgiving: an export that is almost right is a rejected print run, which means the unglamorous details of the export carry the whole promise. And the demand side is still a hypothesis: the research scan priced the human alternative, but no author in this niche has yet been interviewed, so which complex format complains loudest — and would pay — remains an open question by design."
+          "body": "The template bet cuts both ways. Templates that never break are dependable precisely because they refuse unusual pages \u2014 and some authors' styles live on unusual pages, so the tool will simply be wrong for them. Print readiness is also unforgiving: an export that is almost right is a rejected print run, which means the unglamorous details of the export carry the whole promise. And the demand side is still a hypothesis: the research scan priced the human alternative, but no author in this niche has yet been interviewed, so which complex format complains loudest \u2014 and would pay \u2014 remains an open question by design."
         }
       ],
       "checklist": [
@@ -200,7 +423,7 @@
         "Run one real picture book through end to end; log every hand-fix",
         "Price per book, and treat the first paid book as the validation signal"
       ],
-      "caveats": "The $600–$2,500 figure is what human formatters charge, from our market scan — it is not proof that authors will pay a tool any specific price, and we have not interviewed authors in this niche yet. Real demand, willingness to pay, and which complex format complains loudest are all still open questions.",
+      "caveats": "The $600\u2013$2,500 figure is what human formatters charge, from our market scan \u2014 it is not proof that authors will pay a tool any specific price, and we have not interviewed authors in this niche yet. Real demand, willingness to pay, and which complex format complains loudest are all still open questions.",
       "source_name": "Team research",
       "source_url": ""
     },
@@ -211,17 +434,17 @@
       "kicker": "Memory that survives the session",
       "title": "claude-mem: Persistent Memory for AI Coding Agents",
       "summary": "An open-source system that gives coding agents a memory across sessions, so they stop starting from zero.",
-      "hook": "Your agent forgets everything between sessions — this one remembers, without stuffing context full.",
+      "hook": "Your agent forgets everything between sessions \u2014 this one remembers, without stuffing context full.",
       "takeaways": [
         "Hooks capture sessions; a local worker compresses them into searchable observations (SQLite + FTS5 + vectors).",
         "Progressive disclosure: compact index first, timeline next, full detail only for chosen items.",
-        "Trial is narrow and scoped: storytelling repo only, 3–5 sessions, curated files stay the authority."
+        "Trial is narrow and scoped: storytelling repo only, 3\u20135 sessions, curated files stay the authority."
       ],
       "image": "img/claude-mem.jpg",
-      "problem": "AI agents forget everything between sessions; re-briefing them burns time and tokens, and context is lost.\n\nThe cost is easy to underestimate because it is paid in small amounts. Every new session begins with someone — the human or the agent — reconstructing state: what was decided, what is half-done, what broke last time and why. Skip the reconstruction and the agent re-asks, re-reads, or quietly re-makes a settled decision. Do it thoroughly and you stuff ever-larger briefings into the context, burning the very tokens the session then needs for real work. Either way, the session pays before it starts.",
-      "solution": "claude-mem (Apache 2.0) hooks the agent lifecycle, compresses what happened into observations stored in SQLite + FTS5 with vector search, and retrieves them with progressive disclosure: compact index first, then timeline, then full detail only for chosen items.\n\nTwo design choices do the heavy lifting. First, capture is automatic: hooks on the agent's lifecycle — the hosts it supports include Claude Code, Codex, Gemini CLI, and OpenCode — record prompts and tool use without the agent having to remember to take notes. Second, storage is layered for cheap recall: observations sit in SQLite with FTS5 full-text search plus a Chroma vector index, and a local web viewer on port 37777 lets a human inspect what the system believes it knows. Retrieval then spends tokens in order — index, timeline, full detail — instead of all at once.",
+      "problem": "AI agents forget everything between sessions; re-briefing them burns time and tokens, and context is lost.\n\nThe cost is easy to underestimate because it is paid in small amounts. Every new session begins with someone \u2014 the human or the agent \u2014 reconstructing state: what was decided, what is half-done, what broke last time and why. Skip the reconstruction and the agent re-asks, re-reads, or quietly re-makes a settled decision. Do it thoroughly and you stuff ever-larger briefings into the context, burning the very tokens the session then needs for real work. Either way, the session pays before it starts.",
+      "solution": "claude-mem (Apache 2.0) hooks the agent lifecycle, compresses what happened into observations stored in SQLite + FTS5 with vector search, and retrieves them with progressive disclosure: compact index first, then timeline, then full detail only for chosen items.\n\nTwo design choices do the heavy lifting. First, capture is automatic: hooks on the agent's lifecycle \u2014 the hosts it supports include Claude Code, Codex, Gemini CLI, and OpenCode \u2014 record prompts and tool use without the agent having to remember to take notes. Second, storage is layered for cheap recall: observations sit in SQLite with FTS5 full-text search plus a Chroma vector index, and a local web viewer on port 37777 lets a human inspect what the system believes it knows. Retrieval then spends tokens in order \u2014 index, timeline, full detail \u2014 instead of all at once.",
       "benefit": "Continuity without stuffing huge context into every session; cheaper, faster restarts. The restart cost it removes is paid at the start of every session, so even a modest recall win compounds quickly across a team's week.",
-      "apply": "Our team is running a scoped trial — storytelling repo only, offline opt-in, Gemini (free) as the compression provider, 3–5 sessions, then a fresh-session recall test; curated memory files stay the authority during the trial.\n\nThe trial's guardrails matter as much as its verdict. Capture stays offline unless opted in, the compression provider is Gemini on the free tier, and no company code or secrets get captured. The recall test itself should be unforgiving: ask the fresh session questions with known answers — the last merge, the currently open item, a past bug fix — and also measure the session-start token cost against our current curated setup, because memory that costs more than the briefing it replaces has failed quietly.",
+      "apply": "Our team is running a scoped trial \u2014 storytelling repo only, offline opt-in, Gemini (free) as the compression provider, 3\u20135 sessions, then a fresh-session recall test; curated memory files stay the authority during the trial.\n\nThe trial's guardrails matter as much as its verdict. Capture stays offline unless opted in, the compression provider is Gemini on the free tier, and no company code or secrets get captured. The recall test itself should be unforgiving: ask the fresh session questions with known answers \u2014 the last merge, the currently open item, a past bug fix \u2014 and also measure the session-start token cost against our current curated setup, because memory that costs more than the briefing it replaces has failed quietly.",
       "stats": [
         {
           "value": "~108k",
@@ -229,7 +452,7 @@
         },
         {
           "value": "3 layers",
-          "label": "Retrieval: index → timeline → full detail"
+          "label": "Retrieval: index \u2192 timeline \u2192 full detail"
         },
         {
           "value": "Apache 2.0",
@@ -239,7 +462,7 @@
       "details": [
         {
           "heading": "How the memory is built",
-          "body": "Hooks watch the agent's lifecycle — prompts, tool calls, session ends — and a local worker compresses what happened into short observations. Those observations land in SQLite with full-text search (FTS5) plus a vector index, so recall can be keyword-based, semantic, or both."
+          "body": "Hooks watch the agent's lifecycle \u2014 prompts, tool calls, session ends \u2014 and a local worker compresses what happened into short observations. Those observations land in SQLite with full-text search (FTS5) plus a vector index, so recall can be keyword-based, semantic, or both."
         },
         {
           "heading": "Why progressive disclosure saves tokens",
@@ -247,30 +470,30 @@
         },
         {
           "heading": "How this compares to our current setup",
-          "body": "Our team already runs the same idea by hand: curated memory files as the authority, a local RAG for search, and topic annexes loaded on demand. The trial question is therefore narrow — does automatic capture beat careful curation on recall quality — not whether agent memory itself is a good idea."
+          "body": "Our team already runs the same idea by hand: curated memory files as the authority, a local RAG for search, and topic annexes loaded on demand. The trial question is therefore narrow \u2014 does automatic capture beat careful curation on recall quality \u2014 not whether agent memory itself is a good idea."
         },
         {
           "heading": "How it works, step by step",
-          "body": "A session runs under lifecycle hooks, which fire on prompts, tool calls, and session end. A local worker takes what the hooks captured and compresses it into short observations — what was done, decided, or learned — rather than storing the raw transcript. Those observations are written to SQLite, indexed for full-text search with FTS5 and for semantic search with Chroma's vectors. Next session, recall runs the other way: a search returns a compact index of candidate observations, a timeline view places a promising hit in context, and only the observations the agent actually picks are fetched in full and injected. Each layer is cheap; the expensive layer is spent only where the cheap ones say it is worth it."
+          "body": "A session runs under lifecycle hooks, which fire on prompts, tool calls, and session end. A local worker takes what the hooks captured and compresses it into short observations \u2014 what was done, decided, or learned \u2014 rather than storing the raw transcript. Those observations are written to SQLite, indexed for full-text search with FTS5 and for semantic search with Chroma's vectors. Next session, recall runs the other way: a search returns a compact index of candidate observations, a timeline view places a promising hit in context, and only the observations the agent actually picks are fetched in full and injected. Each layer is cheap; the expensive layer is spent only where the cheap ones say it is worth it."
         },
         {
           "heading": "Automatic capture vs our curated files",
-          "body": "Our current setup is the manual version of the same idea, and the comparison is the real trial question. Curated files — MEMORY.md, topic annexes, the local RAG over them — are written deliberately, reviewed, and treated as the authority; their weakness is the labour of keeping them current and the sessions where nobody wrote anything down. claude-mem inverts the trade: capture is total and effortless, but unreviewed, so an observation can preserve a misunderstanding as faithfully as a fact. That is why the trial keeps the curated files as the authority and treats claude-mem as a recall layer to be judged — on whether automatic breadth beats careful curation at finding the right thing fast."
+          "body": "Our current setup is the manual version of the same idea, and the comparison is the real trial question. Curated files \u2014 MEMORY.md, topic annexes, the local RAG over them \u2014 are written deliberately, reviewed, and treated as the authority; their weakness is the labour of keeping them current and the sessions where nobody wrote anything down. claude-mem inverts the trade: capture is total and effortless, but unreviewed, so an observation can preserve a misunderstanding as faithfully as a fact. That is why the trial keeps the curated files as the authority and treats claude-mem as a recall layer to be judged \u2014 on whether automatic breadth beats careful curation at finding the right thing fast."
         },
         {
           "heading": "Setting it up without the trap",
-          "body": "One setup detail from the research notes is worth keeping with the article: the install path matters. The supported route is the project's npx installer, which sets up the hooks and the local worker. Installing the npm package globally instead gives you only the SDK/library — no hooks, no worker, no memory — a silent no-op that looks installed. Combined with the trial's other settings (offline opt-in off via CLAUDE_MEM_ONLINE_OPTIN=false, Gemini as the compression provider, one repo in scope), the correct first run is a checklist, not an improvisation."
+          "body": "One setup detail from the research notes is worth keeping with the article: the install path matters. The supported route is the project's npx installer, which sets up the hooks and the local worker. Installing the npm package globally instead gives you only the SDK/library \u2014 no hooks, no worker, no memory \u2014 a silent no-op that looks installed. Combined with the trial's other settings (offline opt-in off via CLAUDE_MEM_ONLINE_OPTIN=false, Gemini as the compression provider, one repo in scope), the correct first run is a checklist, not an improvisation."
         }
       ],
       "checklist": [
-        "Install on HieuPC only, via the npx installer — not the SDK-only npm package",
+        "Install on HieuPC only, via the npx installer \u2014 not the SDK-only npm package",
         "Scope it to the storytelling repo, with online opt-in off",
         "Pin compression to Gemini (free) for the trial",
-        "Run 3–5 real sessions, then a fresh-session recall test with known answers",
+        "Run 3\u20135 real sessions, then a fresh-session recall test with known answers",
         "Compare session-start token cost against the curated memory setup"
       ],
       "caveats": "A star count is popularity, not proof of quality. The team's scoped trial is queued with an owner and a definition of done, but no recall-test result has been posted yet, so claude-mem's benefit for our work is still unverified. Behavior described here comes from the project's own documentation.",
-      "source_name": "GitHub — thedotmack/claude-mem",
+      "source_name": "GitHub \u2014 thedotmack/claude-mem",
       "source_url": "https://github.com/thedotmack/claude-mem"
     },
     {
@@ -283,14 +506,14 @@
       "hook": "24B of capacity, only ~2.45B working per token: a local brain that could actually run.",
       "takeaways": [
         "Mixture-of-experts routes each token to a few specialists, so running cost tracks ~2.45B, not 24B.",
-        "Local means no per-token bill and no data leaving the machine — if task quality proves out.",
+        "Local means no per-token bill and no data leaving the machine \u2014 if task quality proves out.",
         "Check the license first: LFM 1.0 carries a $10M revenue condition; benchmarks are the vendor's own."
       ],
       "image": "img/lfm2-agent-model.jpg",
-      "problem": "Local models have been too weak for real agent tasks, pushing teams to paid APIs.\n\nThe pressure is structural. Agent work is not one request but hundreds — planning, tool calls, retries, summaries — so a per-token price multiplies across every loop, and a privacy boundary is crossed with every call. Teams accept that deal because the alternative has been worse: a local model that fumbles tool use or loses the thread of a multi-step task costs more in failed runs than the API bill it saves. The question is never whether local is attractive; it is whether a local model can finally do the job.",
-      "solution": "LFM2.5-24B-A2B uses mixture-of-experts efficiency: a 24B model with only about 2.45B active parameters per token, post-trained for reasoning and tool use on local devices.\n\nThe mixture-of-experts design is what makes the trade plausible. Capacity and cost are decoupled: the model's knowledge lives in its full 24B parameters, but any single token is processed by only a routed subset — roughly 2.45B parameters' worth of compute. Post-training for reasoning and tool use then aims that cheaper capacity at exactly the behaviours agent roles depend on, rather than at open-ended chat alone. In effect, you rent the whole library but only pay to heat the room you are standing in.",
+      "problem": "Local models have been too weak for real agent tasks, pushing teams to paid APIs.\n\nThe pressure is structural. Agent work is not one request but hundreds \u2014 planning, tool calls, retries, summaries \u2014 so a per-token price multiplies across every loop, and a privacy boundary is crossed with every call. Teams accept that deal because the alternative has been worse: a local model that fumbles tool use or loses the thread of a multi-step task costs more in failed runs than the API bill it saves. The question is never whether local is attractive; it is whether a local model can finally do the job.",
+      "solution": "LFM2.5-24B-A2B uses mixture-of-experts efficiency: a 24B model with only about 2.45B active parameters per token, post-trained for reasoning and tool use on local devices.\n\nThe mixture-of-experts design is what makes the trade plausible. Capacity and cost are decoupled: the model's knowledge lives in its full 24B parameters, but any single token is processed by only a routed subset \u2014 roughly 2.45B parameters' worth of compute. Post-training for reasoning and tool use then aims that cheaper capacity at exactly the behaviours agent roles depend on, rather than at open-ended chat alone. In effect, you rent the whole library but only pay to heat the room you are standing in.",
       "benefit": "It offers a plausible free local brain for PC-side agent roles, with big-model capacity at a much smaller active running cost. Its published benchmark results are Liquid AI's own, so they still need independent confirmation. And because it runs on hardware the team already owns, the experiment itself is cheap: the cost of finding out is time, not a new subscription.",
-      "apply": "Use it first as a candidate for testbed roles on the team PC. Check real task quality against our current models, and read the LFM 1.0 license carefully before adoption because it has a $10M revenue condition.\n\nA fair testbed trial mirrors how the role would actually run. Give the model a real, bounded agent job the team already does, side by side with the current brain, and score completed work — not impressions from a few chat turns. Keep the trial on internal roles while the license question is open: the $10M revenue condition in the LFM 1.0 license changes little for a testbed, but it has to be settled before the model is built into anything a customer touches.",
+      "apply": "Use it first as a candidate for testbed roles on the team PC. Check real task quality against our current models, and read the LFM 1.0 license carefully before adoption because it has a $10M revenue condition.\n\nA fair testbed trial mirrors how the role would actually run. Give the model a real, bounded agent job the team already does, side by side with the current brain, and score completed work \u2014 not impressions from a few chat turns. Keep the trial on internal roles while the license question is open: the $10M revenue condition in the LFM 1.0 license changes little for a testbed, but it has to be settled before the model is built into anything a customer touches.",
       "stats": [
         {
           "value": "24B",
@@ -308,11 +531,11 @@
       "details": [
         {
           "heading": "What mixture-of-experts means here",
-          "body": "Instead of one dense network doing all the work for every token, the model holds many specialist sub-networks and routes each token to only a few of them. Its total knowledge is 24B parameters wide, but the compute spent per token is roughly that of a ~2.45B model — which is what makes running it on a local device plausible."
+          "body": "Instead of one dense network doing all the work for every token, the model holds many specialist sub-networks and routes each token to only a few of them. Its total knowledge is 24B parameters wide, but the compute spent per token is roughly that of a ~2.45B model \u2014 which is what makes running it on a local device plausible."
         },
         {
           "heading": "Why local matters for agent roles",
-          "body": "A local brain means no per-token bill, no code or data leaving the machine, and no dependency on a provider's uptime — the same reasons the team keeps a local LLM testbed. The trade-off is that quality on hard reasoning still has to be proven task by task against the cloud models it would replace."
+          "body": "A local brain means no per-token bill, no code or data leaving the machine, and no dependency on a provider's uptime \u2014 the same reasons the team keeps a local LLM testbed. The trade-off is that quality on hard reasoning still has to be proven task by task against the cloud models it would replace."
         },
         {
           "heading": "Read the license before the benchmarks",
@@ -320,15 +543,15 @@
         },
         {
           "heading": "How routing works, in plain terms",
-          "body": "Picture the model as a floor of specialists rather than one generalist. For each token it processes, a small routing mechanism decides which few specialists are relevant and sends the work only to them; the rest stay idle. That is the entire trick behind the two headline numbers: 24B parameters is the size of the whole floor — the knowledge available in total — while ~2.45B active is the size of the team actually working on any given token. Running cost follows the active team, not the floor, which is why a model this wide can be plausible on a local device at all."
+          "body": "Picture the model as a floor of specialists rather than one generalist. For each token it processes, a small routing mechanism decides which few specialists are relevant and sends the work only to them; the rest stay idle. That is the entire trick behind the two headline numbers: 24B parameters is the size of the whole floor \u2014 the knowledge available in total \u2014 while ~2.45B active is the size of the team actually working on any given token. Running cost follows the active team, not the floor, which is why a model this wide can be plausible on a local device at all."
         },
         {
-          "heading": "What the vendor’s benchmarks can and cannot tell us",
-          "body": "Liquid AI's published results are best read as a screening signal. They show the model performing on tasks the vendor chose, under conditions the vendor controlled — enough to say the model deserves a testbed slot, not enough to say it will hold up on our agent work. Agent roles stress a specific combination: following a plan across many steps, calling tools correctly, and recovering when a step fails. A benchmark average can look strong while exactly that combination is weak. Until an independent evaluation or our own runs speak to multi-step tool work specifically, the honest position is the one in this article's caveats: promising, unverified, and precisely what the testbed exists to resolve."
+          "heading": "What the vendor\u2019s benchmarks can and cannot tell us",
+          "body": "Liquid AI's published results are best read as a screening signal. They show the model performing on tasks the vendor chose, under conditions the vendor controlled \u2014 enough to say the model deserves a testbed slot, not enough to say it will hold up on our agent work. Agent roles stress a specific combination: following a plan across many steps, calling tools correctly, and recovering when a step fails. A benchmark average can look strong while exactly that combination is weak. Until an independent evaluation or our own runs speak to multi-step tool work specifically, the honest position is the one in this article's caveats: promising, unverified, and precisely what the testbed exists to resolve."
         },
         {
           "heading": "What to watch next",
-          "body": "Three things will move this from interesting to decided. First, independent evaluations — any serious third-party run on agent and tool-use tasks matters more than another vendor chart. Second, our own testbed evidence: completed-task scores on a real bounded role, against the current brain, on our hardware. Third, the license: the LFM 1.0 revenue condition at the $10M threshold is a footnote for internal roles and a design constraint for anything productized, so the reading of it should happen before the model is anyone's plan A, not after."
+          "body": "Three things will move this from interesting to decided. First, independent evaluations \u2014 any serious third-party run on agent and tool-use tasks matters more than another vendor chart. Second, our own testbed evidence: completed-task scores on a real bounded role, against the current brain, on our hardware. Third, the license: the LFM 1.0 revenue condition at the $10M threshold is a footnote for internal roles and a design constraint for anything productized, so the reading of it should happen before the model is anyone's plan A, not after."
         }
       ],
       "checklist": [
@@ -348,18 +571,18 @@
       "category": "Opportunities",
       "kicker": "Cash flow without the awkward chase",
       "title": "Opportunity: AI Invoice Chasing for Solo Freelancers",
-      "summary": "64% of freelancers report late payments with ~$5,600 outstanding on average, while serious AR tools cost $49–$1,500+/month.",
-      "hook": "64% of freelancers are paid late, averaging ~$5,600 outstanding — and chasing payment yourself is awkward, manual work.",
+      "summary": "64% of freelancers report late payments with ~$5,600 outstanding on average, while serious AR tools cost $49\u2013$1,500+/month.",
+      "hook": "64% of freelancers are paid late, averaging ~$5,600 outstanding \u2014 and chasing payment yourself is awkward, manual work.",
       "takeaways": [
-        "The gap: enterprise AR tools cost $49–$1,500+/month and are built for finance departments, not solo workers.",
-        "Product: AI-drafted reminders that escalate politely → firmly on the freelancer's existing invoicing tools.",
+        "The gap: enterprise AR tools cost $49\u2013$1,500+/month and are built for finance departments, not solo workers.",
+        "Product: AI-drafted reminders that escalate politely \u2192 firmly on the freelancer's existing invoicing tools.",
         "MVP pricing sits clearly under $49/month; one recovered invoice at the average pays for years."
       ],
       "image": "img/late-invoice-chasing.jpg",
-      "problem": "Solo freelancers lose cash flow and hours to awkward manual payment chasing. Enterprise accounts-receivable products are too expensive and heavy for a one-person business.\n\nUnderneath the cash-flow problem sits a social one. The client who pays late is often also the freelancer's best source of future work, so every reminder feels like a risk: too soft and it is ignored, too firm and it sours the relationship. So reminders go out late, apologetically, or not at all, and the invoice ages quietly. The work is pure overhead besides — nobody pays a freelancer extra for the hours spent chasing money they have already earned.",
-      "solution": "Layer AI-drafted, escalating reminder sequences — polite first, then progressively firmer — on top of the free invoicing tools freelancers already use.\n\nThe escalation ladder is the product's core mechanic. Each step differs in timing and firmness, not aggression: a friendly note around the due date, a clear reminder once it passes, a firmer message as the invoice ages, and a final notice that names the situation plainly. Because the freelancer approves the whole sequence in advance, the system can be persistent without being personal — the client experiences a process, not a grudge. Persistence on schedule, every time, is exactly what manual chasing never manages.",
-      "benefit": "Freelancers can get paid on time without personally carrying the social cost of chasing clients, and without paying enterprise AR prices. The freelancer also keeps the client relationship intact — the system does the awkward part, in a tone they approved before anything was sent.",
-      "apply": "The smallest MVP connects an invoice list, generates the reminder sequence for approval, and sends it on schedule. Price it as a small monthly subscription positioned clearly under the $49–$1,500+/month enterprise tools.\n\nKeep the MVP deliberately small and measurable. It succeeds if reminders go out on schedule and invoices close faster; it does not need accounting features, payment processing, or yet another invoicing system to replace the one freelancers already use. Pricing follows the same logic: position the subscription clearly under the $49/month floor of the enterprise tools, and let the comparison that matters be against the ~$5,600 average outstanding rather than against other software.\n\nStart narrower than the full ladder if needed: the first two steps — a friendly nudge and one clear reminder, sent on time every time — cover the most common case, the client who simply forgot or lost the invoice. The firmer steps exist for the minority of invoices that genuinely age. A product that earns trust on the common case first can add depth later; one that opens with maximum firmness will scare off exactly the solo users it is built for.",
+      "problem": "Solo freelancers lose cash flow and hours to awkward manual payment chasing. Enterprise accounts-receivable products are too expensive and heavy for a one-person business.\n\nUnderneath the cash-flow problem sits a social one. The client who pays late is often also the freelancer's best source of future work, so every reminder feels like a risk: too soft and it is ignored, too firm and it sours the relationship. So reminders go out late, apologetically, or not at all, and the invoice ages quietly. The work is pure overhead besides \u2014 nobody pays a freelancer extra for the hours spent chasing money they have already earned.",
+      "solution": "Layer AI-drafted, escalating reminder sequences \u2014 polite first, then progressively firmer \u2014 on top of the free invoicing tools freelancers already use.\n\nThe escalation ladder is the product's core mechanic. Each step differs in timing and firmness, not aggression: a friendly note around the due date, a clear reminder once it passes, a firmer message as the invoice ages, and a final notice that names the situation plainly. Because the freelancer approves the whole sequence in advance, the system can be persistent without being personal \u2014 the client experiences a process, not a grudge. Persistence on schedule, every time, is exactly what manual chasing never manages.",
+      "benefit": "Freelancers can get paid on time without personally carrying the social cost of chasing clients, and without paying enterprise AR prices. The freelancer also keeps the client relationship intact \u2014 the system does the awkward part, in a tone they approved before anything was sent.",
+      "apply": "The smallest MVP connects an invoice list, generates the reminder sequence for approval, and sends it on schedule. Price it as a small monthly subscription positioned clearly under the $49\u2013$1,500+/month enterprise tools.\n\nKeep the MVP deliberately small and measurable. It succeeds if reminders go out on schedule and invoices close faster; it does not need accounting features, payment processing, or yet another invoicing system to replace the one freelancers already use. Pricing follows the same logic: position the subscription clearly under the $49/month floor of the enterprise tools, and let the comparison that matters be against the ~$5,600 average outstanding rather than against other software.\n\nStart narrower than the full ladder if needed: the first two steps \u2014 a friendly nudge and one clear reminder, sent on time every time \u2014 cover the most common case, the client who simply forgot or lost the invoice. The firmer steps exist for the minority of invoices that genuinely age. A product that earns trust on the common case first can add depth later; one that opens with maximum firmness will scare off exactly the solo users it is built for.",
       "stats": [
         {
           "value": "64%",
@@ -370,34 +593,34 @@
           "label": "Average outstanding per freelancer"
         },
         {
-          "value": "$49–$1,500+",
+          "value": "$49\u2013$1,500+",
           "label": "What enterprise AR tools cost per month"
         }
       ],
       "details": [
         {
           "heading": "Why the gap exists",
-          "body": "Enterprise accounts-receivable tools are priced and built for finance departments — onboarding, integrations, seats. A solo freelancer needs exactly one slice of that: reminders that go out on time and escalate gracefully. Nobody sells just that slice cheaply, and that absence is the opening."
+          "body": "Enterprise accounts-receivable tools are priced and built for finance departments \u2014 onboarding, integrations, seats. A solo freelancer needs exactly one slice of that: reminders that go out on time and escalate gracefully. Nobody sells just that slice cheaply, and that absence is the opening."
         },
         {
           "heading": "What the product actually does",
-          "body": "It watches due dates on invoices the freelancer already issued, drafts the reminder sequence in their voice — friendly nudge before the due date, firmer note after, final notice later — and sends on schedule after a one-tap approval. The AI's job is tone and timing, not collections aggression."
+          "body": "It watches due dates on invoices the freelancer already issued, drafts the reminder sequence in their voice \u2014 friendly nudge before the due date, firmer note after, final notice later \u2014 and sends on schedule after a one-tap approval. The AI's job is tone and timing, not collections aggression."
         },
         {
           "heading": "The pricing logic",
           "body": "Anchor against the pain, not the software category: one recovered invoice at the ~$5,600 average pays for years of a small subscription. Pricing must sit clearly under the $49/month floor of enterprise tools so the decision stays an easy yes for a one-person business."
         },
         {
-          "heading": "The market gap, in the record’s numbers",
-          "body": "The research scan's figures describe a gap with a specific shape. The pain is widespread — 64% of freelancers report late payments — and the amount stuck is material, averaging ~$5,600 outstanding per freelancer. The existing serious tools sit at $49–$1,500+ per month, priced for finance departments with seats and onboarding. Free invoicing tools, at the other end, send the invoice and stop: the chasing is left entirely to the human. So the unsold product is a single slice — reminders that escalate properly — priced for one person. The gap is not a missing feature in a big suite; it is a missing product at a solo price."
+          "heading": "The market gap, in the record\u2019s numbers",
+          "body": "The research scan's figures describe a gap with a specific shape. The pain is widespread \u2014 64% of freelancers report late payments \u2014 and the amount stuck is material, averaging ~$5,600 outstanding per freelancer. The existing serious tools sit at $49\u2013$1,500+ per month, priced for finance departments with seats and onboarding. Free invoicing tools, at the other end, send the invoice and stop: the chasing is left entirely to the human. So the unsold product is a single slice \u2014 reminders that escalate properly \u2014 priced for one person. The gap is not a missing feature in a big suite; it is a missing product at a solo price."
         },
         {
           "heading": "A worked example: one invoice, chased by the ladder",
-          "body": "An illustrative walk-through, using only the model this article describes. A freelancer finishes a project and issues an invoice through the free tool they already use; the MVP simply watches its due date. Before the date, nothing sends — the sequence is drafted and waiting. At the due date, a friendly nudge goes out after one-tap approval; when the date passes unpaid, the tone steps up to a clear reminder, and later to a firm one, each drafted in the freelancer's voice and none requiring them to sit down and compose an awkward email. If that single invoice is anywhere near the ~$5,600 average outstanding, recovering it pays for years of a subscription priced under $49/month — which is the whole pricing argument in one example."
+          "body": "An illustrative walk-through, using only the model this article describes. A freelancer finishes a project and issues an invoice through the free tool they already use; the MVP simply watches its due date. Before the date, nothing sends \u2014 the sequence is drafted and waiting. At the due date, a friendly nudge goes out after one-tap approval; when the date passes unpaid, the tone steps up to a clear reminder, and later to a firm one, each drafted in the freelancer's voice and none requiring them to sit down and compose an awkward email. If that single invoice is anywhere near the ~$5,600 average outstanding, recovering it pays for years of a subscription priced under $49/month \u2014 which is the whole pricing argument in one example."
         },
         {
           "heading": "Risks and trade-offs",
-          "body": "Tone is the product and also its biggest risk: an escalation that reads as threatening can cost the freelancer the client, which is why the approval step is structural, not a courtesy. Automated reminders also have to avoid feeling like spam — a client who tunes them out has defeated the ladder. And the evidence base deserves the caution stated in this article's caveats: the 64% and ~$5,600 figures come from survey evidence gathered in the scan, populations vary by country and trade, and no freelancer has yet been interviewed to test willingness to pay. The hypothesis is researched; the product is not yet validated."
+          "body": "Tone is the product and also its biggest risk: an escalation that reads as threatening can cost the freelancer the client, which is why the approval step is structural, not a courtesy. Automated reminders also have to avoid feeling like spam \u2014 a client who tunes them out has defeated the ladder. And the evidence base deserves the caution stated in this article's caveats: the 64% and ~$5,600 figures come from survey evidence gathered in the scan, populations vary by country and trade, and no freelancer has yet been interviewed to test willingness to pay. The hypothesis is researched; the product is not yet validated."
         }
       ],
       "checklist": [
@@ -422,31 +645,31 @@
       "takeaways": [
         "Markdown compiles to standard Actions YAML; the agent investigates inside the pipeline's permissions.",
         "Failure investigation is the safe first job: read-only evidence gathering, human still decides the fix.",
-        "Free-first catch: the default Copilot engine needs a paid license — choose the engine deliberately."
+        "Free-first catch: the default Copilot engine needs a paid license \u2014 choose the engine deliberately."
       ],
       "image": "img/github-agentic-workflows.jpg",
-      "problem": "When a CI pipeline goes red, a human has to read logs and triage before anyone learns anything.\n\nThe real cost of a red run is not the failure itself but the queue behind it. Until someone triages, nobody knows whether the fix is a one-line change, a flaky test, or a genuine regression — so other work either waits or proceeds blind. On a small team, that triage tax falls on the same people who write the code, and it arrives at the worst possible times: mid-feature, mid-review, mid-everything. Every red run is a small unscheduled meeting with a log file.",
-      "solution": "GitHub Agentic Workflows let an AI agent investigate a failure, gather evidence, and report as part of the pipeline itself. Teams define the automation in natural-language Markdown, which is compiled into standard GitHub Actions YAML.\n\nThe compilation step is what keeps this governable. The Markdown definition is the human-readable intent — what the agent should investigate and what it may touch — and the compiled Actions YAML is the ordinary, inspectable workflow the platform actually runs. The agent works inside the pipeline's own permissions, with the run's logs and the repository as its context, so its investigation is bounded by the same walls as any other step in the pipeline rather than by trust.",
-      "benefit": "A broken build can get a faster first diagnosis without a person babysitting the run or manually collecting the first round of evidence. The first diagnosis also lands where the team already looks — on the run or the pull request — instead of in a chat thread someone later has to summarise by hand.",
-      "apply": "The natural candidate for our deploy pipeline is an auto-investigation of failed “Deploy dev” runs, with findings posted back to the team. The default Copilot engine needs a paid license, so choose the workflow engine deliberately in a free-first setup.\n\nScope the trial to exactly one job and judge it on report quality. When a Deploy dev run fails, the agent's task is to say why, with evidence — not to fix, merge, or re-run anything; a human reads the report and decides. If the reports reliably save the first round of log-diving, the pattern earns a second job. If they are vague or wrong, the trial ends with one workflow file deleted and nothing else disturbed.",
+      "problem": "When a CI pipeline goes red, a human has to read logs and triage before anyone learns anything.\n\nThe real cost of a red run is not the failure itself but the queue behind it. Until someone triages, nobody knows whether the fix is a one-line change, a flaky test, or a genuine regression \u2014 so other work either waits or proceeds blind. On a small team, that triage tax falls on the same people who write the code, and it arrives at the worst possible times: mid-feature, mid-review, mid-everything. Every red run is a small unscheduled meeting with a log file.",
+      "solution": "GitHub Agentic Workflows let an AI agent investigate a failure, gather evidence, and report as part of the pipeline itself. Teams define the automation in natural-language Markdown, which is compiled into standard GitHub Actions YAML.\n\nThe compilation step is what keeps this governable. The Markdown definition is the human-readable intent \u2014 what the agent should investigate and what it may touch \u2014 and the compiled Actions YAML is the ordinary, inspectable workflow the platform actually runs. The agent works inside the pipeline's own permissions, with the run's logs and the repository as its context, so its investigation is bounded by the same walls as any other step in the pipeline rather than by trust.",
+      "benefit": "A broken build can get a faster first diagnosis without a person babysitting the run or manually collecting the first round of evidence. The first diagnosis also lands where the team already looks \u2014 on the run or the pull request \u2014 instead of in a chat thread someone later has to summarise by hand.",
+      "apply": "The natural candidate for our deploy pipeline is an auto-investigation of failed \u201cDeploy dev\u201d runs, with findings posted back to the team. The default Copilot engine needs a paid license, so choose the workflow engine deliberately in a free-first setup.\n\nScope the trial to exactly one job and judge it on report quality. When a Deploy dev run fails, the agent's task is to say why, with evidence \u2014 not to fix, merge, or re-run anything; a human reads the report and decides. If the reports reliably save the first round of log-diving, the pattern earns a second job. If they are vague or wrong, the trial ends with one workflow file deleted and nothing else disturbed.",
       "stats": [
         {
           "value": "Oct 28, 2026",
           "label": "Generally available"
         },
         {
-          "value": "Markdown → YAML",
+          "value": "Markdown \u2192 YAML",
           "label": "Authored in natural language, compiled to Actions"
         }
       ],
       "details": [
         {
           "heading": "How it works, conceptually",
-          "body": "You describe the automation in a Markdown file — what should happen and what the agent may touch — and GitHub compiles that into a standard Actions workflow. The agent runs inside the pipeline's permissions, investigates with the run's logs and the repository as context, and reports back on the run or the pull request."
+          "body": "You describe the automation in a Markdown file \u2014 what should happen and what the agent may touch \u2014 and GitHub compiles that into a standard Actions workflow. The agent runs inside the pipeline's permissions, investigates with the run's logs and the repository as context, and reports back on the run or the pull request."
         },
         {
           "heading": "Why failure investigation is the right first job",
-          "body": "It is high-value and low-risk: read-only evidence gathering (logs, diffs, recent changes) aimed at one bounded question — why did this run fail? — while a human still decides the fix. That is a far safer first agentic job than letting an agent change code unattended."
+          "body": "It is high-value and low-risk: read-only evidence gathering (logs, diffs, recent changes) aimed at one bounded question \u2014 why did this run fail? \u2014 while a human still decides the fix. That is a far safer first agentic job than letting an agent change code unattended."
         },
         {
           "heading": "The free-first catch",
@@ -454,21 +677,21 @@
         },
         {
           "heading": "How it works, step by step",
-          "body": "Start with intent: a Markdown file in the repository describes the automation in natural language — the trigger, the question the agent should answer, and the boundaries of what it may touch. GitHub compiles that file into a standard Actions workflow, which is the artifact that actually runs and can be inspected like any other YAML. When the trigger fires — in our trial design, a failed run — the agent executes inside the pipeline's permissions, gathering the run's logs, the recent changes, and whatever repository context the question needs. It then reports back on the run or the pull request: what failed, the evidence for that reading, and where a human should look first. The human's job shrinks from gathering evidence to judging it."
+          "body": "Start with intent: a Markdown file in the repository describes the automation in natural language \u2014 the trigger, the question the agent should answer, and the boundaries of what it may touch. GitHub compiles that file into a standard Actions workflow, which is the artifact that actually runs and can be inspected like any other YAML. When the trigger fires \u2014 in our trial design, a failed run \u2014 the agent executes inside the pipeline's permissions, gathering the run's logs, the recent changes, and whatever repository context the question needs. It then reports back on the run or the pull request: what failed, the evidence for that reading, and where a human should look first. The human's job shrinks from gathering evidence to judging it."
         },
         {
           "heading": "Why investigation first, not auto-fix",
-          "body": "The tempting version of this technology fixes the build for you; the wise first version only explains it. Investigation is read-only, so its worst case is a useless report — annoying, not damaging. Auto-fix carries a blast radius: an agent changing code unattended can turn one red run into a subtle wrong fix that passes and ships. Sequencing matters for trust as well. A team that has read twenty good investigation reports knows exactly how much the agent's judgement is worth; a team that starts with auto-fix is gambling before it has any evidence. Failure investigation is where value and safety overlap, which is why it is the right first job."
+          "body": "The tempting version of this technology fixes the build for you; the wise first version only explains it. Investigation is read-only, so its worst case is a useless report \u2014 annoying, not damaging. Auto-fix carries a blast radius: an agent changing code unattended can turn one red run into a subtle wrong fix that passes and ships. Sequencing matters for trust as well. A team that has read twenty good investigation reports knows exactly how much the agent's judgement is worth; a team that starts with auto-fix is gambling before it has any evidence. Failure investigation is where value and safety overlap, which is why it is the right first job."
         },
         {
           "heading": "The engine question, decided deliberately",
-          "body": "The free-first catch deserves its own section because it is a setup decision, not a footnote. The default engine is Copilot, which needs a paid license — so a workflow adopted casually can quietly become a subscription the team never chose. The deliberate version of adoption asks, before anything is written: which engines are supported, what does each cost under our usage, and does the free-first rule survive the answer? The same discipline applies to the reports themselves: engine choice may affect report quality, and that quality — measured against our own manual triage of the same failed runs — is the metric the trial stands or falls on."
+          "body": "The free-first catch deserves its own section because it is a setup decision, not a footnote. The default engine is Copilot, which needs a paid license \u2014 so a workflow adopted casually can quietly become a subscription the team never chose. The deliberate version of adoption asks, before anything is written: which engines are supported, what does each cost under our usage, and does the free-first rule survive the answer? The same discipline applies to the reports themselves: engine choice may affect report quality, and that quality \u2014 measured against our own manual triage of the same failed runs \u2014 is the metric the trial stands or falls on."
         }
       ],
       "checklist": [
         "Pick failed Deploy dev run investigation as the single trial job",
         "Write the Markdown workflow with a read-only scope",
-        "Decide the engine deliberately — check its cost against the free-first rule",
+        "Decide the engine deliberately \u2014 check its cost against the free-first rule",
         "Judge the first reports against manual log triage of the same runs",
         "Expand to a second job only if the reports earn it"
       ],
@@ -485,33 +708,33 @@
       "summary": "Google's open (Apache 2.0) multimodal embedding model, a candidate to power local search.",
       "hook": "Bad embeddings mean the right answer never reaches the model: test a free local embedder against your incumbent.",
       "takeaways": [
-        "RAG search is geometry: embed the question, find nearest passages — wrong embeddings, wrong passages.",
+        "RAG search is geometry: embed the question, find nearest passages \u2014 wrong embeddings, wrong passages.",
         "Our bar is the pair, not the embedder alone: bge-small retrieval plus MiniLM reranking.",
-        "Fair A/B: same corpus, same chunks, same questions with known-good answers — then decide."
+        "Fair A/B: same corpus, same chunks, same questions with known-good answers \u2014 then decide."
       ],
       "image": "img/embeddinggemma-2.jpg",
-      "problem": "RAG quality stands or falls on the embedding model, and cloud embedding APIs cost money and add latency.\n\nThere is a second, quieter cost to weak embeddings: they fail silently. A generator handed the wrong passages still produces a fluent, confident answer — just grounded in the wrong evidence — and nothing in the output announces that retrieval missed. So embedding quality is not a tuning detail; it is the ceiling on whether the whole RAG system can be trusted, and it can only be judged by testing retrieval directly rather than admiring the final prose.",
-      "solution": "EmbeddingGemma 2 is a small open-weight embedder that can run locally and map different content types into a shared retrieval space.\n\nA shared retrieval space is the mechanism to understand. When one model embeds different content types into the same vector space, a text question can retrieve material by meaning rather than by matching words. Running that model locally also removes the per-call cost and latency of a cloud embedding API from every search and every re-index — which matters for a corpus that is re-indexed regularly and queried constantly, and it keeps both the documents and the questions on our own machine.",
+      "problem": "RAG quality stands or falls on the embedding model, and cloud embedding APIs cost money and add latency.\n\nThere is a second, quieter cost to weak embeddings: they fail silently. A generator handed the wrong passages still produces a fluent, confident answer \u2014 just grounded in the wrong evidence \u2014 and nothing in the output announces that retrieval missed. So embedding quality is not a tuning detail; it is the ceiling on whether the whole RAG system can be trusted, and it can only be judged by testing retrieval directly rather than admiring the final prose.",
+      "solution": "EmbeddingGemma 2 is a small open-weight embedder that can run locally and map different content types into a shared retrieval space.\n\nA shared retrieval space is the mechanism to understand. When one model embeds different content types into the same vector space, a text question can retrieve material by meaning rather than by matching words. Running that model locally also removes the per-call cost and latency of a cloud embedding API from every search and every re-index \u2014 which matters for a corpus that is re-indexed regularly and queried constantly, and it keeps both the documents and the questions on our own machine.",
       "benefit": "It could provide free, private, fast embeddings for our local RAG over team documents, keeping the corpus and queries on our own machine. Because it runs on our own machine, the experiment is safe as well: the corpus never leaves the building while we find out whether it deserves the job.",
-      "apply": "Do not switch on the announcement alone. A/B test EmbeddingGemma 2 against our current bge-small-en-v1.5 plus MiniLM reranker on the same corpus, compare retrieval quality and speed, and only then decide whether it earns the replacement.\n\nThe A/B discipline is the deliverable, not the swap. Freeze everything except the embedder: same corpus, same chunks, same questions with known-good answers — and keep the MiniLM reranker in place for both runs, because the pair is the incumbent being challenged. Record where the right passages land in the results for each model, and the speed on our own hardware. Then let those two measurements, not the announcement, make the decision.",
+      "apply": "Do not switch on the announcement alone. A/B test EmbeddingGemma 2 against our current bge-small-en-v1.5 plus MiniLM reranker on the same corpus, compare retrieval quality and speed, and only then decide whether it earns the replacement.\n\nThe A/B discipline is the deliverable, not the swap. Freeze everything except the embedder: same corpus, same chunks, same questions with known-good answers \u2014 and keep the MiniLM reranker in place for both runs, because the pair is the incumbent being challenged. Record where the right passages land in the results for each model, and the speed on our own hardware. Then let those two measurements, not the announcement, make the decision.",
       "stats": [
         {
           "value": "Apache 2.0",
-          "label": "License — free to run locally"
+          "label": "License \u2014 free to run locally"
         },
         {
           "value": "bge-small-en-v1.5",
-          "label": "Our current embedder — the bar it must beat"
+          "label": "Our current embedder \u2014 the bar it must beat"
         }
       ],
       "details": [
         {
           "heading": "What an embedding model does in RAG",
-          "body": "It turns text — and, for a multimodal model, other content types — into vectors: lists of numbers where similar meanings sit close together. Search then becomes geometry. Embed the question, find the nearest passages, and hand those to the answering model. If the embeddings are wrong, the best generator in the world answers from the wrong passages."
+          "body": "It turns text \u2014 and, for a multimodal model, other content types \u2014 into vectors: lists of numbers where similar meanings sit close together. Search then becomes geometry. Embed the question, find the nearest passages, and hand those to the answering model. If the embeddings are wrong, the best generator in the world answers from the wrong passages."
         },
         {
           "heading": "Why the reranker pairing matters",
-          "body": "Our current stack is two-stage: bge-small retrieves broadly, then a MiniLM reranker re-reads the top candidates and reorders them by actual relevance. A new embedder has to beat the pair, not just the embedder alone — a slightly better first stage can still lose if it hands the reranker a worse candidate pool."
+          "body": "Our current stack is two-stage: bge-small retrieves broadly, then a MiniLM reranker re-reads the top candidates and reorders them by actual relevance. A new embedder has to beat the pair, not just the embedder alone \u2014 a slightly better first stage can still lose if it hands the reranker a worse candidate pool."
         },
         {
           "heading": "How we would A/B it fairly",
@@ -519,15 +742,15 @@
         },
         {
           "heading": "How retrieval works, step by step",
-          "body": "The corpus is prepared once: documents are split into chunks, and the embedding model converts each chunk into a vector stored in an index. A question gets the same treatment — embedded by the same model into the same space — and search is then geometry: the nearest stored vectors to the question's vector are the candidate passages. In our two-stage stack, the MiniLM reranker then re-reads those top candidates and reorders them by actual relevance before anything is handed to the answering model. Every stage after the first depends on the first stage's judgement: if the right passage never enters the candidate pool, no reranker and no generator can rescue the answer."
+          "body": "The corpus is prepared once: documents are split into chunks, and the embedding model converts each chunk into a vector stored in an index. A question gets the same treatment \u2014 embedded by the same model into the same space \u2014 and search is then geometry: the nearest stored vectors to the question's vector are the candidate passages. In our two-stage stack, the MiniLM reranker then re-reads those top candidates and reorders them by actual relevance before anything is handed to the answering model. Every stage after the first depends on the first stage's judgement: if the right passage never enters the candidate pool, no reranker and no generator can rescue the answer."
         },
         {
           "heading": "A worked example: one question, two embedders",
-          "body": "An illustrative version of the A/B this article proposes. Take one question whose correct answer lives in a specific passage of our corpus — the known-good answer the test set is built from. Run it through the incumbent pair, bge-small-en-v1.5 plus the MiniLM reranker, and note where that passage lands in the results. Then swap only the embedder for EmbeddingGemma 2, leaving chunks, question, and reranker untouched, and note the same thing. Repeat across the whole question set and the comparison becomes a distribution, not an anecdote: how often the right passage surfaces, how high, and at what speed on our hardware. That distribution — and nothing else — is what earns or refuses the replacement."
+          "body": "An illustrative version of the A/B this article proposes. Take one question whose correct answer lives in a specific passage of our corpus \u2014 the known-good answer the test set is built from. Run it through the incumbent pair, bge-small-en-v1.5 plus the MiniLM reranker, and note where that passage lands in the results. Then swap only the embedder for EmbeddingGemma 2, leaving chunks, question, and reranker untouched, and note the same thing. Repeat across the whole question set and the comparison becomes a distribution, not an anecdote: how often the right passage surfaces, how high, and at what speed on our hardware. That distribution \u2014 and nothing else \u2014 is what earns or refuses the replacement."
         },
         {
           "heading": "What to watch next",
-          "body": "Three open threads decide this article's sequel. First, the usable surface of the open release: the model is multimodal, but which content types are actually usable beyond text is, as the caveats note, a question for the A/B itself. Second, sourcing: when this library was first built, one exact official model page could not be pinned down, so the source is named without a link rather than guessed — a link worth adding only when it is certain. Third, evidence on corpora like ours: independent results on document collections resembling team notes and annexes would sharpen the prior before our own test even runs. None of these change the plan — test, measure, decide — but each one changes how surprised we should be by the result."
+          "body": "Three open threads decide this article's sequel. First, the usable surface of the open release: the model is multimodal, but which content types are actually usable beyond text is, as the caveats note, a question for the A/B itself. Second, sourcing: when this library was first built, one exact official model page could not be pinned down, so the source is named without a link rather than guessed \u2014 a link worth adding only when it is certain. Third, evidence on corpora like ours: independent results on document collections resembling team notes and annexes would sharpen the prior before our own test even runs. None of these change the plan \u2014 test, measure, decide \u2014 but each one changes how surprised we should be by the result."
         }
       ],
       "checklist": [
@@ -537,7 +760,7 @@
         "Compare where the right passages land, plus speed on our hardware",
         "Switch only on a clear quality win at comparable speed"
       ],
-      "caveats": "No independent benchmark on a corpus like ours has been checked, and when this library was first built we could not pin down one exact official model page — so the source is named without a link rather than guessed. Which content types are usable in the open release, beyond text, is also an open question for the A/B test itself.",
+      "caveats": "No independent benchmark on a corpus like ours has been checked, and when this library was first built we could not pin down one exact official model page \u2014 so the source is named without a link rather than guessed. Which content types are usable in the open release, beyond text, is also an open question for the A/B test itself.",
       "source_name": "Google / Hugging Face",
       "source_url": ""
     },
@@ -548,17 +771,17 @@
       "kicker": "Measure the waste",
       "title": "agent-token-saver: Cut Agent Token Spend With Hooks",
       "summary": "MIT, stdlib-only hooks that trimmed 19.67% of provider tokens in a real Codex A/B run.",
-      "hook": "19.67% fewer tokens in a real A/B — but one task got 32% worse. Measure per task.",
+      "hook": "19.67% fewer tokens in a real A/B \u2014 but one task got 32% worse. Measure per task.",
       "takeaways": [
         "Input dwarfs output cost in agentic work: file dumps, logs, and catalogs re-sent every turn.",
-        "Hooks are stdlib-only scripts — nothing to install or vendor, easy to remove if they don't help.",
-        "Trial rule: baseline per task first, then compare task by task — averages hide regressions."
+        "Hooks are stdlib-only scripts \u2014 nothing to install or vendor, easy to remove if they don't help.",
+        "Trial rule: baseline per task first, then compare task by task \u2014 averages hide regressions."
       ],
       "image": "img/agent-token-saver.jpg",
-      "problem": "Agent sessions waste tokens on verbose, repeated tool output, oversized files, long logs, and broad skill or tool catalogs that are not needed for the current decision.\n\nThe waste has a compounding structure. A long log is not paid for once; it is paid for on every subsequent turn, because the conversation re-sends its history as context. One oversized file read early in a session taxes every later step of that session. And the noise disguises itself as diligence — the agent is 'checking' whole files — so it survives casual review. Nobody notices the cost until the provider bill, or the token counter, is examined task by task.",
-      "solution": "agent-token-saver uses small, standard-library hooks and bounded projections to strip or compress that noise before it reaches the model, while preserving the evidence needed for the task.\n\nBounded projections are the key idea. Instead of handing the model a whole file, a hook hands it the slice the current decision actually needs — the outline, the relevant lines, the compressed log with its signal kept and its repetition stripped. The hooks sit in the tool-output path, so the trimming happens before the content ever becomes context. And because they are small standard-library scripts, exactly what was removed is inspectable — a projection you can read, not a black box you have to trust.",
-      "benefit": "In the project's real Codex A/B, provider-reported tokens fell 19.67% in aggregate — the same work for fewer tokens, aligned with our standing token-discipline goal. The discipline it enforces — show the model less, but keep the evidence — is the same one our own retrieval rules already aim at, applied automatically.",
-      "apply": "Trial it on a non-critical workflow and measure before/after by task. One task in the A/B used 32.16% more tokens, so never assume a universal saving or roll it out without per-task evidence.\n\nMeasure like a sceptic. The baseline has to come first — provider-reported tokens per task on the chosen workflow, recorded before any hook is switched on — or there is nothing honest to compare against. Then enable the hooks for that one workflow and compare task by task, watching specifically for a regression like the 32.16% case in the project's own A/B. A workflow that gets more expensive gets its hooks removed, whatever the average says.",
+      "problem": "Agent sessions waste tokens on verbose, repeated tool output, oversized files, long logs, and broad skill or tool catalogs that are not needed for the current decision.\n\nThe waste has a compounding structure. A long log is not paid for once; it is paid for on every subsequent turn, because the conversation re-sends its history as context. One oversized file read early in a session taxes every later step of that session. And the noise disguises itself as diligence \u2014 the agent is 'checking' whole files \u2014 so it survives casual review. Nobody notices the cost until the provider bill, or the token counter, is examined task by task.",
+      "solution": "agent-token-saver uses small, standard-library hooks and bounded projections to strip or compress that noise before it reaches the model, while preserving the evidence needed for the task.\n\nBounded projections are the key idea. Instead of handing the model a whole file, a hook hands it the slice the current decision actually needs \u2014 the outline, the relevant lines, the compressed log with its signal kept and its repetition stripped. The hooks sit in the tool-output path, so the trimming happens before the content ever becomes context. And because they are small standard-library scripts, exactly what was removed is inspectable \u2014 a projection you can read, not a black box you have to trust.",
+      "benefit": "In the project's real Codex A/B, provider-reported tokens fell 19.67% in aggregate \u2014 the same work for fewer tokens, aligned with our standing token-discipline goal. The discipline it enforces \u2014 show the model less, but keep the evidence \u2014 is the same one our own retrieval rules already aim at, applied automatically.",
+      "apply": "Trial it on a non-critical workflow and measure before/after by task. One task in the A/B used 32.16% more tokens, so never assume a universal saving or roll it out without per-task evidence.\n\nMeasure like a sceptic. The baseline has to come first \u2014 provider-reported tokens per task on the chosen workflow, recorded before any hook is switched on \u2014 or there is nothing honest to compare against. Then enable the hooks for that one workflow and compare task by task, watching specifically for a regression like the 32.16% case in the project's own A/B. A workflow that gets more expensive gets its hooks removed, whatever the average says.",
       "stats": [
         {
           "value": "19.67%",
@@ -570,13 +793,13 @@
         },
         {
           "value": "MIT",
-          "label": "License — stdlib-only hooks"
+          "label": "License \u2014 stdlib-only hooks"
         }
       ],
       "details": [
         {
           "heading": "Where agent tokens actually go",
-          "body": "Most people picture the model's answer as the cost. In agentic work the input dwarfs it: file dumps, build logs, test output, tool catalogs, and skill descriptions are re-sent turn after turn. Trimming that stream — bounded projections instead of whole files, compressed logs instead of raw ones — is where an aggregate saving around 20% comes from."
+          "body": "Most people picture the model's answer as the cost. In agentic work the input dwarfs it: file dumps, build logs, test output, tool catalogs, and skill descriptions are re-sent turn after turn. Trimming that stream \u2014 bounded projections instead of whole files, compressed logs instead of raw ones \u2014 is where an aggregate saving around 20% comes from."
         },
         {
           "heading": "Why 'stdlib-only' matters",
@@ -584,30 +807,30 @@
         },
         {
           "heading": "How to trial it without fooling yourself",
-          "body": "Pick one repeatable workflow. Log provider-reported tokens per task for a baseline period, turn the hooks on, and compare task by task — never just the total. The A/B's own regression case shows exactly why: an average can hide a workflow that quietly gets worse."
+          "body": "Pick one repeatable workflow. Log provider-reported tokens per task for a baseline period, turn the hooks on, and compare task by task \u2014 never just the total. The A/B's own regression case shows exactly why: an average can hide a workflow that quietly gets worse."
         },
         {
           "heading": "How it works, step by step",
-          "body": "A tool produces output the way it always does — a file's contents, a build log, a listing. Before that output reaches the model, a hook intercepts it and applies a bounded projection: oversized content is cut down to the part the task needs, repetition is compressed, and the evidence the decision depends on is preserved. The model then works from the trimmed version, and every later turn inherits the saving, because the smaller output is what sits in the re-sent history. The hooks themselves are plain standard-library scripts — no service, no dependency — so the whole mechanism can be read in minutes and removed just as fast."
+          "body": "A tool produces output the way it always does \u2014 a file's contents, a build log, a listing. Before that output reaches the model, a hook intercepts it and applies a bounded projection: oversized content is cut down to the part the task needs, repetition is compressed, and the evidence the decision depends on is preserved. The model then works from the trimmed version, and every later turn inherits the saving, because the smaller output is what sits in the re-sent history. The hooks themselves are plain standard-library scripts \u2014 no service, no dependency \u2014 so the whole mechanism can be read in minutes and removed just as fast."
         },
         {
           "heading": "Reading the A/B honestly",
-          "body": "The project's own numbers deserve both their weight and their limits. In its real Codex A/B, provider-reported tokens fell 19.67% in aggregate — a meaningful saving on a real workload. In the same run, one task used 32.16% more tokens with the hooks on, which is not a footnote but the most instructive figure in the set: projections interact with tasks differently, and an average can improve while a specific workflow silently degrades. Context matters too — when our research first shared this project it had only 8 GitHub stars, so the evidence base is one team's single run, not a literature. That is exactly the profile of something to trial carefully, neither to adopt on faith nor to dismiss."
+          "body": "The project's own numbers deserve both their weight and their limits. In its real Codex A/B, provider-reported tokens fell 19.67% in aggregate \u2014 a meaningful saving on a real workload. In the same run, one task used 32.16% more tokens with the hooks on, which is not a footnote but the most instructive figure in the set: projections interact with tasks differently, and an average can improve while a specific workflow silently degrades. Context matters too \u2014 when our research first shared this project it had only 8 GitHub stars, so the evidence base is one team's single run, not a literature. That is exactly the profile of something to trial carefully, neither to adopt on faith nor to dismiss."
         },
         {
           "heading": "Where the savings hide in our own work",
-          "body": "Our sessions have the same anatomy the hooks target. Whole-file reads where an outline would do, build and test logs re-sent turn after turn, broad tool and skill catalogues carried into decisions that use two entries — each is a projection waiting to be defined. The team's standing token discipline already pushes this way by hand: retrieve first, read slices, keep reports short. What agent-token-saver adds is automation of that discipline at the exact point of waste, the tool-output path, instead of relying on every agent remembering it on every turn. The trial question is whether the automatic version beats the manual habit on the same workflow, measured the same way."
+          "body": "Our sessions have the same anatomy the hooks target. Whole-file reads where an outline would do, build and test logs re-sent turn after turn, broad tool and skill catalogues carried into decisions that use two entries \u2014 each is a projection waiting to be defined. The team's standing token discipline already pushes this way by hand: retrieve first, read slices, keep reports short. What agent-token-saver adds is automation of that discipline at the exact point of waste, the tool-output path, instead of relying on every agent remembering it on every turn. The trial question is whether the automatic version beats the manual habit on the same workflow, measured the same way."
         }
       ],
       "checklist": [
         "Pick one repeatable, non-critical workflow for the trial",
         "Log provider-reported tokens per task as the baseline, before any hook",
         "Enable the hooks for that workflow only",
-        "Compare task by task — never just the total",
+        "Compare task by task \u2014 never just the total",
         "Remove the hooks from any task that regresses, like the +32% A/B case"
       ],
-      "caveats": "The 19.67% figure is the project's own single A/B run on Codex — one workload, one run. It is evidence worth trialing, not a guaranteed saving, and the effect on other harnesses, including ours, is unverified until we measure it ourselves.",
-      "source_name": "GitHub — Supersynergy/agent-token-saver",
+      "caveats": "The 19.67% figure is the project's own single A/B run on Codex \u2014 one workload, one run. It is evidence worth trialing, not a guaranteed saving, and the effect on other harnesses, including ours, is unverified until we measure it ourselves.",
+      "source_name": "GitHub \u2014 Supersynergy/agent-token-saver",
       "source_url": "https://github.com/Supersynergy/agent-token-saver"
     }
   ]
