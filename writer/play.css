@@ -203,6 +203,35 @@
   font-size: 0.75rem;
   color: var(--color-text-muted);
 }
+/* Stream replies toggle (todo stream-replies): a pill chip
+   in the composer bar in the tool-button idiom; the
+   checkbox inside carries the state. */
+.page-play .stream-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 0.42rem 0.6rem;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.page-play .stream-toggle input {
+  margin: 0;
+  accent-color: var(--color-primary);
+  cursor: pointer;
+}
+.page-play .stream-toggle:has(input:disabled) {
+  opacity: 0.55;
+  cursor: default;
+}
+.page-play .stream-toggle:has(input:disabled) input {
+  cursor: default;
+}
 /* A landed scene scrolls to its own first line (play.js
    scrollIntoView); keep that line clear of the top edge. */
 .page-play .prose p {

@@ -19,7 +19,7 @@
  * tap plays the turn by suggestion id. The starter actions
  * below only cover the time before the first turn lands. */
 
-import { apiFetch } from "./js/app-api.js";
+import { apiFetch, API_BASE, TOKEN_KEY, ApiError } from "./js/app-api.js";
 import { getToken, clearToken } from "./js/app-auth.js";
 import {
   renderTopbar,
@@ -616,6 +616,7 @@ function setBusy(b) {
   el("continue-btn").disabled = b;
   el("action-input").disabled = b;
   el("suggest-toggle").disabled = b;
+  el("stream-toggle").disabled = b;
   el("reset-btn").disabled = b;
   document
     .querySelectorAll(".suggestion-card")
@@ -668,68 +669,354 @@ function scrollToLatestScene() {
   if (target) target.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
+/* Streaming turns (todo stream-replies): with the Stream
+ * toggle on, a turn goes to the streaming sibling endpoint
+ * (POST /api/playthroughs/{id}/turns/stream) and the new
+ * scene's prose appears sentence by sentence as the pipeline
+ * writes it, instead of landing all at once. The endpoint
+ * speaks Server-Sent Events; each event's data is JSON:
+ *   stage         - progress only; ignored here
+ *   segment       - one provisional sentence of the draft
+ *   revision      - QC rewrote the draft: {scene} is the
+ *                   full final text, replacing the draft
+ *   final_segment - segments of the checked scene (the
+ *                   future audio build reads these; the
+ *                   display already has the text)
+ *   turn_final    - {result}: the exact dict the classic
+ *                   /turns endpoint returns; finalizing
+ *                   from it is shared with the classic path
+ *   error         - {status, detail}: the turn failed
+ * The streamed draft is PROVISIONAL: it lives in a scenes
+ * entry the finalize step replaces, and a turn that fails
+ * after prose showed removes it again - nothing streamed
+ * is ever saved state (only the checked turn is recorded,
+ * server side). If the stream fails before any prose
+ * shows, the turn falls back to the classic POST once, so
+ * a backend without the streaming endpoint behaves as
+ * before.
+ *
+ * The toggle persists to localStorage under the key below.
+ * That key is the shared contract the future
+ * reading-settings panel binds to: same key, same "1" = on
+ * value, so either control flips the same switch. */
+const STREAM_REPLIES_KEY = "writer.streamReplies";
+
+function streamRepliesOn() {
+  try {
+    return localStorage.getItem(STREAM_REPLIES_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
+/* The friendly wording for a streamed turn's error event:
+ * the same sentences apiFetch produces for the same status
+ * on the classic path, so a failed turn reads identically
+ * however it was submitted. The event's detail string is
+ * deliberately not shown (the classic path never shows the
+ * server's detail either). */
+function streamEventError(status) {
+  if (status === 401) return new ApiError("unauthorized", 401);
+  if (status === 404) {
+    return new ApiError(
+      "We couldn't find that. It may have been moved or removed.",
+      404,
+    );
+  }
+  if (status === 502 || status === 503) {
+    return new ApiError(
+      "The story engine is busy right now. Please try again in a moment.",
+      status,
+    );
+  }
+  return new ApiError(
+    "Something went wrong. Please try again.",
+    status || 0,
+  );
+}
+
+async function fetchStreamedTurn(body, actionText) {
+  const base = "/api/playthroughs/" + encodeURIComponent(playthroughId);
+  const classicTurn = () =>
+    apiFetch(base + "/turns", { method: "POST", body });
+
+  let provisional = null;
+  let provisionalParas = null;
+  let displayed = false;
+
+  /* The provisional scene is a normal scenes entry (the
+   * reader's input marker, its paragraphs) whose text
+   * grows; the finalize step replaces it with the checked
+   * scene, and dropProvisional removes it when a turn
+   * fails after prose already showed. */
+  function createProvisional() {
+    provisional = { action: actionText || "", text: "" };
+    scenes.push(provisional);
+    displayed = true;
+    renderScenes();
+    provisionalParas = captureProvisionalParas();
+    scrollToLatestScene();
+    showNote(el("play-note"), "");
+  }
+
+  /* The provisional scene's paragraph elements, captured
+   * right after a render (when the DOM is known to match
+   * the scenes state), so segment growth can update text
+   * in place instead of rebuilding the whole prose. */
+  function captureProvisionalParas() {
+    const count = splitBeats(provisional.text).length;
+    const found = [];
+    const kids = el("prose").children;
+    for (let k = kids.length - 1; k >= 0 && found.length < count; k--) {
+      if (kids[k].tagName === "P") found.unshift(kids[k]);
+    }
+    return found.length === count ? found : null;
+  }
+
+  /* Grow the provisional text in place while the beat
+   * layout is unchanged; a segment that opens a new
+   * paragraph re-renders through the normal path. */
+  function syncProvisional() {
+    const beats = splitBeats(provisional.text);
+    if (!provisionalParas || provisionalParas.length !== beats.length) {
+      renderScenes();
+      provisionalParas = captureProvisionalParas();
+      return;
+    }
+    beats.forEach((beat, j) => {
+      provisionalParas[j].textContent = beat;
+    });
+  }
+
+  function appendSegment(text) {
+    const t = String(text || "");
+    if (!t) return;
+    if (!provisional) createProvisional();
+    // Segments are sentences: join with a space unless the
+    // text already carries the separation.
+    if (provisional.text && !/\s$/.test(provisional.text) &&
+        !/^\s/.test(t)) {
+      provisional.text += " ";
+    }
+    provisional.text += t;
+    syncProvisional();
+  }
+
+  function applyRevision(scene) {
+    if (!provisional) createProvisional();
+    provisional.text = sceneText(scene);
+    renderScenes();
+    provisionalParas = captureProvisionalParas();
+  }
+
+  function dropProvisional() {
+    if (!provisional) return;
+    const i = scenes.indexOf(provisional);
+    if (i >= 0) scenes.splice(i, 1);
+    provisional = null;
+    provisionalParas = null;
+    renderScenes();
+  }
+
+  let res;
+  try {
+    const headers = { "Content-Type": "application/json" };
+    const token = localStorage.getItem(TOKEN_KEY);
+    if (token) headers.Authorization = "Bearer " + token;
+    res = await fetch(API_BASE + base + "/turns/stream", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+  } catch {
+    // The stream could not even start: nothing was shown,
+    // so the classic POST is the whole turn.
+    return classicTurn();
+  }
+  if (res.status === 401) throw new ApiError("unauthorized", 401);
+  const contentType = res.headers.get("content-type") || "";
+  if (!res.ok || !res.body || !contentType.includes("text/event-stream")) {
+    // An older backend (or a proxy) answered without SSE:
+    // fall back before anything was displayed.
+    return classicTurn();
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let finalResult = null;
+  let errorStatus = null;
+
+  function handleFrame(frame) {
+    let event = "message";
+    const dataLines = [];
+    for (const line of frame.split("\n")) {
+      if (line.startsWith("event:")) event = line.slice(6).trim();
+      else if (line.startsWith("data:")) {
+        dataLines.push(line.slice(5).replace(/^ /, ""));
+      }
+    }
+    if (!dataLines.length) return;
+    let data;
+    try {
+      data = JSON.parse(dataLines.join("\n"));
+    } catch {
+      return;
+    }
+    if (event === "segment") appendSegment(data.text);
+    else if (event === "revision") applyRevision(data.scene);
+    else if (event === "error") errorStatus = data.status || 0;
+    else if (event === "turn_final") finalResult = data.result || null;
+    // stage and final_segment need no display work: the
+    // segments/revision already carry the visible text.
+  }
+
+  try {
+    let streamDone = false;
+    while (!streamDone) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true })
+        .replace(/\r\n/g, "\n");
+      let cut = buffer.indexOf("\n\n");
+      while (cut >= 0) {
+        const frame = buffer.slice(0, cut);
+        buffer = buffer.slice(cut + 2);
+        handleFrame(frame);
+        if (finalResult || errorStatus !== null) {
+          streamDone = true;
+          break;
+        }
+        cut = buffer.indexOf("\n\n");
+      }
+    }
+    // A last frame the server closed without a trailing
+    // blank line still counts.
+    if (!streamDone && buffer.trim()) handleFrame(buffer);
+  } catch {
+    // The connection dropped mid-stream.
+    if (!displayed) return classicTurn();
+    dropProvisional();
+    throw new ApiError(
+      "The story engine stopped mid-scene. Please try again in a moment.",
+      0,
+    );
+  } finally {
+    try {
+      reader.cancel();
+    } catch {
+      // Already closed.
+    }
+  }
+
+  if (finalResult) {
+    // Replace the provisional entry: applyTurnResult
+    // pushes the checked scene it carries, in the same
+    // position at the end of the book.
+    const i = scenes.indexOf(provisional);
+    if (i >= 0) scenes.splice(i, 1);
+    return finalResult;
+  }
+  if (errorStatus !== null) {
+    if (!displayed) return classicTurn();
+    dropProvisional();
+    throw streamEventError(errorStatus);
+  }
+  // The stream ended with neither a result nor an error.
+  if (!displayed) return classicTurn();
+  dropProvisional();
+  throw new ApiError(
+    "The story engine stopped mid-scene. Please try again in a moment.",
+    0,
+  );
+}
+
 /* One turn, however it was played: a typed action, a tapped
  * suggestion ({suggestion_id}), or Continue ({continue: true}).
  * On success the response's suggestions (when the backend
  * generated a set) replace the cards and the panel opens -
  * that is the moment the reader looks for them (Hieu, Oct 27).
  * When generation failed open (empty set), the current cards
- * and panel state are left exactly as they were. */
+ * and panel state are left exactly as they were. With the
+ * Stream toggle on, the turn goes through fetchStreamedTurn
+ * instead; both paths land in applyTurnResult and surface
+ * failures through handleTurnError, so a streamed turn ends
+ * exactly like a classic one. */
 async function runTurnBody(body, actionText) {
   if (busy || !playthroughId) return;
   setBusy(true);
   showLoading(el("play-note"), "Writing the next scene...");
   try {
-    const result = await apiFetch(
-      "/api/playthroughs/" + encodeURIComponent(playthroughId) + "/turns",
-      { method: "POST", body },
-    );
-    const scene = result.scene || result.text || "";
-    if (scene) {
-      scenes.push({
-        turn: result.turn,
-        action: actionText || sceneActionText(result),
-        text: scene,
-      });
-    }
-    renderScenes();
-    if (scene) scrollToLatestScene();
-    el("action-input").value = "";
-    growInput();
-    if (result.continued_with) {
-      showPlayNote(
-        'Continuing with: "' + result.continued_with.text + '" - ' +
-          result.continued_with.hint,
-      );
-    } else {
-      showNote(el("play-note"), "");
-    }
-    if (result.suggestions && result.suggestions.length === 3) {
-      currentSuggestions = result.suggestions;
-      renderSuggestions(currentSuggestions);
-      openSuggestPanel();
-    }
-    const state = await refreshDiary();
-    if (state && state.bible) renderBible(state.bible);
+    const result = streamRepliesOn()
+      ? await fetchStreamedTurn(body, actionText)
+      : await apiFetch(
+          "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+            "/turns",
+          { method: "POST", body },
+        );
+    await applyTurnResult(result, actionText);
   } catch (err) {
-    if (err.status === 401) {
-      clearToken();
-      showSignedOut();
-      return;
-    }
-    if (err.status === 422 && (body.suggestion_id || body.continue)) {
-      // Stale pick (Milo's review condition): the scene and
-      // the current cards stay; just say the pick expired.
-      showPlayNote("That suggestion expired - pick another one.");
-      if (currentSuggestions.length === 3) {
-        renderSuggestions(currentSuggestions);
-      }
-      return;
-    }
-    showPlayError(friendlyError(err));
+    handleTurnError(err, body);
   } finally {
     setBusy(false);
   }
+}
+
+/* The classic landing for a finished turn, shared with the
+ * streaming path: the new scene joins the book, the reader
+ * lands at its first line, the input clears, and the
+ * turn's suggestions (when a full set came back) replace
+ * the cards and open the panel. */
+async function applyTurnResult(result, actionText) {
+  const scene = result.scene || result.text || "";
+  if (scene) {
+    scenes.push({
+      turn: result.turn,
+      action: actionText || sceneActionText(result),
+      text: scene,
+    });
+  }
+  renderScenes();
+  if (scene) scrollToLatestScene();
+  el("action-input").value = "";
+  growInput();
+  if (result.continued_with) {
+    showPlayNote(
+      'Continuing with: "' + result.continued_with.text + '" - ' +
+        result.continued_with.hint,
+    );
+  } else {
+    showNote(el("play-note"), "");
+  }
+  if (result.suggestions && result.suggestions.length === 3) {
+    currentSuggestions = result.suggestions;
+    renderSuggestions(currentSuggestions);
+    openSuggestPanel();
+  }
+  const state = await refreshDiary();
+  if (state && state.bible) renderBible(state.bible);
+}
+
+/* A failed turn, classic or streamed: the session is gone
+ * (401), a stale suggestion/Continue pick expired (422 -
+ * the scene and the current cards stay, just say so), or
+ * a plain failure note. */
+function handleTurnError(err, body) {
+  if (err.status === 401) {
+    clearToken();
+    showSignedOut();
+    return;
+  }
+  if (err.status === 422 && (body.suggestion_id || body.continue)) {
+    // Stale pick (Milo's review condition): the scene and
+    // the current cards stay; just say the pick expired.
+    showPlayNote("That suggestion expired - pick another one.");
+    if (currentSuggestions.length === 3) {
+      renderSuggestions(currentSuggestions);
+    }
+    return;
+  }
+  showPlayError(friendlyError(err));
 }
 
 function sceneActionText(result) {
@@ -781,6 +1068,26 @@ el("suggest-toggle").addEventListener("click", () => {
     "aria-expanded",
     String(!panel.hidden),
   );
+});
+
+/* Stream replies toggle: reflects the saved preference on
+ * load; flipping it writes the localStorage key the turn
+ * dispatcher reads (see STREAM_REPLIES_KEY above - the
+ * shared contract the reading-settings panel will bind
+ * to). */
+const streamToggle = el("stream-toggle");
+streamToggle.checked = streamRepliesOn();
+streamToggle.addEventListener("change", () => {
+  try {
+    if (streamToggle.checked) {
+      localStorage.setItem(STREAM_REPLIES_KEY, "1");
+    } else {
+      localStorage.removeItem(STREAM_REPLIES_KEY);
+    }
+  } catch {
+    // Private mode or similar: the preference just is not
+    // remembered for the next visit.
+  }
 });
 
 el("continue-btn").addEventListener("click", () => {

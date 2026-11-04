@@ -63,6 +63,13 @@
               <button id="continue-btn" data-testid="continue-btn" class="tool-btn" type="button"
                 title="Continue the story" aria-label="Continue the story"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4.5 12.5 12 5 19.5zM12.5 4.5 20 12l-7.5 7.5z"/></svg></button>
             </div>
+            <!-- Stream replies toggle: binds the localStorage
+                 key writer.streamReplies ("1" = on) - the same
+                 key the future reading-settings panel will use. -->
+            <label class="stream-toggle" title="Show each scene as it is written">
+              <input id="stream-toggle" data-testid="stream-toggle" type="checkbox">
+              Stream
+            </label>
             <p class="input-hint">Enter to send &middot; Shift+Enter for a new line</p>
           </div>
         </div>
