@@ -2,6 +2,79 @@
   "generated_at": "2026-11-02",
   "articles": [
     {
+      "apply": "Use the dated 3 Nov closes and the watch list to time decisions: patch WordPress to 7.1.4 before the 6 Nov CISA deadline, check whether any vendor was named in the ARTEX campaign notices and rotate exposed credentials, and watch Nvidia's 17 Nov earnings call for the next hard read on AI chip demand. Treat the briefing's unverified items as open questions, not facts.",
+      "benefit": "One page gives the week's real numbers with their sources \u2014 Anthropic's filing, AMD's results, the incident notices \u2014 so the AI boom can be judged on economics and security, not headlines.",
+      "category": "Models",
+      "caveats": "Unverified items are flagged in the briefing, not stated as fact: ChatGPT at 1.2B weekly users, Anthropic's valuation 'up to $2T', the DreamHost victim count, the ARTEX China-link attribution, and the exact Marvell deal value (fixed in shares, so the dollar figure moves with the share price). Market closes are 3 Nov 2026, dated not current.",
+      "checklist": [
+        "Patch WordPress to 7.1.4 before the 6 Nov CISA deadline if you run a site \u2014 CVE-2026-119977 is on CISA's exploited list.",
+        "Check whether any vendor was named in the ARTEX campaign notices (Chainstack, WorkOS, Chainalysis, Kernel) and rotate exposed credentials.",
+        "Read Anthropic's S-1/A revenue table before quoting the $23B loss \u2014 most of it is a non-cash accounting charge.",
+        "Watch Nvidia's 17 Nov earnings call for the next hard read on AI chip demand and supply.",
+        "Use the 3 Nov closes as a dated snapshot, not a trend \u2014 AMD had fallen about 20% in the three prior sessions."
+      ],
+      "date": "2026-11-05",
+      "details": [
+        {
+          "body": "Anthropic filed an amended IPO prospectus (S-1/A) on 2 Nov, adding Q3 results: revenue $16.96B for the three months to 30 Sep \u2014 up 47% on Q2 ($11.56B) and about 12 times the $1.38B of a year earlier. But the quarter swung from a $974M operating profit in Q2 to a $567M operating loss, and the net loss was $23.29B. The filing discloses about $895.4B in commitments, almost all for compute and data centres. The $23.29B net loss looks alarming and is mostly not cash: about $22.7B sits below the operating line as fair-value changes on convertible notes whose value rose as Anthropic's own valuation rose \u2014 an accounting effect of getting more valuable, not of burning cash, though it is real dilution risk for future shareholders. The filing sets no price range, share count, deal size or listing date; Bloomberg-reported timing (roadshow week of 9 Nov, valuation up to $2T) is reported, not confirmed.",
+          "heading": "Anthropic's filing: the economics of frontier AI"
+        },
+        {
+          "body": "AMD reported Q3 revenue of $13.38B on 3 Nov, up 45% year on year, beating the roughly $13.06\u201313.08B expected, with EPS of $2.09 against about $1.95 expected. Data-centre revenue hit a record $8.5B, up 97%, and Q4 guidance is about $17B. The stock rose 3.78% into the print and about 7% after hours. Two things stand out beyond the beat. First, the customer list: AMD says Anthropic, Meta, Microsoft, OpenAI and Oracle are all running workloads on its first Helios rack-scale systems \u2014 the five largest buyers of frontier compute named on one non-Nvidia platform. Second, the context: the industry's constraint has flipped from 'will anyone buy this?' to 'can anyone build it fast enough?' \u2014 Samsung's second Texas fab reportedly already has its entire output booked, mostly by AMD, for HBM base dies, with production not starting until 2030 (a newspaper report citing industry sources, not a company announcement).",
+          "heading": "AMD and the chip cycle: demand is not the problem, supply is"
+        },
+        {
+          "body": "In the space of a week, four organisations disclosed intrusions linked to the same AI-powered attack campaign, built around an autonomous agent framework called ARTEX. Chainstack said an attacker entered a development environment on 26 Oct, reached parts of production, and was cut off on 31 Oct, accessing a customer database with organisation names, account-holder names, member emails and password hashes. WorkOS found its incident on 30 Oct, limited to its go-to-market systems. Chainalysis took its Reactor and Data Solutions products offline as of 2 Nov after detecting 'offensive agentic techniques'. Kernel traced a compromised API key (24 Oct) through its logging provider (27 Oct) to four GPU servers (3 Nov); 0.28% of its customers were affected. The link to a China-linked cluster is described as an assessment of overlaps, not a proven attribution. The industry's answer arrived the same week: CrowdStrike's AI Kill Switch (3 Nov) lets an administrator terminate a rogue agent, block its relaunch and cut its network access \u2014 vendor claims, with endpoint enforcement still to follow.",
+          "heading": "ARTEX: AI agents are now the attack tool"
+        },
+        {
+          "body": "Markets bounced on 3 Nov after a sharp sell-off: S&P 500 closed 7,568.92 (+0.36%), Nasdaq Composite 25,372.01 (+0.83%), Nasdaq-100 28,180.26 (+0.68%), Dow 51,786.72 (\u22120.38%), and the SOXX semiconductor ETF $464.99 (+2.50%). AMD closed $484.50 (+3.78% into the print; +7.13% after hours to $519.05), Nvidia $206.56 (+2.23%), Apple $331.72 (\u22121.95% after earnings, on margin worries). Context: the bounce followed a brutal three-day sell-off \u2014 AMD had lost nearly 20% over the previous three sessions and Intel had fallen 37% over three days (Investopedia). One day does not make a recovery.",
+          "heading": "The market's verdict: 3 Nov closes"
+        },
+        {
+          "body": "6 Nov: CISA deadline for US federal agencies to patch the WordPress flaw (CVE-2026-119977). 10 Nov: Canva's company-wide meeting \u2014 watch for the redundancy split among the 1,271 people. Week of 9 Nov (reported, not confirmed): Anthropic IPO roadshow reportedly begins; watch for a price range in a further S-1/A. 17 Nov: Nvidia Q3 FY2027 earnings call. 30 Nov \u2013 4 Dec: AWS re:Invent in Las Vegas (2,200+ sessions). Spring 2027: App Store submissions open for Siri AI integrations.",
+          "heading": "What to watch next"
+        },
+        {
+          "body": "This entry is the short version. The full briefing \u2014 all 8 stories, the Anthropic revenue table, the AMD results table, the market closes, the release timeline, and the three deep dives with sources \u2014 is the interactive page linked below as the source. It has a topic filter (AI / chips / apps / security) and every number labelled by its source.",
+          "heading": "Read the full interactive briefing"
+        }
+      ],
+      "hook": "Anthropic's $17B quarter, AMD's data-centre surge, and AI agents turned into attack tools \u2014 one week.",
+      "image": "img/ai-boom-priced-policed-paid.jpg",
+      "kicker": "Daily Briefing \u00b7 Thu 5 Nov 2026",
+      "problem": "Frontier AI's economics were mostly hidden, compute demand is outrunning supply, and AI agents are now being used as attack tools \u2014 and all three stories landed in the same week.",
+      "slug": "ai-boom-priced-policed-paid",
+      "solution": "This briefing reads the primary sources \u2014 Anthropic's S-1/A filing, AMD's Q3 results, and the week's incident notices \u2014 and separates audited numbers from vendor claims and reported-but-unconfirmed figures, with every number labelled by its source.",
+      "source_name": "Full interactive briefing \u2014 Milo's Nov 5 research artifact",
+      "source_url": "https://muse.ai/s/tech-news-research-artifact-xkh66qxrzxvxqxexy/PgEGrYatwMMDuU2KxdZcmyWmHioAIMWUlNOpurFiOtw",
+      "stats": [
+        {
+          "label": "Anthropic Q3 2026 revenue (S-1/A filing), about 12\u00d7 a year earlier",
+          "value": "$16.96B"
+        },
+        {
+          "label": "AMD data-centre revenue growth, Q3 2026 \u2014 record $8.5B",
+          "value": "+97%"
+        },
+        {
+          "label": "Marvell's deal to buy Lumentum, the largest tech deal of 2026 (per coverage)",
+          "value": "$115B"
+        },
+        {
+          "label": "Organisations disclosing intrusions in the ARTEX agent-attack campaign",
+          "value": "4"
+        }
+      ],
+      "summary": "The AI boom is now being priced, policed, and paid for \u2014 all in the same week. Anthropic's IPO filing shows $17B in a quarter and still losing money on the machines behind it; AMD's earnings show data-centre revenue nearly doubled in a year; and the week's security news shows the newest risk is AI agents being used as the attack tool itself. Growth is real and enormous, the compute bill is the business model, and the security industry is racing to build brakes for the agents everyone is now shipping.",
+      "takeaways": [
+        "Anthropic made $16.96B in Q3 2026 \u2014 about 12 times a year earlier \u2014 but lost $23.29B on paper, mostly a non-cash accounting charge, while committing about $895B to compute.",
+        "AMD's data-centre revenue hit a record $8.5B, up 97% year on year, with all five biggest AI buyers now running on its Helios racks.",
+        "An AI agent framework called ARTEX powered intrusions at Chainstack, WorkOS, Chainalysis and Kernel in a single week; CrowdStrike answered with an AI kill switch."
+      ],
+      "title": "The AI Boom Is Now Being Priced, Policed, and Paid For"
+    },
+    {
       "apply": "Start where the cost is visible: pick a handful of pages your crawlers or agents already visit and run them through Lightpanda's fetch command with markdown output, comparing output quality and elapsed time against your current route. If the dumps hold up, try the CDP server with an existing automation script before committing to the agent mode or the MCP server. Treat it as a trial until your own numbers confirm the project's claims.",
       "benefit": "For teams running agents and crawlers, the payoff is a much cheaper fleet: less memory per page means more pages in parallel on the same machine, and faster runs mean shorter pipelines. Markdown dumps feed language-model workflows directly without a separate extraction step, and the agent mode's recorded scripts let a team prototype with a model and then ship a deterministic script that runs with no model at runtime.",
       "category": "Tools",
