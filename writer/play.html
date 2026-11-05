@@ -42,6 +42,16 @@
            the bar's toolbar carries the two icons - Suggestion
            (toggles the sheet) and Continue. -->
       <div class="composer-wrap">
+        <!-- Scene audio transport (stream-audio v1, T3):
+             hidden until something plays; pause/resume and
+             stop control the current reading, mute persists
+             per user. None of these change the auto-speak
+             flag. -->
+        <div id="audio-transport" class="audio-transport" hidden>
+          <button id="audio-pause-btn" data-testid="audio-pause-btn" class="tool-btn" type="button" aria-label="Pause listening">Pause</button>
+          <button id="audio-stop-btn" data-testid="audio-stop-btn" class="tool-btn" type="button" aria-label="Stop listening">Stop</button>
+          <button id="audio-mute-btn" data-testid="audio-mute-btn" class="tool-btn" type="button" aria-label="Mute">Mute</button>
+        </div>
         <div id="suggest-panel" class="suggest-panel suggest-sheet" hidden>
           <div class="suggestions">
             <button class="suggestion-card" data-testid="suggestion-1" type="button" aria-label="Suggestion 1">Loading...</button>
@@ -69,6 +79,22 @@
             <label class="stream-toggle" title="Show each scene as it is written">
               <input id="stream-toggle" data-testid="stream-toggle" type="checkbox">
               Stream
+            </label>
+            <!-- Scene audio (stream-audio v1, T3): auto-speak
+                 flag (OFF by default, writer.autoSpeak) and
+                 narrator voice (writer.narratorVoice) on the
+                 same localStorage contract the future
+                 reading-settings panel will bind to. -->
+            <label class="stream-toggle" title="Read each new scene aloud automatically once its audio is ready">
+              <input id="auto-speak-toggle" data-testid="auto-speak-toggle" type="checkbox">
+              Auto-speak
+            </label>
+            <label class="voice-select" title="Narrator voice">
+              Voice
+              <select id="narrator-voice" data-testid="narrator-voice">
+                <option value="vendetti">Vendetti</option>
+                <option value="klett">Klett</option>
+              </select>
             </label>
             <p class="input-hint">Enter to send &middot; Shift+Enter for a new line</p>
           </div>
