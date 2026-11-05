@@ -2,8 +2,8 @@
  *
  * WIRING SECTION (separable): everything in this file is the live
  * play wiring - start a playthrough, Enter/Continue as real turns,
- * diary from live state, Retry/Correct parked as "Soon". The
- * styling fixes (fonts, cards, tokens, prose width, mobile bar)
+ * diary from live state, Retry live (f3-t4) and Correct parked
+ * as "Soon". The styling fixes (fonts, cards, tokens, prose
  * live in play.html/play.css and do not depend on this file's
  * turn logic; this file could be reverted to the T0 shell
  * independently of those fixes.
@@ -618,6 +618,7 @@ function setBusy(b) {
   el("suggest-toggle").disabled = b;
   el("stream-toggle").disabled = b;
   el("reset-btn").disabled = b;
+  refreshRetryButton();
   document
     .querySelectorAll(".suggestion-card")
     .forEach((card) => { card.disabled = b; });
@@ -954,7 +955,7 @@ async function runTurnBody(body, actionText) {
             "/turns",
           { method: "POST", body },
         );
-    await applyTurnResult(result, actionText);
+    await applyTurnResult(result, actionText, body);
   } catch (err) {
     handleTurnError(err, body);
   } finally {
@@ -966,10 +967,19 @@ async function runTurnBody(body, actionText) {
  * streaming path: the new scene joins the book, the reader
  * lands at its first line, the input clears, and the
  * turn's suggestions (when a full set came back) replace
- * the cards and open the panel. */
-async function applyTurnResult(result, actionText) {
+ * the cards and open the panel. A retry body ({retry_turn})
+ * rewinds first: the server already dropped the old tail,
+ * so the local scenes at or after the retried turn go too,
+ * and the new scene lands in their place instead of
+ * appending after a scene that no longer exists. */
+async function applyTurnResult(result, actionText, body) {
   const scene = result.scene || result.text || "";
   if (scene) {
+    if (body && Number.isInteger(body.retry_turn)) {
+      scenes = scenes.filter(
+        (s) => !Number.isInteger(s.turn) || s.turn < result.turn,
+      );
+    }
     scenes.push({
       turn: result.turn,
       action: actionText || sceneActionText(result),
@@ -977,6 +987,7 @@ async function applyTurnResult(result, actionText) {
     });
   }
   renderScenes();
+  refreshRetryButton();
   if (scene) scrollToLatestScene();
   el("action-input").value = "";
   growInput();
@@ -1105,6 +1116,95 @@ el("continue-btn").addEventListener("click", () => {
   const actions = STARTER_ACTIONS[BOOK_ID] || DEFAULT_ACTIONS;
   runTurn(actions[0]);
 });
+
+/* Retry (f3-t4): rewrite the last scene. Two-step, like
+ * Reset: the first tap arms it and stages the last scene's
+ * action in the input (editable - the reader may rewrite
+ * the action before confirming); the second tap sends
+ * {retry_turn, action} and the backend rewinds that scene
+ * and reruns it. Only the last turn is retried from this
+ * control - the backend accepts any scene, and per-scene
+ * margin controls are a later step (they share this
+ * surface with Milu's reading-view redesign, so this
+ * control stays additive: one button + handler, no
+ * restructuring of renderScenes or the composer). The
+ * button is enabled only when a turn exists to retry and
+ * no turn is in flight; a failed retry changes nothing,
+ * because the local tail is dropped only when the new
+ * scene lands in applyTurnResult. */
+let retryArmed = false;
+let retryTimer = null;
+
+function lastRetryableScene() {
+  if (scenes.length < 2) return null;
+  const last = scenes[scenes.length - 1];
+  return Number.isInteger(last.turn) && last.turn >= 1 ? last : null;
+}
+
+function refreshRetryButton() {
+  const btn = el("retry-btn");
+  if (!btn) return;
+  const ok = !busy && lastRetryableScene() !== null;
+  btn.disabled = !ok;
+  btn.setAttribute("aria-disabled", String(!ok));
+  if (!ok) disarmRetry();
+}
+
+function disarmRetry() {
+  retryArmed = false;
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+  const btn = el("retry-btn");
+  if (!btn) return;
+  btn.textContent = "Retry";
+  btn.removeAttribute("aria-label");
+  btn.classList.remove("confirming");
+}
+
+async function retryLastTurn() {
+  if (busy || !playthroughId) return;
+  const last = lastRetryableScene();
+  if (!last) {
+    showPlayNote("There is no scene to retry yet.");
+    return;
+  }
+  if (!retryArmed) {
+    retryArmed = true;
+    const input = el("action-input");
+    if (!input.value.trim()) {
+      input.value = last.action || "";
+      growInput();
+    }
+    const btn = el("retry-btn");
+    btn.textContent = "Retry this scene? Tap again to confirm";
+    btn.setAttribute(
+      "aria-label", "Tap again to confirm retrying the last scene");
+    btn.classList.add("confirming");
+    showPlayNote(
+      "Retrying discards the last scene and rewrites it from " +
+        "your action - edit the action above first if you want " +
+        "a different take, then tap Retry again to confirm.");
+    retryTimer = setTimeout(disarmRetry, 5000);
+    el("action-input").focus();
+    return;
+  }
+  disarmRetry();
+  const { action, instruction } = splitInstruction(
+    el("action-input").value);
+  const text = action || last.action || "";
+  if (!text) {
+    showPlayNote("Write what the scene should do, then tap " +
+      "Retry again.");
+    return;
+  }
+  const body = { retry_turn: last.turn, action: text };
+  if (instruction) body.instruction = instruction;
+  await runTurnBody(body, text);
+}
+
+el("retry-btn").addEventListener("click", retryLastTurn);
 
 el("diary-btn").addEventListener("click", async () => {
   const panel = el("diary-panel");
@@ -1310,6 +1410,7 @@ async function init() {
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
     renderScenes();
+    refreshRetryButton();
     await restoreSceneBackground();
     renderDiary(state.diary);
     loadedSuggestions = state.suggestions || [];

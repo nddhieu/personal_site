@@ -343,8 +343,10 @@
 /* Reset button, armed state (Hieu's Oct 28 book test): the
  * two-step confirm turns the button unmistakably red while it
  * waits for the second tap, so the armed state cannot be
- * mistaken for the idle button. */
-.page-play #reset-btn.confirming {
+ * mistaken for the idle button. The Retry button (f3-t4)
+ * shares the same armed treatment. */
+.page-play #reset-btn.confirming,
+.page-play #retry-btn.confirming {
   border-color: #b3261e;
   color: #b3261e;
   font-weight: 600;
