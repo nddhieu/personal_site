@@ -352,6 +352,100 @@
   font-weight: 600;
 }
 
+/* Scene audio (stream-audio v1, T3): one small speaker
+ * button per paragraph, in the beat control row under it
+ * (same row as the image buttons). About 18px, muted, an
+ * icon-only button like Suggest/Continue; the paragraph
+ * margin placement rides Milu's reading-view redesign,
+ * which owns paragraph layout. States: playing shows a
+ * stop square; generating waits; unavailable is dimmed and
+ * disabled ("Audio unavailable"). App-only, hidden in
+ * print like the other beat controls. */
+.page-play .scene-audio-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-left: 0.5rem;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+}
+.page-play .scene-audio-btn svg {
+  width: 1.1rem;
+  height: 1.1rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.page-play .scene-audio-btn:hover {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+.page-play .scene-audio-btn.is-playing {
+  color: var(--color-text);
+  border-color: var(--color-primary);
+}
+.page-play .scene-audio-btn.is-generating {
+  cursor: wait;
+  opacity: 0.6;
+}
+.page-play .scene-audio-btn.is-unavailable {
+  cursor: default;
+  opacity: 0.45;
+}
+.page-play .scene-audio-btn:disabled {
+  cursor: default;
+  box-shadow: none;
+}
+@media print {
+  .page-play .scene-audio-btn {
+    display: none !important;
+  }
+}
+
+/* Scene audio transport (T3): pause/resume, stop, mute for
+ * the current reading. Hidden until something plays; the
+ * mute button shows its pressed state while muted. */
+.page-play .audio-transport {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+.page-play .audio-transport[hidden] {
+  display: none;
+}
+.page-play #audio-mute-btn.is-muted {
+  box-shadow: 0 0 0 2px var(--color-primary);
+}
+/* Narrator voice select (T3): same pill-chip idiom as the
+ * Stream / Auto-speak toggles in the composer bar. */
+.page-play .voice-select {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.page-play .voice-select select {
+  font: inherit;
+  font-size: 0.82rem;
+  padding: 0.15rem 0.3rem;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text);
+}
+.page-play .composer-bar {
+  flex-wrap: wrap;
+}
+
 /* Scene images (todo, @Chubby): one small control under each
  * scene; the image itself renders inline under its scene once
  * loaded. The button is app-only (hidden in print, like the
