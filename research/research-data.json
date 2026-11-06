@@ -2,6 +2,67 @@
   "generated_at": "2026-11-05",
   "articles": [
     {
+      "slug": "digitalocean-cuttlefish",
+      "date": "2026-11-06",
+      "category": "Tools",
+      "kicker": "Supervision, from your pocket",
+      "title": "DigitalOcean Cuttlefish: Supervise Your AI Agents From Your iPhone",
+      "summary": "DigitalOcean's new iPhone app lets you watch live agent sessions, approve or deny tool calls with the full command or diff in front of you, and pause or stop a run — from anywhere. Paired with Box Mount, agents work on your real business files under Box permissions.",
+      "hook": "Your coding agent keeps working while you're away — approve its next move from your phone.",
+      "takeaways": [
+        "Cuttlefish streams live agent sessions to your iPhone — replies, reasoning, and tool calls — and notifies you when a run needs approval, finishes, or fails.",
+        "Approvals show the full command, file path, or diff before you tap yes or no, and you can redirect, pause, or stop a run mid-flight.",
+        "Box Mount syncs a Box folder into each agent session, so agents work on real contracts and specs with Box permissions, version history, and audit trail intact."
+      ],
+      "image": "img/digitalocean-cuttlefish.jpg",
+      "problem": "AI coding agents now run long jobs on their own — but supervision still chains you to your desk. An agent can sit waiting for an approval on a risky tool call, or worse, keep going without one, while you're in a meeting, commuting, or away from your machine. The result is either stalled runs that waste the window you gave them, or unsupervised runs that touch files and systems you never got to check.",
+      "solution": "DigitalOcean Cuttlefish, a native iPhone app for DigitalOcean Managed Agents, announced November 5 at BoxWorks. It streams live sessions to your phone — replies, reasoning, and tool calls — and sends a notification when a run needs approval, finishes, or fails. You approve or deny each tool call with the full command, file path, or diff shown, and you can redirect, pause, or stop a run. It works with whichever harness a team runs on Managed Agents: Claude Code, Codex CLI, OpenCode, OpenHands, Hermes, LangGraph, and CrewAI. Sessions run in DigitalOcean MicroVMs that persist independently of any device, and billing follows active CPU use, so an agent waiting on you costs almost nothing. Alongside it, Box Mount syncs a Box folder into every session of a Managed Agents environment, so agents work on the team's real contracts, reports, and specs — edits, including deletions, sync back to Box, and each person syncs with their own Box account, so Box permissions, version history, and audit trail apply to every change.",
+      "benefit": "Supervision stops being a desk job. A builder can start a long agent run, walk away, and still be the human in the loop — approving the risky step from a phone instead of discovering it hours later. For teams, the payoff is fewer stalled runs and fewer unsupervised surprises, and for our own setup the pattern is directly relevant: agents already run long jobs on HieuPC while Hieu is away from the keyboard.",
+      "apply": "If you run agents on DigitalOcean Managed Agents, install Cuttlefish from the App Store — it is available now for Managed Agents customers — and turn on approval notifications for your longest-running sessions. If your team's files live in Box, request the Box Mount private preview and point it at one folder first, so the agent's edits land where the team can review them. For our own stack, the lesson to copy is the approval habit: show the full command or diff before a human approves, and make pause and stop one tap away — the same control our group-chat watcher already gives Hieu over the team's agents.",
+      "stats": [
+        {
+          "value": "7",
+          "label": "Agent harnesses Cuttlefish supervises on Managed Agents"
+        },
+        {
+          "value": "2",
+          "label": "Preview programs live: Managed Agents (public) and Box Mount (private)"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "Cuttlefish follows a live session as replies, reasoning, and tool calls stream in. When a run needs a decision, the phone notifies you; the approval screen shows the full command, file path, or diff, and you approve or deny. You can also redirect, pause, or stop the run. The session itself lives in a DigitalOcean MicroVM, so it keeps running whether or not your phone is open — and billing follows active CPU use, so waiting time costs little."
+        },
+        {
+          "heading": "What Box Mount adds",
+          "body": "Box Mount syncs a Box folder into every session of a Managed Agents environment; you pick the folder in Cuttlefish. The agent works on plain files, and its edits — including deletions — sync back to Box, while changes made in Box show up in the workspace. Each person syncs with their own Box account, so the permissions, version history, and audit trail of the original files apply to every change the agent makes."
+        },
+        {
+          "heading": "Which agents it covers",
+          "body": "Cuttlefish is harness-agnostic inside Managed Agents: it works with Claude Code, Codex CLI, OpenCode, OpenHands, Hermes, LangGraph, and CrewAI. That matters because teams rarely standardize on one harness — the supervisor app stays the same while the agent underneath changes."
+        },
+        {
+          "heading": "The problem it names",
+          "body": "DigitalOcean's framing is that agentic work turns every builder into a supervisor: builders direct agents that work on projects and check in when a decision needs a human. The bottleneck is no longer writing the code — it is staying in the loop while the work happens elsewhere. Cuttlefish's answer is to move the loop to the phone, with the approval evidence attached."
+        },
+        {
+          "heading": "What to watch next",
+          "body": "Whether Cuttlefish reaches Android, since the launch is iPhone-only. Whether Box Mount moves from private preview to general availability, and what Managed Agents pricing looks like once the public preview ends — preview services are offered as-is and may change or be discontinued. And whether other clouds ship a supervisor app of their own, now that the pattern is public."
+        }
+      ],
+      "checklist": [
+        "Install Cuttlefish from the App Store if you use DigitalOcean Managed Agents, and enable notifications for approvals, finishes, and failures.",
+        "Route your longest-running agent session through Cuttlefish first, so approvals reach you instead of waiting at a desk.",
+        "Before approving a tool call, read the full command, file path, or diff on the approval screen — never approve blind.",
+        "If your files live in Box, request the Box Mount private preview and start with a single folder, so agent edits land where the team can review them.",
+        "Set your own rule for unattended runs: which tool calls need a human tap, and which can proceed — then check the audit trail after the first week."
+      ],
+      "caveats": "All capability claims come from DigitalOcean's own announcement; no independent hands-on review was available at publication time. Managed Agents is in public preview and Box Mount in private preview — both are offered as-is, are not supported for production workloads, and may change, never become generally available, or be discontinued. Cuttlefish is iPhone-only at launch and requires a Managed Agents account; no pricing was announced with the launch.",
+      "source_name": "DigitalOcean (Business Wire press release)",
+      "source_url": "https://investors.digitalocean.com/news/news-details/2026/DigitalOcean-Launches-Cuttlefish-to-Supervise-AI-Agents-From-Anywhere-With-Box-as-Launch-Partner/default.aspx"
+    },
+    {
       "slug": "together-compiler",
       "date": "2026-11-05",
       "category": "Tools",
