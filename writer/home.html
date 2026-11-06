@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Home - AI Storytelling Co-Author</title>
+<title>Explore - AI Storytelling Co-Author</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../brand-theme.css">
@@ -17,8 +17,8 @@
 <nav id="app-shell" aria-label="Primary"></nav>
 <main class="page-home">
   <section class="card home-card">
-    <h1 class="home-title">Your library</h1>
-    <p class="home-sub">Pick up a story where you left off.</p>
+    <h1 class="home-title">Explore</h1>
+    <p class="home-sub">Discover stories to co-write — or pick up where you left off.</p>
     <p><a class="btn btn-secondary" href="./create.html" data-testid="create-book-link">Create a book</a></p>
     <p id="welcome" class="home-welcome" hidden></p>
 
@@ -28,7 +28,40 @@
     </div>
 
     <div id="state-in" hidden>
+      <div class="explore-toolbar" id="explore-toolbar">
+        <div class="explore-search-row">
+          <label class="page-home-visually-hidden" for="explore-search">Search books</label>
+          <input id="explore-search" class="input explore-search" type="search" placeholder="Search title, genre, or tone" autocomplete="off" data-testid="explore-search">
+          <button id="explore-search-clear" class="btn btn-ghost explore-clear" type="button" hidden aria-label="Clear search">Clear</button>
+        </div>
+        <div id="explore-recent" class="explore-recent" hidden>
+          <span class="explore-recent-label">Recent:</span>
+          <span id="explore-recent-chips" class="explore-chips"></span>
+        </div>
+        <div class="explore-tabs" role="tablist" aria-label="Sort books" id="explore-tabs">
+          <button role="tab" type="button" data-sort="explore" aria-selected="true" class="explore-tab explore-tab-active" data-testid="sort-explore">Explore</button>
+          <button role="tab" type="button" data-sort="trending" aria-selected="false" class="explore-tab" data-testid="sort-trending">Trending</button>
+          <button role="tab" type="button" data-sort="new" aria-selected="false" class="explore-tab" data-testid="sort-new">New</button>
+          <button role="tab" type="button" data-sort="top" aria-selected="false" class="explore-tab" data-testid="sort-top">Top</button>
+        </div>
+        <div class="explore-filters">
+          <div id="explore-genres" class="explore-chips" aria-label="Filter by genre"></div>
+          <label class="explore-lang">Language
+            <select id="explore-language" class="input explore-language" data-testid="explore-language">
+              <option value="">All languages</option>
+            </select>
+          </label>
+        </div>
+        <p id="explore-count" class="explore-count" aria-live="polite"></p>
+      </div>
+
       <div id="library-grid" class="library-grid"></div>
+      <div id="explore-ranked-empty" class="explore-empty" hidden>
+        <h2 id="explore-ranked-title" class="explore-empty-title"></h2>
+        <p id="explore-ranked-text" class="explore-empty-text"></p>
+        <button id="explore-ranked-back" class="btn btn-secondary" type="button">Show all books</button>
+      </div>
+      <p id="explore-no-results" class="home-note" hidden></p>
       <p id="library-empty" class="home-note" hidden>No books in your library yet.</p>
       <p id="library-error" class="form-error" role="alert" hidden></p>
     </div>

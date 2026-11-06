@@ -1,4 +1,4 @@
-/* Home (library) page: layout only, scoped to .page-home.
+/* Home (Explore) page: layout only, scoped to .page-home.
    Colors and components come from the shared brand theme. */
 .page-home {
   min-height: 100vh;
@@ -9,7 +9,7 @@
 }
 .page-home .home-card {
   width: 100%;
-  max-width: 44rem;
+  max-width: 60rem;
   padding: 2rem;
 }
 .page-home .home-title {
@@ -27,6 +27,7 @@
 }
 .page-home .library-grid {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 .page-home .book-card-item .card-body {
@@ -47,4 +48,247 @@
 }
 .page-home .home-note {
   color: var(--color-text-muted);
+}
+
+/* Screen-reader-only label for the search input. */
+.page-home-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Explore toolbar: sticky at the top of the viewport so search
+   stays reachable while scrolling the grid (design §3.2). The
+   card's own background keeps it opaque over the cards. */
+.page-home .explore-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--color-bg-primary);
+  padding: 0.25rem 0 0.75rem;
+  margin-bottom: 1rem;
+  border-bottom: 1px solid var(--color-card-border);
+}
+.page-home .explore-search-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.page-home .explore-search {
+  flex: 1;
+  min-width: 0;
+}
+.page-home .explore-clear {
+  flex-shrink: 0;
+  min-height: 44px;
+}
+.page-home .explore-recent {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+}
+.page-home .explore-recent-label {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+/* Sort tabs: horizontally scrollable; the fade on the right edge
+   is the scroll affordance (design §4: hidden tabs are a known
+   failure mode, so the row must show that more exists). */
+.page-home .explore-tabs {
+  display: flex;
+  gap: 0.25rem;
+  overflow-x: auto;
+  margin-top: 0.75rem;
+  padding-bottom: 0.25rem;
+  -webkit-mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 88%, transparent 100%);
+}
+.page-home .explore-tab {
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+.page-home .explore-tab:hover {
+  color: var(--color-text);
+}
+.page-home .explore-tab-active {
+  background: var(--color-primary-soft);
+  /* Active text takes --color-primary-hover, not --color-primary:
+     primary alone is 3.56:1 on the soft tint in light and fails AA
+     (same call as the M1 shell active label, 5.67/11.49). */
+  color: var(--color-primary-hover);
+  font-weight: 600;
+}
+.page-home .explore-tab:focus-visible,
+.page-home .explore-chip:focus-visible,
+.page-home .explore-language:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-glow);
+}
+
+/* Genre chips + recent chips: same pill treatment as the tabs. */
+.page-home .explore-filters {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-end;
+  justify-content: space-between;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+.page-home .explore-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+.page-home .explore-chip {
+  min-height: 44px;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card-bg);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.page-home .explore-chip:hover {
+  color: var(--color-text);
+}
+.page-home .explore-chip-active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  border-color: transparent;
+  font-weight: 600;
+}
+.page-home .explore-lang {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  flex-shrink: 0;
+}
+.page-home .explore-language {
+  width: auto;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+}
+.page-home .explore-count {
+  margin: 0.75rem 0 0;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+/* Explore cards: cover tile on top, then title / tags / hook /
+   stacked full-width actions. Title and hook clamp at 2 lines
+   (design failure mode #3: never a mid-word cut, full title on
+   the book page). */
+.page-home .explore-card {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.page-home .explore-cover {
+  aspect-ratio: 4 / 3;
+  display: grid;
+  place-items: center;
+  background: var(--color-bg-secondary);
+  border-bottom: 1px solid var(--color-card-border);
+}
+.page-home .explore-cover span {
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.page-home .explore-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  flex: 1;
+}
+.page-home .explore-card-title {
+  font-size: 1rem;
+  line-height: 1.3;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.page-home .explore-tags {
+  display: flex;
+  gap: 0.375rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.page-home .explore-hook {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 0.9rem;
+}
+.page-home .explore-card-actions {
+  flex-direction: column;
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+.page-home .explore-card-actions .btn {
+  justify-content: center;
+  min-height: 44px;
+}
+
+/* Honest empty state for the ranked sorts (no ranking data yet). */
+.page-home .explore-empty {
+  background: var(--color-card-bg);
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-md);
+  padding: 1.25rem;
+}
+.page-home .explore-empty-title {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+}
+.page-home .explore-empty-text {
+  margin: 0 0 1rem;
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
+
+/* Wider grid as the viewport grows (design §1: 2 cols phone,
+   3–4 cols desktop). Tighter card padding on phones so the two
+   columns keep room for a readable card. */
+@media (min-width: 768px) {
+  .page-home .library-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1280px) {
+  .page-home .library-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+@media (max-width: 640px) {
+  .page-home .home-card {
+    padding: 1rem;
+  }
 }
