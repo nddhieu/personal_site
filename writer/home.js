@@ -1,13 +1,16 @@
 /* Home page: Explore — the reader's library as a discovery feed
- * (mobile-app-navigation-design.md §3.2, slice M2b, client-only).
+ * (mobile-app-navigation-design.md §3.2, slices M2b + M2d).
  * Lists the books from GET /api/books as a 2-col card grid with a
  * sticky search bar, sort tabs (Explore / Trending / New / Top),
- * genre chips and a language filter. Search covers title, genre,
- * subgenre and tone — the only fields /api/books returns today
- * (no opening hook, tags, character names, covers, counts or
- * dates yet). The ranked sorts need that backend data (M2c), so
- * until it lands they show an honest empty state instead of a
- * fake ordering; M2d adds the ranking sections + Continue strip.
+ * genre chips and a language filter. M2d adds, over the M2c fields
+ * (created_at, playthrough_count, latest_playthrough_at,
+ * character_names, tags, cover_image): real rankings on the three
+ * sort tabs, ranking sections on Explore (top 5 + See all), a
+ * Continue strip from the reader's own per-book playthroughs
+ * (GET /api/books/{id}/playthroughs — scene_count + preview),
+ * real covers when cover_image is set (initial tile otherwise),
+ * and playthrough counts as the cards' social proof. Search covers
+ * title, genre, subgenre, tone, tags and character names.
  * No internal identifiers or session debug data reach the UI.
  * Signed-out users see the sign-in state, never a wrong user. */
 
@@ -21,25 +24,22 @@ const el = (id) => document.getElementById(id);
 const SORTS = ["explore", "trending", "new", "top"];
 const RECENT_KEY = "explore_recent_searches";
 const MAX_RECENT = 5;
-/* Rankings need fields /api/books does not return yet (M2c):
- * playthroughs + saves for Trending/Top, created_at for New. */
-const RANKED_COPY = {
-  trending: {
-    title: "Trending is coming soon",
-    text: "Trending ranks books by recent playthroughs, and the library API doesn't return playthrough counts yet. The backend slice (M2c) adds them — until then, Explore shows every book.",
-  },
-  new: {
-    title: "New is coming soon",
-    text: "New sorts books by the date they were added, and the library API doesn't return dates yet. The backend slice (M2c) adds them — until then, Explore shows every book.",
-  },
-  top: {
-    title: "Top is coming soon",
-    text: "Top ranks books by saves and total playthroughs, and the library API doesn't return those counts yet. The backend slice (M2c) adds them — until then, Explore shows every book.",
-  },
+/* Section order on Explore follows the sort tabs; the design's
+ * "Popular this week" waits on weekly counts the API does not
+ * return yet (only latest_playthrough_at + total), so Trending
+ * (recently played) is the honest stand-in. Per-genre sections
+ * wait until the library is bigger — 4 books over 4 genres today
+ * would be one row each. */
+const RANKED_LABELS = {
+  trending: "Trending",
+  new: "New",
+  top: "Top",
 };
 const LANGUAGE_NAMES = { en: "English" };
 
 let allBooks = [];
+let continueItems = []; /* [{ book, run }] — run: { id, scene_count, preview, updated_at } */
+let continueLoaded = false;
 let activeSort = "explore";
 let activeGenre = "";
 let activeLanguage = "";
@@ -53,6 +53,45 @@ function show(state, note) {
     el("out-note").textContent = note;
     el("out-note").hidden = false;
   }
+}
+
+function parseDate(value) {
+  const t = Date.parse(value || "");
+  return Number.isNaN(t) ? null : t;
+}
+
+/* Short relative time for "played …" / "added …" meta. Older than
+ * a week falls back to a plain date ("Nov 5"). */
+function relTime(iso) {
+  const t = parseDate(iso);
+  if (t === null) return "";
+  const diff = Date.now() - t;
+  if (diff < 0) return "just now";
+  const minutes = Math.floor(diff / 60000);
+  if (minutes < 1) return "just now";
+  if (minutes < 60) return minutes + "m ago";
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return hours + "h ago";
+  const days = Math.floor(hours / 24);
+  if (days < 7) return days + "d ago";
+  return new Date(t).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function dateLabel(iso) {
+  const t = parseDate(iso);
+  if (t === null) return "";
+  return new Date(t).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function playsLabel(count) {
+  const n = count || 0;
+  return n === 1 ? "1 playthrough" : n + " playthroughs";
 }
 
 function premiseOf(book) {
@@ -74,6 +113,8 @@ function bookSearchText(book) {
     book.style && book.style.genre,
     book.style && book.style.subgenre,
     book.style && book.style.tone,
+    (book.tags || []).join(" "),
+    (book.character_names || []).join(" "),
   ]
     .filter(Boolean)
     .join(" ")
@@ -91,6 +132,44 @@ function filteredBooks() {
     if (q && !bookSearchText(book).includes(q)) return false;
     return true;
   });
+}
+
+/* Rankings over the M2c fields. Missing values sort last on every
+ * sort (a book with no playthroughs yet is never first). */
+function rankedBooks(sort, books) {
+  const list = [...books];
+  const time = (book, field) => parseDate(book[field]) ?? -Infinity;
+  const plays = (book) => book.playthrough_count || 0;
+  if (sort === "trending") {
+    /* Most recently played first; ties break on total plays. */
+    list.sort(
+      (a, b) =>
+        time(b, "latest_playthrough_at") - time(a, "latest_playthrough_at") ||
+        plays(b) - plays(a),
+    );
+  } else if (sort === "new") {
+    list.sort((a, b) => time(b, "created_at") - time(a, "created_at"));
+  } else if (sort === "top") {
+    /* Most played first; ties break on most recently played. */
+    list.sort(
+      (a, b) =>
+        plays(b) - plays(a) ||
+        time(b, "latest_playthrough_at") - time(a, "latest_playthrough_at"),
+    );
+  }
+  return list;
+}
+
+/* Discovery mode: Explore tab with no search or filter active.
+ * The Continue strip and the ranking sections are discovery, not
+ * search results — they hide while the reader is filtering. */
+function discoveryMode() {
+  return (
+    activeSort === "explore" &&
+    query.trim() === "" &&
+    activeGenre === "" &&
+    activeLanguage === ""
+  );
 }
 
 function loadRecent() {
@@ -198,19 +277,31 @@ function renderTabs() {
   });
 }
 
-function renderCard(book) {
-  const card = document.createElement("article");
-  card.className = "card explore-card";
-  /* Cover placeholder: no cover/beat image comes back from
-   * /api/books yet (M2c/M2d). A neutral tile with the title
-   * initial, never a fake cover. */
+/* Cover: the real cover_image when the API returns one, else the
+ * neutral initial tile (never a fake cover). cover_image is null
+ * for every book today, so the tile is what renders. */
+function coverThumb(book, className) {
   const cover = document.createElement("div");
-  cover.className = "explore-cover";
+  cover.className = className;
+  if (book.cover_image) {
+    const img = document.createElement("img");
+    img.className = "explore-cover-img";
+    img.src = book.cover_image;
+    img.alt = "";
+    cover.append(img);
+    return cover;
+  }
   cover.setAttribute("aria-hidden", "true");
   const initial = document.createElement("span");
   initial.textContent = (book.title || "?").trim().charAt(0).toUpperCase() || "?";
   cover.append(initial);
-  card.append(cover);
+  return cover;
+}
+
+function renderCard(book) {
+  const card = document.createElement("article");
+  card.className = "card explore-card";
+  card.append(coverThumb(book, "explore-cover"));
   const body = document.createElement("div");
   body.className = "card-body explore-card-body";
   const title = document.createElement("h2");
@@ -233,6 +324,13 @@ function renderCard(book) {
   premise.className = "book-premise explore-hook";
   premise.textContent = premiseOf(book);
   body.append(premise);
+  /* Social proof is playthroughs (saves do not exist yet — M3). */
+  if ((book.playthrough_count || 0) > 0) {
+    const meta = document.createElement("p");
+    meta.className = "explore-meta";
+    meta.textContent = playsLabel(book.playthrough_count);
+    body.append(meta);
+  }
   const actions = document.createElement("div");
   actions.className = "book-card-actions explore-card-actions";
   const play = document.createElement("a");
@@ -249,45 +347,160 @@ function renderCard(book) {
   return card;
 }
 
+function renderContinue() {
+  const box = el("explore-continue");
+  const cards = el("explore-continue-cards");
+  cards.innerHTML = "";
+  if (!discoveryMode() || !continueLoaded || continueItems.length === 0) {
+    box.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  for (const { book, run } of continueItems) {
+    const card = document.createElement("article");
+    card.className = "explore-continue-card";
+    card.append(coverThumb(book, "explore-continue-thumb"));
+    const body = document.createElement("div");
+    body.className = "explore-continue-body";
+    const title = document.createElement("h3");
+    title.className = "explore-continue-title";
+    title.textContent = book.title || "Untitled book";
+    const scene = document.createElement("p");
+    scene.className = "explore-continue-scene";
+    scene.textContent = "Continue — Scene " + run.scene_count;
+    body.append(title, scene);
+    /* Preview is the last scene's text (the summary has no diary
+     * line); labelled as the scene, never as a diary entry. */
+    if (run.preview) {
+      const preview = document.createElement("p");
+      preview.className = "explore-continue-preview";
+      preview.textContent = run.preview;
+      body.append(preview);
+    }
+    const button = document.createElement("a");
+    button.className = "btn btn-primary explore-continue-btn";
+    /* play.html resumes the reader's latest run for this book
+     * (GET /api/books/{id}/playthroughs), so no new URL scheme. */
+    button.href = "./play.html?id=" + encodeURIComponent(book.id);
+    button.textContent = "Continue";
+    body.append(button);
+    card.append(body);
+    cards.append(card);
+  }
+}
+
+function rankMeta(book, sort) {
+  if (sort === "trending") {
+    const played = relTime(book.latest_playthrough_at);
+    return playsLabel(book.playthrough_count) +
+      (played ? " · played " + played : "");
+  }
+  if (sort === "new") {
+    const added = dateLabel(book.created_at);
+    return added ? "Added " + added : "";
+  }
+  const played = relTime(book.latest_playthrough_at);
+  return playsLabel(book.playthrough_count) +
+    (played ? " · last played " + played : "");
+}
+
+function rankRow(book, rank, sort) {
+  const row = document.createElement("article");
+  row.className = "explore-rank-row";
+  const num = document.createElement("span");
+  num.className = "explore-rank-num";
+  num.textContent = String(rank);
+  row.append(num);
+  row.append(coverThumb(book, "explore-rank-thumb"));
+  const body = document.createElement("div");
+  body.className = "explore-rank-body";
+  const title = document.createElement("a");
+  title.className = "explore-rank-title";
+  title.href = "./play.html?id=" + encodeURIComponent(book.id);
+  title.textContent = book.title || "Untitled book";
+  const meta = document.createElement("p");
+  meta.className = "explore-meta explore-rank-meta";
+  meta.textContent = rankMeta(book, sort);
+  const hook = document.createElement("p");
+  hook.className = "book-premise explore-rank-hook";
+  hook.textContent = premiseOf(book);
+  body.append(title, meta, hook);
+  row.append(body);
+  return row;
+}
+
+function renderSections() {
+  const box = el("explore-sections");
+  const heading = el("explore-all-heading");
+  box.innerHTML = "";
+  if (!discoveryMode() || allBooks.length === 0) {
+    box.hidden = true;
+    heading.hidden = true;
+    return;
+  }
+  box.hidden = false;
+  heading.hidden = false;
+  for (const sort of ["trending", "new", "top"]) {
+    const ranked = rankedBooks(sort, allBooks).slice(0, 5);
+    if (ranked.length === 0) continue;
+    const section = document.createElement("section");
+    section.className = "explore-section";
+    section.setAttribute("aria-label", RANKED_LABELS[sort]);
+    const head = document.createElement("div");
+    head.className = "explore-section-head";
+    const title = document.createElement("h2");
+    title.className = "explore-section-title";
+    title.textContent = RANKED_LABELS[sort];
+    const see = document.createElement("button");
+    see.type = "button";
+    see.className = "btn btn-ghost explore-see-all";
+    see.textContent = "See all";
+    see.addEventListener("click", () => {
+      setSort(sort);
+      el("explore-search").focus();
+    });
+    head.append(title, see);
+    section.append(head);
+    ranked.forEach((book, i) => section.append(rankRow(book, i + 1, sort)));
+    box.append(section);
+  }
+}
+
 function renderExplore() {
   renderTabs();
   renderGenres();
   renderLanguages();
   renderRecent();
   const grid = el("library-grid");
-  const ranked = el("explore-ranked-empty");
   const noResults = el("explore-no-results");
   const empty = el("library-empty");
   const count = el("explore-count");
   const clearBtn = el("explore-search-clear");
   clearBtn.hidden = query.trim() === "";
   grid.innerHTML = "";
-  ranked.hidden = true;
   noResults.hidden = true;
   empty.hidden = true;
-  if (activeSort !== "explore") {
-    /* No ranking data exists yet: say so, don't fake an order. */
-    const copy = RANKED_COPY[activeSort];
-    el("explore-ranked-title").textContent = copy.title;
-    el("explore-ranked-text").textContent = copy.text;
-    ranked.hidden = false;
-    count.textContent = "";
-    return;
-  }
-  const books = filteredBooks();
+  const books =
+    activeSort === "explore"
+      ? filteredBooks()
+      : rankedBooks(activeSort, filteredBooks());
   const total = allBooks.length;
   empty.hidden = total > 0;
   if (total === 0) {
     count.textContent = "";
+    renderContinue();
+    renderSections();
     return;
   }
   if (books.length === 0) {
     const q = query.trim();
     noResults.textContent = q
-      ? `No books match "${q}". Try a title, a genre, or a tone word — or clear the search to see all ${total} books.`
+      ? `No books match "${q}". Try a title, a genre, a character name, or a tone word — or clear the search to see all ${total} books.`
       : "No books match the selected filters. Clear a filter to see all books.";
     noResults.hidden = false;
     count.textContent = `0 of ${total} book${total === 1 ? "" : "s"}`;
+    renderContinue();
+    renderSections();
     return;
   }
   for (const book of books) grid.append(renderCard(book));
@@ -295,11 +508,41 @@ function renderExplore() {
     books.length === total
       ? `${total} book${total === 1 ? "" : "s"}`
       : `${books.length} of ${total} book${total === 1 ? "" : "s"}`;
+  renderContinue();
+  renderSections();
 }
 
 function setSort(sort) {
   if (!SORTS.includes(sort) || sort === activeSort) return;
   activeSort = sort;
+  renderExplore();
+}
+
+/* Continue strip: the reader's own in-progress runs, one list call
+ * per book. Any failure (401, 404, network) just hides the strip —
+ * the grid never waits on it. Runs with no scenes are not
+ * in-progress and are skipped. */
+async function loadContinue() {
+  const jobs = allBooks.map(async (book) => {
+    try {
+      const data = await apiFetch(
+        "/api/books/" + encodeURIComponent(book.id) + "/playthroughs",
+      );
+      const runs = (data && data.playthroughs) || [];
+      const run = runs.find((r) => (r.scene_count || 0) >= 1);
+      return run ? { book, run } : null;
+    } catch {
+      return null;
+    }
+  });
+  const found = (await Promise.all(jobs)).filter(Boolean);
+  found.sort(
+    (a, b) =>
+      (parseDate(b.run.updated_at) ?? -Infinity) -
+      (parseDate(a.run.updated_at) ?? -Infinity),
+  );
+  continueItems = found;
+  continueLoaded = true;
   renderExplore();
 }
 
@@ -340,10 +583,6 @@ function bindExplore() {
     activeLanguage = event.target.value;
     renderExplore();
   });
-  el("explore-ranked-back").addEventListener("click", () => {
-    setSort("explore");
-    el("explore-search").focus();
-  });
 }
 
 async function init() {
@@ -375,6 +614,7 @@ async function init() {
     const data = await apiFetch("/api/books");
     allBooks = Array.isArray(data) ? data : (data && data.books) || [];
     renderExplore();
+    loadContinue();
   } catch (err) {
     el("library-error").textContent = friendlyError(err);
     el("library-error").hidden = false;

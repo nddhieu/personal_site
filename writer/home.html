@@ -31,7 +31,7 @@
       <div class="explore-toolbar" id="explore-toolbar">
         <div class="explore-search-row">
           <label class="page-home-visually-hidden" for="explore-search">Search books</label>
-          <input id="explore-search" class="input explore-search" type="search" placeholder="Search title, genre, or tone" autocomplete="off" data-testid="explore-search">
+          <input id="explore-search" class="input explore-search" type="search" placeholder="Search title, genre, character, or tone" autocomplete="off" data-testid="explore-search">
           <button id="explore-search-clear" class="btn btn-ghost explore-clear" type="button" hidden aria-label="Clear search">Clear</button>
         </div>
         <div id="explore-recent" class="explore-recent" hidden>
@@ -55,12 +55,14 @@
         <p id="explore-count" class="explore-count" aria-live="polite"></p>
       </div>
 
-      <div id="library-grid" class="library-grid"></div>
-      <div id="explore-ranked-empty" class="explore-empty" hidden>
-        <h2 id="explore-ranked-title" class="explore-empty-title"></h2>
-        <p id="explore-ranked-text" class="explore-empty-text"></p>
-        <button id="explore-ranked-back" class="btn btn-secondary" type="button">Show all books</button>
+      <div id="explore-continue" class="explore-continue" hidden>
+        <h2 class="explore-section-title">Pick up where you left off</h2>
+        <div id="explore-continue-cards" class="explore-continue-cards"></div>
       </div>
+
+      <h2 id="explore-all-heading" class="explore-section-title" hidden>All books</h2>
+      <div id="library-grid" class="library-grid"></div>
+      <div id="explore-sections" hidden></div>
       <p id="explore-no-results" class="home-note" hidden></p>
       <p id="library-empty" class="home-note" hidden>No books in your library yet.</p>
       <p id="library-error" class="form-error" role="alert" hidden></p>
