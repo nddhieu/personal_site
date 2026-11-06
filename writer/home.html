@@ -16,10 +16,11 @@
 <div id="app-topbar"></div>
 <nav id="app-shell" aria-label="Primary"></nav>
 <main class="page-home">
-  <section class="card home-card">
-    <h1 class="home-title">Explore</h1>
-    <p class="home-sub">Discover stories to co-write — or pick up where you left off.</p>
-    <p><a class="btn btn-secondary" href="./create.html" data-testid="create-book-link">Create a book</a></p>
+  <section class="home-feed">
+    <div class="home-head">
+      <h1 class="home-title">Explore</h1>
+      <a class="btn btn-primary btn-sm home-create" href="./create.html" data-testid="create-book-link">+ New book</a>
+    </div>
     <p id="welcome" class="home-welcome" hidden></p>
 
     <div id="state-loading" class="loading-row">
@@ -30,9 +31,17 @@
     <div id="state-in" hidden>
       <div class="explore-toolbar" id="explore-toolbar">
         <div class="explore-search-row">
-          <label class="page-home-visually-hidden" for="explore-search">Search books</label>
-          <input id="explore-search" class="input explore-search" type="search" placeholder="Search title, genre, character, or tone" autocomplete="off" data-testid="explore-search">
+          <div class="explore-search-wrap">
+            <svg class="explore-search-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="11" cy="11" r="7" fill="none" stroke="currentColor" stroke-width="2"/><path d="M20 20l-3.8-3.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            <label class="page-home-visually-hidden" for="explore-search">Search books</label>
+            <input id="explore-search" class="input explore-search" type="search" placeholder="Search title, genre, character, or tone" autocomplete="off" data-testid="explore-search">
+          </div>
           <button id="explore-search-clear" class="btn btn-ghost explore-clear" type="button" hidden aria-label="Clear search">Clear</button>
+          <label class="explore-lang"><span class="page-home-visually-hidden">Language</span>
+            <select id="explore-language" class="input explore-language" data-testid="explore-language" aria-label="Language">
+              <option value="">All languages</option>
+            </select>
+          </label>
         </div>
         <div id="explore-recent" class="explore-recent" hidden>
           <span class="explore-recent-label">Recent:</span>
@@ -46,11 +55,6 @@
         </div>
         <div class="explore-filters">
           <div id="explore-genres" class="explore-chips" aria-label="Filter by genre"></div>
-          <label class="explore-lang">Language
-            <select id="explore-language" class="input explore-language" data-testid="explore-language">
-              <option value="">All languages</option>
-            </select>
-          </label>
         </div>
         <p id="explore-count" class="explore-count" aria-live="polite"></p>
       </div>

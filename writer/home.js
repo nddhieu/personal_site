@@ -11,6 +11,10 @@
  * real covers when cover_image is set (initial tile otherwise),
  * and playthrough counts as the cards' social proof. Search covers
  * title, genre, subgenre, tone, tags and character names.
+ * Feed polish (Nov 6, Hieu's Emochi reference): no panel wrapper,
+ * portrait covers with an overlaid plays-count badge, typographic
+ * covers for coverless books, and the whole card as one tap target
+ * (stretched title link to play; Book details a separate link).
  * No internal identifiers or session debug data reach the UI.
  * Signed-out users see the sign-in state, never a wrong user. */
 
@@ -277,10 +281,27 @@ function renderTabs() {
   });
 }
 
-/* Cover: the real cover_image when the API returns one, else the
- * neutral initial tile (never a fake cover). cover_image is null
- * for every book today, so the tile is what renders. */
-function coverThumb(book, className) {
+/* Compact count for the cover plays badge: 32, 1.2K, 12.2M —
+ * the discovery-feed convention (Emochi shows raw chat counts). */
+function fmtCount(n) {
+  return new Intl.NumberFormat("en", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(n || 0);
+}
+
+/* "New" means added within the last 7 days. */
+function isNewBook(book) {
+  const t = parseDate(book.created_at);
+  return t !== null && Date.now() - t < 7 * 24 * 3600 * 1000;
+}
+
+/* Cover: the real cover_image when the API returns one. Without
+ * one (every book today), the grid card gets a designed typographic
+ * cover — genre in small caps, the title set in the heading font,
+ * a "with <characters>" line — instead of a bare letter tile; the
+ * small thumbs (Continue strip, ranking rows) keep the initial. */
+function coverThumb(book, className, variant) {
   const cover = document.createElement("div");
   cover.className = className;
   if (book.cover_image) {
@@ -292,22 +313,83 @@ function coverThumb(book, className) {
     return cover;
   }
   cover.setAttribute("aria-hidden", "true");
+  if (variant === "art") {
+    const art = document.createElement("div");
+    art.className = "explore-cover-art";
+    const genre = (book.style && book.style.genre) || "";
+    if (genre) {
+      const g = document.createElement("span");
+      g.className = "explore-cover-art-genre";
+      g.textContent = genre;
+      art.append(g);
+    }
+    const t = document.createElement("span");
+    t.className = "explore-cover-art-title";
+    t.textContent = book.title || "Untitled book";
+    art.append(t);
+    const names = book.character_names || [];
+    if (names.length > 0) {
+      const w = document.createElement("span");
+      w.className = "explore-cover-art-with";
+      w.textContent = "with " + names.slice(0, 2).join(" & ");
+      art.append(w);
+    }
+    cover.append(art);
+    return cover;
+  }
   const initial = document.createElement("span");
+  initial.className = "explore-cover-initial";
   initial.textContent = (book.title || "?").trim().charAt(0).toUpperCase() || "?";
   cover.append(initial);
   return cover;
 }
 
+/* Chat-bubble glyph for the plays badge (their count pill). */
+function playsBadge(book) {
+  const badge = document.createElement("span");
+  badge.className = "explore-plays";
+  badge.setAttribute("aria-label", playsLabel(book.playthrough_count));
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = '<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+  const count = document.createElement("span");
+  count.textContent = fmtCount(book.playthrough_count);
+  badge.append(svg, count);
+  return badge;
+}
+
 function renderCard(book) {
   const card = document.createElement("article");
-  card.className = "card explore-card";
-  card.append(coverThumb(book, "explore-cover"));
+  card.className = "explore-card";
+  const cover = coverThumb(book, "explore-cover", "art");
+  if (isNewBook(book)) {
+    const pill = document.createElement("span");
+    pill.className = "explore-new";
+    pill.textContent = "New";
+    cover.append(pill);
+  }
+  /* Social proof rides on the cover as a count badge (saves do
+   * not exist yet — M3), not as a text line in the body. */
+  if ((book.playthrough_count || 0) > 0) cover.append(playsBadge(book));
+  card.append(cover);
   const body = document.createElement("div");
-  body.className = "card-body explore-card-body";
+  body.className = "explore-card-body";
   const title = document.createElement("h2");
   title.className = "card-title explore-card-title";
-  title.textContent = book.title || "Untitled book";
+  /* The title link stretches over the whole card (::after), so
+   * the cover, title and description are one tap target that
+   * opens the story; Book details stays a separate small link. */
+  const link = document.createElement("a");
+  link.className = "explore-card-link";
+  link.href = "./play.html?id=" + encodeURIComponent(book.id);
+  link.textContent = book.title || "Untitled book";
+  title.append(link);
   body.append(title);
+  const premise = document.createElement("p");
+  premise.className = "book-premise explore-hook";
+  premise.textContent = premiseOf(book);
+  body.append(premise);
   const tags = tagsOf(book);
   if (tags.length > 0) {
     const tagRow = document.createElement("p");
@@ -320,29 +402,14 @@ function renderCard(book) {
     }
     body.append(tagRow);
   }
-  const premise = document.createElement("p");
-  premise.className = "book-premise explore-hook";
-  premise.textContent = premiseOf(book);
-  body.append(premise);
-  /* Social proof is playthroughs (saves do not exist yet — M3). */
-  if ((book.playthrough_count || 0) > 0) {
-    const meta = document.createElement("p");
-    meta.className = "explore-meta";
-    meta.textContent = playsLabel(book.playthrough_count);
-    body.append(meta);
-  }
-  const actions = document.createElement("div");
-  actions.className = "book-card-actions explore-card-actions";
-  const play = document.createElement("a");
-  play.className = "btn btn-primary btn-block";
-  play.href = "./play.html?id=" + encodeURIComponent(book.id);
-  play.textContent = "Play";
-  const open = document.createElement("a");
-  open.className = "btn btn-secondary btn-block";
-  open.href = "./book.html?id=" + encodeURIComponent(book.id);
-  open.textContent = "Open book";
-  actions.append(play, open);
-  body.append(actions);
+  const detailsRow = document.createElement("p");
+  detailsRow.className = "explore-details-row";
+  const details = document.createElement("a");
+  details.className = "explore-details";
+  details.href = "./book.html?id=" + encodeURIComponent(book.id);
+  details.textContent = "Book details ›";
+  detailsRow.append(details);
+  body.append(detailsRow);
   card.append(body);
   return card;
 }
