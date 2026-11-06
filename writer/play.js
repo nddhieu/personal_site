@@ -199,10 +199,26 @@ audioPlayer.onChange(() => {
   updateAudioTransport();
 });
 
-async function onAudioButton(sceneIndex, beatText) {
+async function onAudioButton(sceneIndex, beatIndex, beatText) {
   if (busy && sceneIndex === scenes.length - 1) return;
+  const voice = readVoice();
+  if (audioPlayer.beatState(beatText, voice) === "playing") {
+    audioPlayer.stop();
+    return;
+  }
   try {
-    await audioPlayer.playBeat(beatText, readVoice());
+    if (autoSpeakOn()) {
+      const scene = scenes[sceneIndex];
+      if (!scene) return;
+      const from = Number.isInteger(beatIndex) ? beatIndex : 0;
+      const beats = splitBeats(sceneText(scene))
+        .map((text, j) => ({ key: beatKey(sceneIndex, j), text }))
+        .slice(from);
+      if (!beats.length) return;
+      await audioPlayer.playQueue(beats, voice);
+    } else {
+      await audioPlayer.playBeat(beatText, voice);
+    }
   } catch {
     // A failed play leaves the quiet state: the button
     // already shows "Audio unavailable"; reading continues.
@@ -639,9 +655,13 @@ function renderScenes() {
       });
       // Speaker button (stream-audio v1, T3): one small
       // control per paragraph, inline at its start beside
-      // the image icon - it plays ONLY this paragraph's
-      // cached audio (background pre-generation, design
-      // section 6), then stops; tap again stops it. Its
+      // the image icon - it plays this paragraph's cached
+      // audio (background pre-generation, design section
+      // 6). Auto-speak off: only this paragraph, then it
+      // stops. Auto-speak on: keeps going from here
+      // through the rest of the scene. Tapping another
+      // speaker stops the current one at once and plays
+      // the new one once ready; tap again stops it. Its
       // state (idle / generating / ready / playing /
       // unavailable) is refreshed in place by the player.
       const audioBtn = document.createElement("button");
@@ -650,7 +670,7 @@ function renderScenes() {
       audioBtn.dataset.testid = "scene-audio-btn-" + key;
       syncAudioButton(audioBtn, i, beatText);
       audioBtn.addEventListener("click",
-        () => onAudioButton(i, beatText));
+        () => onAudioButton(i, j, beatText));
       wrap.append(img);
       // Beat icons inline (Hieu, Nov 5): the speaker and
       // image icons open the paragraph itself, floated at
