@@ -559,7 +559,7 @@ hr.scene-break {
     resize: none;
     outline: none;
     font-family: var(--font-sans);
-    font-size: 0.95rem;
+    font-size: 1rem;
     transition: var(--transition-smooth);
 }
 
@@ -737,7 +737,7 @@ hr.scene-break {
     padding: 10px 12px;
     border-radius: var(--border-radius);
     font-family: var(--font-sans);
-    font-size: 0.9rem;
+    font-size: 1rem;
     outline: none;
     transition: var(--transition-smooth);
 }
@@ -994,7 +994,7 @@ hr.scene-break {
     border-radius: var(--border-radius);
     color: var(--color-text);
     font-family: var(--font-sans);
-    font-size: 0.95rem;
+    font-size: 1rem;
     outline: none;
     transition: var(--transition-smooth);
 }
@@ -1363,7 +1363,7 @@ hr.scene-break {
 
     .story-selector-container select {
         padding: 6px 8px;
-        font-size: 0.8rem;
+        font-size: 1rem;
     }
 
     /* Auth page mobile */
@@ -1385,7 +1385,7 @@ hr.scene-break {
     }
 
     .auth-form-group input {
-        font-size: 0.85rem;
+        font-size: 1rem;
         padding: 8px 10px;
     }
 
@@ -1454,7 +1454,7 @@ hr.scene-break {
     }
 
     .prompt-form textarea {
-        font-size: 0.85rem;
+        font-size: 1rem;
         padding: 8px 10px;
     }
 
@@ -1515,7 +1515,7 @@ hr.scene-break {
 
     .form-group input,
     .form-group textarea {
-        font-size: 0.85rem;
+        font-size: 1rem;
         padding: 8px 10px;
     }
 
@@ -1570,7 +1570,7 @@ hr.scene-break {
     }
 
     .story-selector-container select {
-        font-size: 0.75rem;
+        font-size: 1rem;
         padding: 4px 6px;
     }
 
@@ -1583,7 +1583,7 @@ hr.scene-break {
     }
 
     .prompt-form textarea {
-        font-size: 0.8rem;
+        font-size: 1rem;
         padding: 6px 8px;
     }
 
