@@ -1,7 +1,7 @@
 /* Play screen: live turns against the F3 turn pipeline.
  *
  * WIRING SECTION (separable): everything in this file is the live
- * play wiring - start a playthrough, Enter/Continue as real turns,
+ * play wiring - start a playthrough, Send/Continue as real turns,
  * diary from live state, Retry live (f3-t4) and Correct parked
  * as "Soon". The styling fixes (fonts, cards, tokens, prose
  * live in play.html/play.css and do not depend on this file's
@@ -101,6 +101,40 @@ const AUDIO_BUTTON_TITLES = {
   paused: "Listen to this paragraph",
   unavailable: "Audio unavailable",
 };
+
+/* One image icon per paragraph (Hieu, Nov 5), replacing the
+ * "Generate image" / "Use as background" text buttons. The
+ * icon is state-aware, mirroring syncAudioButton: no image
+ * yet -> it generates one; an image exists -> it sets that
+ * image as the page background; the current background's
+ * icon is filled and offers Clear instead. The label always
+ * names the action a tap will take. */
+const IMAGE_SVG =
+  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
+
+const IMAGE_BUTTON_TITLES = {
+  generate: "Generate image",
+  background: "Use as background",
+  clear: "Clear background",
+};
+
+function imageButtonState(scene, beatIndex) {
+  if (!beatImageState(scene, beatIndex).file) return "generate";
+  const key = beatKey(
+    scenes.indexOf(scene), beatIndex);
+  return sceneBackground && sceneBackground.key === key
+    ? "clear" : "background";
+}
+
+function syncImageButton(btn, scene, beatIndex) {
+  const state = imageButtonState(scene, beatIndex);
+  btn.classList.toggle("has-image", state !== "generate");
+  btn.classList.toggle("is-background", state === "clear");
+  btn.innerHTML = IMAGE_SVG;
+  btn.title = IMAGE_BUTTON_TITLES[state];
+  btn.setAttribute("aria-label",
+    IMAGE_BUTTON_TITLES[state] + " for this paragraph");
+}
 
 function syncAudioButton(btn, sceneIndex, beatText) {
   const voice = readVoice();
@@ -440,12 +474,6 @@ function clearSceneImages() {
   sceneImageSrc.clear();
 }
 
-function beatImageLabel(scene, beatIndex, shown) {
-  if (shown) return "Regenerate image";
-  if (beatImageState(scene, beatIndex).file) return "Show image";
-  return "Generate image";
-}
-
 async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
   if (busy || !playthroughId) return;
   const scene = scenes[sceneIndex];
@@ -453,7 +481,9 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
   const key = beatKey(sceneIndex, beatIndex);
   const shown = sceneImageSrc.has(key);
   btn.disabled = true;
-  const idleLabel = btn.textContent;
+  btn.classList.add("is-generating");
+  btn.title = "Generating image…";
+  btn.setAttribute("aria-label", "Generating image…");
   const base = "/api/playthroughs/" + encodeURIComponent(playthroughId) +
     "/scenes/" + sceneIndex + "/beats/" + beatIndex;
   try {
@@ -463,7 +493,8 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
       // prompt; a first generate writes the prompt first
       // unless the backend already stored one for the beat).
       if (!state.prompt) {
-        btn.textContent = "Writing prompt…";
+        btn.title = "Writing image prompt…";
+        btn.setAttribute("aria-label", "Writing image prompt…");
         const promptRes = await apiFetch(base + "/image-prompt",
           { method: "POST" });
         scene.beat_images = scene.beat_images || {};
@@ -472,7 +503,8 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
         scene.beat_images[String(beatIndex)].image_prompt =
           promptRes.image_prompt;
       }
-      btn.textContent = "Generating…";
+      btn.title = "Generating image…";
+      btn.setAttribute("aria-label", "Generating image…");
       const genRes = await apiFetch(base + "/image", { method: "POST" });
       scene.beat_images = scene.beat_images || {};
       scene.beat_images[String(beatIndex)] =
@@ -480,7 +512,8 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
       scene.beat_images[String(beatIndex)].image_file =
         genRes.image_file;
     }
-    btn.textContent = "Loading…";
+    btn.title = "Loading image…";
+    btn.setAttribute("aria-label", "Loading image…");
     const blob = await apiFetch(base + "/image", { response: "blob" });
     const url = URL.createObjectURL(blob);
     const old = sceneImageSrc.get(key);
@@ -490,20 +523,14 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
     img.hidden = false;
     // A regenerate replaces the object URL: a background
     // pointing at the revoked one would go blank, so it
-    // follows the new URL. A first generate enables the
-    // background button, which was disabled while the beat
-    // had no image (renderScenes is not re-run here).
+    // follows the new URL. The icon then re-syncs to the
+    // beat's new state (it now offers Use as background, or
+    // Clear if it is the background) - renderScenes is not
+    // re-run here.
     if (sceneBackground && sceneBackground.key === key) {
       applySceneBackground(key, url);
-    } else {
-      const bgBtn = document.querySelector(
-        '[data-testid="scene-bg-btn-' + key + '"]',
-      );
-      if (bgBtn) bgBtn.disabled = false;
     }
-    btn.textContent = "Regenerate image";
-    btn.setAttribute("aria-label",
-      "Regenerate the image for this paragraph");
+    syncImageButton(btn, scene, beatIndex);
   } catch (err) {
     if (err.status === 401) {
       clearToken();
@@ -522,8 +549,9 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
     } else {
       showPlayError(friendlyError(err));
     }
-    btn.textContent = idleLabel;
+    syncImageButton(btn, scene, beatIndex);
   } finally {
+    btn.classList.remove("is-generating");
     btn.disabled = false;
   }
 }
@@ -591,32 +619,24 @@ function renderScenes() {
       } else {
         img.hidden = true;
       }
+      // One image icon (Hieu, Nov 5), state-aware like the
+      // speaker beside it: no image yet -> tap generates;
+      // image exists -> tap sets it as the page background
+      // (the toggle shows it inline too); the current
+      // background's icon is filled and taps back to plain.
       const imgBtn = document.createElement("button");
       imgBtn.type = "button";
       imgBtn.className = "scene-image-btn";
       imgBtn.dataset.testid = "scene-image-btn-" + key;
-      imgBtn.textContent = beatImageLabel(scene, j, Boolean(shownUrl));
-      imgBtn.setAttribute("aria-label",
-        beatImageLabel(scene, j, Boolean(shownUrl)) +
-        " for this paragraph");
-      imgBtn.addEventListener("click",
-        () => generateBeatImage(i, j, imgBtn, img));
-      // Background control: same pill idiom, disabled until
-      // this beat actually has an image. The active beat
-      // offers Clear instead, so the reader always has a way
-      // back to the plain page from the beat itself.
-      const bgBtn = document.createElement("button");
-      bgBtn.type = "button";
-      bgBtn.className = "scene-image-btn scene-bg-btn";
-      bgBtn.dataset.testid = "scene-bg-btn-" + key;
-      const isBg = sceneBackground && sceneBackground.key === key;
-      bgBtn.textContent = isBg ? "Clear background" : "Use as background";
-      bgBtn.setAttribute("aria-label",
-        (isBg ? "Clear the page background"
-          : "Use this paragraph's image as the page background"));
-      bgBtn.disabled = busy || !beatImageState(scene, j).file;
-      bgBtn.addEventListener("click",
-        () => toggleSceneBackground(i, j));
+      syncImageButton(imgBtn, scene, j);
+      imgBtn.disabled = busy;
+      imgBtn.addEventListener("click", () => {
+        if (!beatImageState(scene, j).file) {
+          generateBeatImage(i, j, imgBtn, img);
+        } else {
+          toggleSceneBackground(i, j);
+        }
+      });
       // Speaker button (stream-audio v1, T3): one small
       // control per paragraph in the same beat row as the
       // image buttons - it plays ONLY this paragraph's
@@ -631,7 +651,7 @@ function renderScenes() {
       syncAudioButton(audioBtn, i, beatText);
       audioBtn.addEventListener("click",
         () => onAudioButton(i, beatText));
-      wrap.append(imgBtn, bgBtn, audioBtn, img);
+      wrap.append(audioBtn, imgBtn, img);
       prose.append(wrap);
     });
   });
@@ -775,24 +795,18 @@ function setBusy(b) {
   el("suggest-toggle").disabled = b;
   el("stream-toggle").disabled = b;
   el("reset-btn").disabled = b;
+  el("send-btn").disabled = b;
   refreshRetryButton();
   document
     .querySelectorAll(".suggestion-card")
     .forEach((card) => { card.disabled = b; });
+  // The one image icon per beat is busy-gated like the
+  // other controls; its generate/background routing reads
+  // live beat state at click time, so no per-state disable
+  // bookkeeping is needed here.
   document
     .querySelectorAll(".scene-image-btn")
     .forEach((btn) => { btn.disabled = b; });
-  // Background buttons are only actionable for beats that
-  // have an image: a blanket re-enable after a turn would
-  // light up buttons that can do nothing.
-  document
-    .querySelectorAll(".scene-bg-btn")
-    .forEach((btn) => {
-      const m = /scene-bg-btn-(\d+)-(\d+)/.exec(btn.dataset.testid || "");
-      const scene = m ? scenes[Number(m[1])] : null;
-      btn.disabled = b || !scene ||
-        !beatImageState(scene, m ? Number(m[2]) : -1).file;
-    });
 }
 
 function showPlayNote(text) {
@@ -1230,13 +1244,14 @@ function growInput() {
 }
 el("action-input").addEventListener("input", growInput);
 
-/* No Send button (Hieu, Oct 27): Enter sends the turn,
- * Shift+Enter makes a new line. */
-el("action-input").addEventListener("keydown", (ev) => {
-  if (ev.key === "Enter" && !ev.shiftKey) {
-    ev.preventDefault();
-    runTurn(el("action-input").value);
-  }
+/* Send button (Hieu, Nov 5): Enter makes a new line - the
+ * textarea's default, so there is deliberately no keydown
+ * handler - and the Send button sends the turn. This
+ * reverses the Oct 27 Enter-sends rule at Hieu's direction;
+ * suggestion cards and Continue still send programmatically
+ * through runTurn/runTurnBody as before. */
+el("send-btn").addEventListener("click", () => {
+  runTurn(el("action-input").value);
 });
 
 el("suggest-toggle").addEventListener("click", () => {
