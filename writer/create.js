@@ -15,6 +15,7 @@
 import { apiFetch } from "./js/app-api.js";
 import { getToken, clearToken } from "./js/app-auth.js";
 import { renderTopbar, friendlyError } from "./js/app-ui.js";
+import { renderShell } from "./js/shell.js";
 
 const el = (id) => document.getElementById(id);
 let draft = null;
@@ -60,6 +61,7 @@ function collect() {
 
 function init() {
   renderTopbar({ backHref: "./home.html", backLabel: "Back to library" });
+  renderShell({ active: "create" });
   if (!getToken()) {
     el("create-form").hidden = true;
     el("create-out").hidden = false;

@@ -9,6 +9,7 @@
 import { apiFetch } from "./js/app-api.js";
 import { getToken, clearToken } from "./js/app-auth.js";
 import { renderTopbar, friendlyError } from "./js/app-ui.js";
+import { renderShell } from "./js/shell.js";
 
 const BOOK_ID = new URLSearchParams(location.search).get("id") || "accad-kim";
 
@@ -65,6 +66,7 @@ function collect() {
 
 async function init() {
   renderTopbar({ backHref: "./home.html", backLabel: "Back to library" });
+  renderShell({ active: "explore" });
   if (!getToken()) {
     el("book-status").hidden = true;
     el("book-out").hidden = false;
