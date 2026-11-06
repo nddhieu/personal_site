@@ -6,6 +6,7 @@
 import { apiFetch } from "./js/app-api.js";
 import { getToken, getMe, clearToken } from "./js/app-auth.js";
 import { renderTopbar, friendlyError } from "./js/app-ui.js";
+import { renderShell } from "./js/shell.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -68,6 +69,7 @@ function renderBooks(books) {
 
 async function init() {
   renderTopbar();
+  renderShell({ active: "explore" });
   if (!getToken()) {
     show("out");
     return;

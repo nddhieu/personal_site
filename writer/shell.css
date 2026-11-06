@@ -1,0 +1,229 @@
+/* App shell (mobile-nav M1): bottom tab bar on phone/tablet,
+ * left rail on desktop. Design: mobile-app-navigation-design.md
+ * §3.1 + §6 slice 1. Loaded after app.css, before the page CSS.
+ * Brand tokens carry both themes; no colour is hardcoded here
+ * except the raised Create button, which uses the primary token
+ * with white content in both themes. */
+
+/* The shell reserves room for itself so it never covers content
+ * (failure mode #1): bottom padding on phone/tablet, left padding
+ * for the rail on desktop. The class is set by renderShell. */
+body.has-app-shell {
+  padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+
+.app-shell {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  align-items: stretch;
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  box-sizing: border-box;
+  background: var(--color-bg-primary);
+  border-top: 1px solid var(--color-card-border);
+}
+
+/* Brand only belongs on the desktop rail; the phone bar is tabs. */
+.app-shell-brand {
+  display: none;
+}
+
+.app-shell-tab {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+  min-height: 48px;
+  padding: 0.35rem 0.1rem 0.3rem;
+  box-sizing: border-box;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  cursor: pointer;
+  position: relative;
+}
+
+.app-shell-tab:hover {
+  color: var(--color-text);
+}
+
+.app-shell-tab:focus-visible {
+  outline: none;
+  box-shadow: inset 0 0 0 3px var(--color-glow);
+}
+
+.app-shell-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.app-shell-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.app-shell-label {
+  font-family: var(--font-body);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.app-shell-tab-active {
+  color: var(--color-primary-hover);
+}
+
+/* Active is weight as well as colour, so it is not conveyed by
+ * colour alone. */
+.app-shell-tab-active .app-shell-label {
+  font-weight: 700;
+}
+
+.app-shell-tab-disabled {
+  cursor: default;
+  opacity: 0.75;
+}
+
+.app-shell-tab-disabled:hover {
+  color: var(--color-text-muted);
+}
+
+.app-shell-soon {
+  position: absolute;
+  top: 0.2rem;
+  right: calc(50% - 1.7rem);
+  font-size: 0.6rem;
+  font-weight: 700;
+  line-height: 1;
+  padding: 0.15rem 0.3rem;
+  border-radius: 999px;
+  background: var(--color-primary-soft);
+  color: var(--color-text-muted);
+}
+
+/* Centre + Create: raised circular button, label underneath.
+ * The icon takes the page-background colour: it contrasts with
+ * the primary button in both themes (light 4.10:1, dark 8.94:1),
+ * where white-on-primary fails dark (2.14:1). */
+.app-shell-tab-raised .app-shell-icon {
+  width: 3rem;
+  height: 3rem;
+  margin-top: -1.4rem;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: var(--color-bg-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+}
+
+.app-shell-tab-raised .app-shell-icon svg {
+  width: 1.6rem;
+  height: 1.6rem;
+  stroke-width: 2.2;
+}
+
+.app-shell-tab-raised.app-shell-tab-active .app-shell-icon {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35), 0 0 0 3px var(--color-glow);
+}
+
+/* Desktop (>=1024px): the bar becomes a left rail, icon + label.
+ * Same destinations, same order, same active/disabled states. */
+@media (min-width: 1024px) {
+  body.has-app-shell {
+    padding-bottom: 0;
+    padding-left: 216px;
+  }
+
+  .app-shell {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: 216px;
+    height: auto;
+    padding: 0 0 1rem;
+    flex-direction: column;
+    align-items: stretch;
+    border-top: none;
+    border-right: 1px solid var(--color-card-border);
+  }
+
+  .app-shell-brand {
+    display: block;
+    font-family: var(--font-heading);
+    font-weight: 700;
+    font-size: 1rem;
+    line-height: 1.3;
+    color: var(--color-text);
+    text-decoration: none;
+    padding: 1rem 1.25rem;
+    border-bottom: 1px solid var(--color-card-border);
+  }
+
+  .app-shell-brand:hover {
+    color: var(--color-primary);
+  }
+
+  .app-shell-tab {
+    flex: 0 0 auto;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 0.75rem;
+    min-height: 48px;
+    padding: 0.65rem 1.25rem;
+  }
+
+  .app-shell-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex: 0 0 auto;
+  }
+
+  .app-shell-label {
+    font-size: 0.95rem;
+  }
+
+  .app-shell-tab-active {
+    background: var(--color-primary-soft);
+  }
+
+  .app-shell-soon {
+    position: static;
+    margin-left: auto;
+  }
+
+  .app-shell-tab-raised {
+    margin-top: 0.5rem;
+  }
+
+  .app-shell-tab-raised .app-shell-icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-top: 0;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  }
+
+  .app-shell-tab-raised .app-shell-icon svg {
+    width: 1.4rem;
+    height: 1.4rem;
+  }
+
+  .app-shell-tab-raised.app-shell-tab-active .app-shell-icon {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 3px var(--color-glow);
+  }
+}
