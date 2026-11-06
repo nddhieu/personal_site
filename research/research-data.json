@@ -2,6 +2,213 @@
   "generated_at": "2026-11-05",
   "articles": [
     {
+      "slug": "security-audit-skill",
+      "date": "2026-11-06",
+      "category": "Tools",
+      "kicker": "Adversarial review, as a skill",
+      "title": "Cloudflare's security-audit-skill: An Auditor That Checks Its Own Work",
+      "summary": "Cloudflare's open skill turns a coding agent into a structured security auditor: six phases, isolated hunters, and one hard rule — the agent that checks a finding is never the agent that found it. For a team whose ship gate already covers tests and rendering, this is the missing adversarial layer, and it installs with a single command.",
+      "hook": "Your agent can find bugs — now make a second agent try to disprove them.",
+      "takeaways": [
+        "Six phases run from recon to target-neutral reporting, and every finding lands as a machine-readable record with one of three verdicts: confirmed, needs_validation, or rejected.",
+        "Adversarial by design: a fresh verifier tries to disprove every candidate, and a different fresh agent re-verifies the final records — the checker is never the finder.",
+        "It needs Node.js plus an OS-enforced sandbox to execute target code, and Cloudflare's own runs found one pass catches only about half of what repeated runs find."
+      ],
+      "image": "img/security-audit-skill.jpg",
+      "problem": "Our verify-before-ship gate is solid at what it checks: code parses, tests pass, the page renders. What it never does is attack the code. A security flaw that passes the tests ships, because nothing in the pipeline reads the code the way an adversary would — hunting for trust-boundary mistakes, auth gaps, or injection paths instead of confirming the happy path works.",
+      "solution": "security-audit-skill, from Cloudflare, is a coding-agent skill that runs a structured audit in six phases. Reconnaissance maps the architecture, trust boundaries, and input surfaces into a coverage ledger. Coverage-led hunting assigns isolated hunters from ledger units, with coverage critics looking for gaps. Candidate validation hands every unique candidate to a fresh verifier that tries to disprove it. Structured output writes confirmed, needs_validation, and rejected records to findings.json, validated against a schema. Independent record verification has fresh agents re-verify the final source claims. Target-neutral reporting derives the report from the verified records. It installs with one command — npx skills add with the repo URL — and runs in full audit mode for a direct audit request, or in lighter guidance mode for security questions and focused work.",
+      "benefit": "Findings arrive with a complete source trace and a bounded observed result, or they stay honestly unresolved as needs_validation with the exact open fact named. Severity requires impact, not just deviation from a checklist, and a missing second layer of defense is recorded as a hardening note rather than a vulnerability. The skill seeded Cloudflare's own vulnerability discovery harness, so the workflow has been exercised at fleet scale, not just on a demo repo.",
+      "apply": "First step for our team: run it in guidance mode against a scratch copy of the storytelling repo and read the findings file it produces. No harness changes until Hieu and Milo approve — the point of this trial is to see what an adversarial pass finds that our parse, test, and render checks miss, and whether the findings are worth acting on.",
+      "stats": [
+        {
+          "value": "63,168",
+          "label": "GitHub stars (live API, Nov 6, 2026)"
+        },
+        {
+          "value": "6",
+          "label": "Audit phases, recon to reporting"
+        },
+        {
+          "value": "4,092",
+          "label": "Forks on GitHub"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How the six phases fit together",
+          "body": "The phases form a chain, not a menu. Reconnaissance builds the coverage ledger — architecture, trust boundaries, input surfaces, prior evidence — and everything after it works from that ledger. Hunters are assigned from ledger units so coverage is deliberate, and coverage critics flag units nobody checked. Validation, structured output, independent verification, and reporting each add a layer of distrust to the previous layer's claims. The parent agent re-runs the coverage-ledger validator after every ledger update and the findings validator after every Phase 5 replacement, so a late edit cannot silently break the record. Multiple runs against the same repo are additive: the skill uses prior ledgers and findings to target gaps, revalidate changed source, and carry forward current-source evidence without treating stale or unresolved work as covered."
+        },
+        {
+          "heading": "The three verdicts, and what each means",
+          "body": "Confirmed means a complete source trace and a bounded observed result — the finding is real and reproducible. Needs_validation means the lead is source-grounded but blocked on one exact unresolved fact, with no severity attached. Rejected means a candidate was disproved. Keeping the middle verdict matters: a lead the auditor could not run stays visible as an open question instead of vanishing or being overstated as a vulnerability."
+        },
+        {
+          "heading": "Why the checker is never the finder",
+          "body": "Adversarial validation is a stated design principle: the agent that checks a finding is never the agent that found it. Each candidate goes to a fresh verifier whose job is to disprove it, and the final records get another independent verifier — with material replacements receiving yet another. This mirrors our own co-lead review model, where the reviewer is a different agent from the builder, and it is the part of the skill most directly transferable to how we already work."
+        },
+        {
+          "heading": "Guidance mode vs full audit mode",
+          "body": "A direct request — 'security audit this codebase' or 'find vulnerabilities in ./src' — triggers full audit mode, which writes its output to a run directory (by default ~/security-audit-skill/<repo-name>/run-<N>) and only writes inside the target repo when you explicitly pick an ignored directory. Security questions and focused vulnerability work use the lighter guidance mode unless you ask for report artifacts. The skill activates automatically when the request matches its trigger — security audit, find vulnerabilities, pen-test the code — so the trial is a plain-language request, not a configuration project. For our first trial, guidance mode is the right fit: questions and findings first, artifacts only if the trial earns them."
+        },
+        {
+          "heading": "What it needs to run",
+          "body": "Three requirements: a coding agent whose model supports tool use and parallel sub-agents, Node.js for the zero-dependency findings and coverage-ledger validators, and an OS-enforced sandbox for anything that executes target code — builds, tests, processes, browsers, fuzzers. The sandbox must disable external networking, use a sanitized allowlisted environment, enforce resource limits, and allow writes only to assigned scratch paths. Without those controls the workflow does not execute target code at all; the lead stays needs_validation instead."
+        },
+        {
+          "heading": "Where it came from",
+          "body": "The skill is the single-repo starting point of the vulnerability discovery harness Cloudflare described in its own engineering blog — the harness grew into a multi-stage, fleet-wide system, and this repo is what it evolved from. It is MIT-licensed, created June 18, 2026, and last pushed September 14, 2026. Fourteen commits so far, no releases, and it is not archived — a small, focused tool rather than a sprawling framework."
+        }
+      ],
+      "checklist": [
+        "Install the skill with npx skills add and the repo URL, in guidance mode.",
+        "Point it at a scratch copy of the storytelling repo — never the live tree.",
+        "Read the findings file it produces and sort confirmed from needs_validation.",
+        "Compare what it found against what our parse, test, and render checks already catch.",
+        "Bring the comparison to Hieu and Milo before changing anything in our pipeline."
+      ],
+      "caveats": "The 'one pass catches roughly half' figure is Cloudflare's own test-run observation, not an independent measurement. Stars and forks measure attention, not audit quality. The repo was last pushed September 14, 2026, so it is maintained but not under daily churn. We have not run it yet — whether its findings are worth acting on is untested for our codebase.",
+      "source_name": "Cloudflare — security-audit-skill on GitHub",
+      "source_url": "https://github.com/cloudflare/security-audit-skill"
+    },
+    {
+      "slug": "plamo-3-translate",
+      "date": "2026-11-06",
+      "category": "Models",
+      "kicker": "Small, local, glossary-aware translation",
+      "title": "PLaMo 3 Translate: Open-Weight Translation That Fits on a Phone",
+      "summary": "Preferred Networks' new translation model comes in four sizes down to 0.8B, covers 53 languages including Vietnamese, and runs locally in GGUF and MLX formats — free for small commercial use. For our movie-subtitle prototype, it is the first local model that takes a glossary, so character names can stay consistent from the first line to the last.",
+      "hook": "A 0.8B translator that runs offline on a phone — with a glossary for names.",
+      "takeaways": [
+        "Four open-weight sizes — 0.8B, 2B, 8B, and 31B — in BF16, quantized, GGUF, and MLX formats, covering 53 languages including Vietnamese.",
+        "It accepts surrounding context and glossaries and can switch between plain and polite Japanese — exactly what consistent character names in subtitles need.",
+        "Free under the PLaMo Community License for personal and noncommercial use, and for commercial use when revenue is ¥1 billion or less, with advance registration."
+      ],
+      "image": "img/plamo-3-translate.jpg",
+      "problem": "Our movie-subtitle prototype needs translation that is local, offline, and glossary-aware: character names must stay the same across a whole film, and a general-purpose LLM charged per token is the wrong tool for that job. The same need shows up in our book work, where series terms and names have to stay consistent across books. Budget translation tools translate generically — they do not take a glossary, so names drift, and they do not run offline, so every subtitle costs a round trip.",
+      "solution": "PLaMo 3 Translate, released November 5 by Preferred Networks (PFN), is a translation-specialized LLM with its weights open on Hugging Face. It comes in 0.8B, 2B, 8B, and 31B sizes, each with BF16 weights, several quantized variants, and GGUF and MLX builds. It translates across 53 languages, accepts surrounding context and glossaries, and lets users choose plain or polite Japanese. It was built in two stages of supervised fine-tuning followed by direct preference optimization, with the smaller models distilled from the 31B model. PFN's own demo runs the 0.8B model translating on a smartphone in airplane mode, with no internet connection.",
+      "benefit": "Local and offline means no per-token bill and no data leaving the machine — the subtitle file never has to be uploaded anywhere. A glossary locks names and series terms, which is the difference between a translation that reads consistently and one where a character's name changes halfway through. Four sizes mean the same model family can run on a phone, on HieuPC's GPU, or on a server, depending on the job.",
+      "apply": "First step: run the 8B GGUF build via llama.cpp on HieuPC on a sample subtitle file, English to Vietnamese, with a small name glossary, and compare the quality against our current route. No adoption until Hieu and Milo approve — the trial is a quality comparison, not a switch.",
+      "stats": [
+        {
+          "value": "53",
+          "label": "Languages covered, including Vietnamese"
+        },
+        {
+          "value": "4",
+          "label": "Model sizes, from 0.8B to 31B"
+        },
+        {
+          "value": "¥1B",
+          "label": "Revenue ceiling for free commercial use"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it was built",
+          "body": "Training starts from a third-generation PLaMo base model and applies two stages of supervised fine-tuning on source-text and translation pairs — first large-scale, then a smaller, higher-quality set — followed by direct preference optimization, where the model learns to prefer a chosen translation over a rejected one. For the 8B model and smaller, PFN also distills from the finished 31B model between fine-tuning and preference optimization. Most training data was synthesized: source texts collected from the web, translations generated by an LLM, refined through tournament-based synthesis, back-translation, and iterative self-distillation."
+        },
+        {
+          "heading": "Picking a size and format",
+          "body": "BF16 weights suit GPUs with enough memory, via Transformers or vLLM. FP8, W4A16, and NVFP4 quantized variants trade memory for throughput on newer NVIDIA hardware. GGUF builds run on CPUs and GPUs through llama.cpp — the path for HieuPC — and MLX 4-bit builds run on Apple silicon through mlx-lm. PFN's benchmarks say the quantized formats retain nearly the same accuracy as the BF16 versions; that is their measurement, and the model cards carry the detail. The 0.8B model is the one PFN demos on a phone, while the 8B build is the practical middle ground for a workstation trial — large enough for quality, small enough to run locally without a data-center GPU."
+        },
+        {
+          "heading": "What the 0.8B claim actually is",
+          "body": "PFN says even the smallest 0.8B model outperforms existing translation-specialized models, including models with more than 30 times as many parameters, on Japanese–English translation and translation between Japanese and other languages. That is PFN's own benchmark claim, not an independent result, and it is measured on their PFTB benchmark, which scores n-gram similarity against reference translations they built with multiple powerful LLMs. Treat it as a reason to trial the small model, not as proof it beats everything."
+        },
+        {
+          "heading": "Glossaries and context, the part that matters to us",
+          "body": "The model accepts surrounding context and glossaries as part of the translation request — the same mechanism PFN's own translation SaaS uses when it translates web pages while preserving HTML tags. For subtitles, a glossary is how a character's name, a place, or a series term stays identical across hundreds of lines instead of being re-translated line by line. For a subtitle file, that means the glossary travels with the request instead of living in a separate post-processing step — the model itself keeps the names straight. It can also switch between plain and polite Japanese, which matters for dialogue register in film and books."
+        },
+        {
+          "heading": "The license, plainly",
+          "body": "PLaMo 3 Translate is released under the PLaMo Community License. Personal use such as study and hobbies is free, with no registration. Noncommercial use, including academic use, has no income or revenue limit and needs no prior registration. Commercial use is also free when the user or its affiliates had income or revenue of ¥1 billion or less in the most recent fiscal year, provided the user registers in advance through PFN's form. Commercial use above that threshold needs a separate license agreement with PFN."
+        },
+        {
+          "heading": "How it was evaluated",
+          "body": "PFN evaluated on four benchmarks: PFTB, their in-house benchmark for Japanese–English translation across domains from academic papers to poetry; a SaaS benchmark that mirrors real translation-service requests; WMT24++, covering English into 55 languages and dialects; and FLORES+, for multilingual performance across 15 languages including Vietnamese. PFN says it relied primarily on PFTB and the SaaS benchmark during development, because WMT24++ uses mainly short sentences and its reference quality concerned them."
+        }
+      ],
+      "checklist": [
+        "Download the 8B GGUF build from Hugging Face.",
+        "Prepare a sample subtitle file, English to Vietnamese, plus a small name glossary.",
+        "Run it via llama.cpp on HieuPC and record the output.",
+        "Compare translation quality against our current route, name consistency included.",
+        "Share the comparison before any adoption decision."
+      ],
+      "caveats": "The 'beats models 30 times larger' claim is PFN's own benchmark, not independently verified. 'Nearly the same accuracy' for quantized formats is PFN's measurement. The November 5 release date is from the announcement. We have not run the model yet, so its subtitle quality and glossary behaviour on our material are untested.",
+      "source_name": "Preferred Networks",
+      "source_url": "https://www.preferred.jp/en/blog/tech/plamo-3-translate-weight-release"
+    },
+    {
+      "slug": "indie-author-translation",
+      "date": "2026-11-06",
+      "category": "Opportunities",
+      "kicker": "A $6,400 problem with no marketing attached",
+      "title": "Opportunity: Indie Authors Skip Translation Because the Math Doesn't Work",
+      "summary": "Human literary translation costs $0.08–$0.30 a word — $6,400–$24,000 for a typical novel — so most self-published authors publish English-only. Budget AI tools translate cheaply but ignore canon, genre demand, and launch marketing, and translation without marketing rarely sells. That gap is a product: manuscript plus series bible, a locked glossary, a demand check, and a launch kit in the new language.",
+      "hook": "Translation costs more than most indie books earn — and cheap AI skips the parts that sell it.",
+      "takeaways": [
+        "Human literary translation runs $0.08–$0.30 per word, or roughly $6,400–$24,000 for an 80,000-word novel — a cost a traditional publisher would normally carry, not the author.",
+        "Translation alone rarely produces meaningful sales: it pays off only with real genre demand in a specific market and a marketing plan in that market.",
+        "The product gap is a bundle — a locked glossary for names and series terms, a genre-demand check per market, and a localized launch kit — priced between budget AI tools and human rates."
+      ],
+      "image": "img/indie-author-translation.jpg",
+      "problem": "Self-published authors face a simple piece of arithmetic. Human literary translation commonly runs $0.08 to $0.30 per word, which for a typical 80,000-word novel works out to roughly $6,400 to $24,000 — and many authors land in the $6,000 to $15,000 range even for a standard language pair like Spanish, French, or German. So most publish English-only and leave the rest of the world's readers untouched. The cheap alternative does not close the gap: budget AI tools translate a manuscript generically, with no series canon or character-name glossary, no check that the genre sells in the target market, and no launch marketing in the new language — and translation alone, without marketing there, rarely produces sales.",
+      "solution": "The product is a bundle, not a translation button. An author hands over the manuscript plus a series bible; the service translates with a locked glossary for names and terms, checks genre demand in the target market, and ships a localized launch kit — cover, blurb, and marketing in the new language. It is a natural upsell to a storytelling app's publishing step, and it sits in the price gap the market leaves open: our team's proposed $199–$499 per book per language, between budget AI tools and human rates. That price is a proposal from our research, not a market fact.",
+      "benefit": "For authors, the bundle turns translation from a $6,400 gamble into a priced, testable step — one language, one market, with the marketing included instead of assumed. For us, it reuses exactly the muscle we are already building: text, canon, and media, plus the glossary-aware translation work from the subtitle prototype. Series and backlist authors are the strongest first customers, because a translated edition can build on momentum from later books in a way a standalone title cannot.",
+      "apply": "First steps before any build: pick one target language where a genre-demand signal already exists, price a glossary-locked sample chapter, and draft what the launch kit actually contains. The decision framework from Entrada Publishing is the screen for all of it — specific market, real cost estimates, marketing plan before committing, and start with one language, well-supported, rather than spreading a limited budget across several.",
+      "stats": [
+        {
+          "value": "$0.08–$0.30",
+          "label": "Per word for human literary translation"
+        },
+        {
+          "value": "$6,400–$24,000",
+          "label": "For an 80,000-word novel"
+        },
+        {
+          "value": "$6,000–$15,000",
+          "label": "Typical range for a standard language pair"
+        }
+      ],
+      "details": [
+        {
+          "heading": "What translation actually costs",
+          "body": "Entrada Publishing's guide, published September 15, 2026, puts human literary translation at $0.08 to $0.30 per word, depending on language pair, genre complexity, and translator experience. For a typical 80,000-word novel that works out to roughly $6,400 to $24,000, and many self-published authors land somewhere in the $6,000 to $15,000 range for a standard pair like Spanish, French, or German. Less commonly translated languages or highly specialized content push costs toward the higher end or beyond. AI and machine translation can bring costs down dramatically, sometimes to a small fraction of human rates — with corresponding trade-offs in quality."
+        },
+        {
+          "heading": "Why translation alone doesn't sell",
+          "body": "Entrada's central point is blunt: translation only pays off when there is real, specific demand for the book's genre in the target market, and when the author is prepared to market the translated edition there. Romance, thriller, and fantasy often have active reader communities in German, Spanish, and Portuguese, and an existing audience signal — readers who asked about a translated edition, or social-media visibility in that language — is a far better bet than a general sense that more languages equals more readers. Without dedicated marketing in the new market, translation rarely produces meaningful sales."
+        },
+        {
+          "heading": "What budget AI tools miss",
+          "body": "Budget AI translation tools, which our research notes put at roughly $2–$100 per book, translate generically. They carry no series canon or character-name glossary, so names and terms drift across a book and across a series. They check nothing about whether the genre sells in the target market, so an author can pay to translate a book nobody in that market is looking for. And they ship no launch marketing in the new language — the part Entrada says determines whether translation pays at all. Each missing piece is a failure mode, not a feature gap."
+        },
+        {
+          "heading": "The bundle, piece by piece",
+          "body": "The minimum viable product has four parts. First, the manuscript plus a series bible, so the translation knows the canon. Second, a locked glossary for names and series terms, enforced across the whole book. Third, a genre-demand check for the target market — is this genre selling there, and is there an audience signal for this book? Fourth, a localized launch kit: translated cover copy, blurb, and marketing assets in the new language, not just a translated file. The launch kit is the piece that turns translation from a cost into a testable market entry."
+        },
+        {
+          "heading": "Who pays in the traditional model",
+          "body": "In traditional publishing, when a foreign publisher acquires rights to a book, that publisher typically pays for the translation — not the author. That matters because a self-published author considering translation is taking on a cost that, in the traditional model, would not typically fall to them. It is an investment a traditional publisher would only make if confident enough in the market to fund it themselves. The bundle's job is to give an indie author the same confidence a publisher would want before spending: demand evidence, a locked glossary, and a marketing plan."
+        },
+        {
+          "heading": "How to decide, the Entrada way",
+          "body": "Entrada's framework is a five-step screen. Identify a specific target language and market where there is concrete reason to believe demand exists. Get real cost estimates for that language pair and the manuscript's length. Plan the marketing approach in that market before committing to translation. Weigh the cost against other priorities, including whether the budget might be better spent marketing the existing edition or editing the next book. And start with one language, well-supported, rather than spreading a limited budget across several languages with no meaningful marketing behind any of them."
+        }
+      ],
+      "checklist": [
+        "Pick one target language where a genre-demand signal already exists.",
+        "Price a glossary-locked sample chapter to test translation quality.",
+        "Check genre demand in that market before committing to a full book.",
+        "Draft the launch kit's contents: cover copy, blurb, and marketing assets.",
+        "Cost the full MVP before building anything."
+      ],
+      "caveats": "The $199–$499 per-book-per-language price and the $2–$100 budget-tool figure are the team's research proposals and notes, not market facts. Entrada's cost figures come from one publisher's guide (September 15, 2026), not a market survey, and actual quotes vary by language pair and genre. No demand data has been gathered yet, so the opportunity is a reasoned gap, not a validated market.",
+      "source_name": "Entrada Publishing",
+      "source_url": "https://www.entradapublishing.com/articles/should-you-translate-your-book.html"
+    },
+    {
       "slug": "digitalocean-cuttlefish",
       "date": "2026-11-06",
       "category": "Tools",
