@@ -5,9 +5,7 @@
  * genre chips and a language filter. M2d adds, over the M2c fields
  * (created_at, playthrough_count, latest_playthrough_at,
  * character_names, tags, cover_image): real rankings on the three
- * sort tabs, ranking sections on Explore (top 5 + See all), a
- * Continue strip from the reader's own per-book playthroughs
- * (GET /api/books/{id}/playthroughs — scene_count + preview),
+ * sort tabs, ranking sections on Explore (top 5 + See all),
  * real covers when cover_image is set (initial tile otherwise),
  * and playthrough counts as the cards' social proof. Search covers
  * title, genre, subgenre, tone, tags and character names.
@@ -15,6 +13,8 @@
  * portrait covers with an overlaid plays-count badge, typographic
  * covers for coverless books, and the whole card as one tap target
  * (stretched title link to play; Book details a separate link).
+ * The Continue strip moved to the My Stories page (stories.html)
+ * on Nov 6 at Hieu's direction — resuming lives there now.
  * No internal identifiers or session debug data reach the UI.
  * Signed-out users see the sign-in state, never a wrong user. */
 
@@ -42,8 +42,6 @@ const RANKED_LABELS = {
 const LANGUAGE_NAMES = { en: "English" };
 
 let allBooks = [];
-let continueItems = []; /* [{ book, run }] — run: { id, scene_count, preview, updated_at } */
-let continueLoaded = false;
 let activeSort = "explore";
 let activeGenre = "";
 let activeLanguage = "";
@@ -165,8 +163,8 @@ function rankedBooks(sort, books) {
 }
 
 /* Discovery mode: Explore tab with no search or filter active.
- * The Continue strip and the ranking sections are discovery, not
- * search results — they hide while the reader is filtering. */
+ * The ranking sections are discovery, not search results — they
+ * hide while the reader is filtering. */
 function discoveryMode() {
   return (
     activeSort === "explore" &&
@@ -300,7 +298,7 @@ function isNewBook(book) {
  * one (every book today), the grid card gets a designed typographic
  * cover — genre in small caps, the title set in the heading font,
  * a "with <characters>" line — instead of a bare letter tile; the
- * small thumbs (Continue strip, ranking rows) keep the initial. */
+ * small thumbs (ranking rows) keep the initial. */
 function coverThumb(book, className, variant) {
   const cover = document.createElement("div");
   cover.className = className;
@@ -414,48 +412,6 @@ function renderCard(book) {
   return card;
 }
 
-function renderContinue() {
-  const box = el("explore-continue");
-  const cards = el("explore-continue-cards");
-  cards.innerHTML = "";
-  if (!discoveryMode() || !continueLoaded || continueItems.length === 0) {
-    box.hidden = true;
-    return;
-  }
-  box.hidden = false;
-  for (const { book, run } of continueItems) {
-    const card = document.createElement("article");
-    card.className = "explore-continue-card";
-    card.append(coverThumb(book, "explore-continue-thumb"));
-    const body = document.createElement("div");
-    body.className = "explore-continue-body";
-    const title = document.createElement("h3");
-    title.className = "explore-continue-title";
-    title.textContent = book.title || "Untitled book";
-    const scene = document.createElement("p");
-    scene.className = "explore-continue-scene";
-    scene.textContent = "Continue — Scene " + run.scene_count;
-    body.append(title, scene);
-    /* Preview is the last scene's text (the summary has no diary
-     * line); labelled as the scene, never as a diary entry. */
-    if (run.preview) {
-      const preview = document.createElement("p");
-      preview.className = "explore-continue-preview";
-      preview.textContent = run.preview;
-      body.append(preview);
-    }
-    const button = document.createElement("a");
-    button.className = "btn btn-primary explore-continue-btn";
-    /* play.html resumes the reader's latest run for this book
-     * (GET /api/books/{id}/playthroughs), so no new URL scheme. */
-    button.href = "./play.html?id=" + encodeURIComponent(book.id);
-    button.textContent = "Continue";
-    body.append(button);
-    card.append(body);
-    cards.append(card);
-  }
-}
-
 function rankMeta(book, sort) {
   if (sort === "trending") {
     const played = relTime(book.latest_playthrough_at);
@@ -555,7 +511,6 @@ function renderExplore() {
   empty.hidden = total > 0;
   if (total === 0) {
     count.textContent = "";
-    renderContinue();
     renderSections();
     return;
   }
@@ -566,7 +521,6 @@ function renderExplore() {
       : "No books match the selected filters. Clear a filter to see all books.";
     noResults.hidden = false;
     count.textContent = `0 of ${total} book${total === 1 ? "" : "s"}`;
-    renderContinue();
     renderSections();
     return;
   }
@@ -575,41 +529,12 @@ function renderExplore() {
     books.length === total
       ? `${total} book${total === 1 ? "" : "s"}`
       : `${books.length} of ${total} book${total === 1 ? "" : "s"}`;
-  renderContinue();
   renderSections();
 }
 
 function setSort(sort) {
   if (!SORTS.includes(sort) || sort === activeSort) return;
   activeSort = sort;
-  renderExplore();
-}
-
-/* Continue strip: the reader's own in-progress runs, one list call
- * per book. Any failure (401, 404, network) just hides the strip —
- * the grid never waits on it. Runs with no scenes are not
- * in-progress and are skipped. */
-async function loadContinue() {
-  const jobs = allBooks.map(async (book) => {
-    try {
-      const data = await apiFetch(
-        "/api/books/" + encodeURIComponent(book.id) + "/playthroughs",
-      );
-      const runs = (data && data.playthroughs) || [];
-      const run = runs.find((r) => (r.scene_count || 0) >= 1);
-      return run ? { book, run } : null;
-    } catch {
-      return null;
-    }
-  });
-  const found = (await Promise.all(jobs)).filter(Boolean);
-  found.sort(
-    (a, b) =>
-      (parseDate(b.run.updated_at) ?? -Infinity) -
-      (parseDate(a.run.updated_at) ?? -Infinity),
-  );
-  continueItems = found;
-  continueLoaded = true;
   renderExplore();
 }
 
@@ -681,7 +606,6 @@ async function init() {
     const data = await apiFetch("/api/books");
     allBooks = Array.isArray(data) ? data : (data && data.books) || [];
     renderExplore();
-    loadContinue();
   } catch (err) {
     el("library-error").textContent = friendlyError(err);
     el("library-error").hidden = false;
