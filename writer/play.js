@@ -587,8 +587,8 @@ function renderScenes() {
       prose.append(marker, input);
     }
     // Beat rendering (Hieu, Oct 29): a scene is its
-    // paragraphs, and each paragraph carries its own image
-    // control right under it - one image per beat, never one
+    // paragraphs, and each paragraph carries its own
+    // controls at its start - one image per beat, never one
     // image at the end of the whole scene. The diary jump
     // target (F3 T3) stays on the first paragraph: the
     // opening premise is turn 0.
@@ -601,10 +601,10 @@ function renderScenes() {
       }
       p.textContent = beatText;
       prose.append(p);
-      // Beat image control (see the block above
-      // renderScenes): the button follows the beat's backend
-      // state, and the image renders inline under its
-      // paragraph once loaded.
+      // Beat image (see the block above renderScenes):
+      // the icon follows the beat's backend state, and the
+      // image renders inline under its paragraph once
+      // loaded. The icon itself opens the paragraph (below).
       const wrap = document.createElement("div");
       wrap.className = "scene-image-wrap";
       wrap.dataset.testid = "scene-image-wrap-" + key;
@@ -638,8 +638,8 @@ function renderScenes() {
         }
       });
       // Speaker button (stream-audio v1, T3): one small
-      // control per paragraph in the same beat row as the
-      // image buttons - it plays ONLY this paragraph's
+      // control per paragraph, inline at its start beside
+      // the image icon - it plays ONLY this paragraph's
       // cached audio (background pre-generation, design
       // section 6), then stops; tap again stops it. Its
       // state (idle / generating / ready / playing /
@@ -651,7 +651,17 @@ function renderScenes() {
       syncAudioButton(audioBtn, i, beatText);
       audioBtn.addEventListener("click",
         () => onAudioButton(i, beatText));
-      wrap.append(audioBtn, imgBtn, img);
+      wrap.append(img);
+      // Beat icons inline (Hieu, Nov 5): the speaker and
+      // image icons open the paragraph itself, floated at
+      // its start (see .beat-icons in play.css), instead of
+      // sitting on a controls line of their own - the prose
+      // starts right after them on the first line and wraps
+      // full-width below.
+      const icons = document.createElement("span");
+      icons.className = "beat-icons";
+      icons.append(audioBtn, imgBtn);
+      p.prepend(icons);
       prose.append(wrap);
     });
   });
