@@ -309,6 +309,12 @@ export function createAudioPlayer(deps = {}) {
       notify();
       throw err;
     }
+    // Lookahead: start the next queued paragraph audio now,
+    // while this one plays, so it is ready when this one ends.
+    if (queueActive && queue.length) {
+      const next = queue[0];
+      ensureAudio(next.text, next.voice).catch(() => {});
+    }
     notify();
   }
 
