@@ -1,16 +1,25 @@
-/* Create a book (F2 T4): describe -> assemble -> review -> confirm.
+/* Create a book, wizard edition (mobile-nav M4b): four steps,
+ * design §3.4 (Emochi's 4-step shape, our approved content).
  *
- * Step 1 posts the plain-words description to POST /api/books/enhance
- * (F2 T3), which returns a bible draft and saves nothing. Step 2
- * shows that draft for review; the reader edits the fields the
- * page names, and the page sends the full definition back, so
- * untouched fields survive by construction (same pattern as the
- * book page). Step 3 confirms with POST /api/books (201), then
+ * Step 1: main character (pick-or-write chips + free text).
+ * Step 2: location + what happens in the first scene.
+ * Step 3: style/genre + language.
+ * Steps 1-3 compose into the plain-words description sent to
+ * POST /api/books/enhance (F2 T3), which returns a bible draft
+ * and saves nothing. Step 4 reuses the review form: the reader
+ * edits the fields, confirms with POST /api/books (201), then
  * navigates to play.html?id=<book id>: the play screen starts
  * (or resumes) a playthrough of the saved book, scene 0 being
  * its opening premise. A 409 at confirm means a book with that
  * id already exists - nothing is overwritten; the reader
- * re-assembles with a different description. */
+ * re-assembles with a different description.
+ *
+ * Back never wipes a step: every step stays in the DOM and only
+ * its `hidden` flips, so chips + free text survive the whole
+ * round trip. Chips are help, not a limit: picking one never
+ * removes free text, and free text is never overwritten.
+ * No waiting screen / Explore While Waiting here - that is M4c,
+ * which needs the async-enhance decision first. */
 
 import { apiFetch } from "./js/app-api.js";
 import { getToken, clearToken } from "./js/app-auth.js";
@@ -18,7 +27,17 @@ import { renderTopbar, friendlyError } from "./js/app-ui.js";
 import { renderShell } from "./js/shell.js";
 
 const el = (id) => document.getElementById(id);
+const STEP_TITLES = ["Main character", "First scene", "Style and language", "Review your bible"];
+let step = 1;
 let draft = null;
+/* One selected chip per group (single pick); null = none picked. */
+const chips = { character: null, setting: null, genre: null, language: null };
+
+function showWizardError(msg) {
+  const box = el("wizard-error");
+  box.textContent = msg;
+  box.hidden = !msg;
+}
 
 function showError(msg) {
   const box = el("create-error");
@@ -59,43 +78,120 @@ function collect() {
   return book;
 }
 
-function init() {
-  renderTopbar({ backHref: "./home.html", backLabel: "Back to library" });
-  renderShell({ active: "create" });
-  if (!getToken()) {
-    el("create-form").hidden = true;
-    el("create-out").hidden = false;
-    return;
-  }
+/* The four step inputs, composed into the plain-words description
+ * the enhance endpoint already accepts. Empty parts are omitted,
+ * so an all-blank wizard sends "" and the AI invents a book -
+ * the old single-textarea behaviour, preserved. */
+function composeDescription() {
+  const parts = [];
+  const character = [chips.character, el("f-character").value.trim()]
+    .filter(Boolean).join(" ");
+  if (character) parts.push("Main character: " + character + ".");
+  const place = [chips.setting, el("f-first-scene").value.trim()]
+    .filter(Boolean).join(" ");
+  if (place) parts.push("Setting and first scene: " + place + ".");
+  const style = [chips.genre, el("f-style-notes").value.trim()]
+    .filter(Boolean).join("; ");
+  if (style) parts.push("Style: " + style + ".");
+  if (chips.language) parts.push("Language: " + chips.language + ".");
+  return parts.join(" ");
 }
 
-el("create-form").addEventListener("submit", async (event) => {
-  event.preventDefault();
-  showError("");
+function showStep(n) {
+  step = n;
+  el("wizard-form").hidden = n === 4;
+  el("review-form").hidden = n !== 4;
+  for (let i = 1; i <= 3; i++) {
+    el("step-" + i).hidden = i !== n;
+  }
+  el("wizard-step-label").textContent =
+    "Step " + n + " of 4 — " + STEP_TITLES[n - 1];
+  el("wizard-bar-fill").style.width = (n * 25) + "%";
+  el("wizard-back").disabled = n === 1;
+  el("wizard-next").textContent = n === 3 ? "Assemble my bible" : "Next";
+  showWizardError("");
+  const heading = n === 4
+    ? el("review-title")
+    : el("step-" + n + "-title");
+  if (heading) heading.focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+}
+
+async function assemble() {
+  showWizardError("");
   el("assemble-status").textContent = "Assembling your bible...";
-  el("assemble-btn").disabled = true;
+  el("wizard-next").disabled = true;
+  el("wizard-back").disabled = true;
   try {
     const result = await apiFetch("/api/books/enhance", {
       method: "POST",
-      body: { description: el("f-description").value },
+      body: { description: composeDescription() },
     });
     draft = result.draft;
     fill(draft);
     el("assemble-status").textContent = "";
-    el("create-form").hidden = true;
-    el("review-form").hidden = false;
+    showStep(4);
   } catch (err) {
     if (err.status === 401) {
       clearToken();
-      el("create-form").hidden = true;
+      el("wizard-form").hidden = true;
+      el("wizard-progress").hidden = true;
       el("create-out").hidden = false;
       return;
     }
-    showError(friendlyError(err));
+    showWizardError(friendlyError(err));
     el("assemble-status").textContent = "";
   } finally {
-    el("assemble-btn").disabled = false;
+    el("wizard-next").disabled = false;
+    el("wizard-back").disabled = step === 1;
   }
+}
+
+function init() {
+  renderTopbar({ backHref: "./home.html", backLabel: "Back to library" });
+  renderShell({ active: "create" });
+  if (!getToken()) {
+    el("wizard-form").hidden = true;
+    el("wizard-progress").hidden = true;
+    el("create-out").hidden = false;
+    return;
+  }
+  el("wizard-progress").hidden = false;
+  showStep(1);
+}
+
+/* Chips: single pick per group; tapping the picked chip again
+ * clears it. The group container delegates so the handler is
+ * one listener, not one per chip. */
+document.querySelectorAll(".wizard-chips").forEach((group) => {
+  group.addEventListener("click", (event) => {
+    const chip = event.target.closest(".wizard-chip");
+    if (!chip) return;
+    const name = group.dataset.chipGroup;
+    const picked = chips[name] === chip.dataset.chipValue;
+    group.querySelectorAll(".wizard-chip").forEach((c) => {
+      c.setAttribute("aria-pressed", "false");
+      c.classList.remove("wizard-chip-active");
+    });
+    chips[name] = picked ? null : chip.dataset.chipValue;
+    if (!picked) {
+      chip.setAttribute("aria-pressed", "true");
+      chip.classList.add("wizard-chip-active");
+    }
+  });
+});
+
+el("wizard-back").addEventListener("click", () => {
+  if (step > 1) showStep(step - 1);
+});
+
+el("wizard-form").addEventListener("submit", async (event) => {
+  event.preventDefault();
+  if (step < 3) {
+    showStep(step + 1);
+    return;
+  }
+  await assemble();
 });
 
 el("review-form").addEventListener("submit", async (event) => {
@@ -113,6 +209,7 @@ el("review-form").addEventListener("submit", async (event) => {
     if (err.status === 401) {
       clearToken();
       el("review-form").hidden = true;
+      el("wizard-progress").hidden = true;
       el("create-out").hidden = false;
       return;
     }
@@ -127,8 +224,7 @@ el("review-form").addEventListener("submit", async (event) => {
 });
 
 el("back-btn").addEventListener("click", () => {
-  el("review-form").hidden = true;
-  el("create-form").hidden = false;
+  showStep(3);
   showError("");
 });
 

@@ -1,0 +1,134 @@
+/* Create wizard (mobile-nav M4b): layout only, scoped to .page-create.
+   Colors and components come from the shared brand theme; the chip
+   pattern follows home.css .explore-chip (same tokens, same active
+   state) so the wizard reads as part of the app, not a new style. */
+
+/* Progress: step label + bar. */
+.page-create .wizard-progress {
+  margin: 0 0 1.25rem;
+}
+.page-create #wizard-step-label {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.page-create .wizard-bar {
+  height: 6px;
+  margin-top: 0.5rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-secondary);
+  overflow: hidden;
+}
+.page-create #wizard-bar-fill {
+  display: block;
+  height: 100%;
+  width: 25%;
+  background: var(--color-primary);
+  border-radius: inherit;
+  transition: width var(--transition-normal);
+}
+
+/* Steps: one visible at a time; the rest stay in the DOM (hidden)
+   so Back never wipes input. */
+.page-create .wizard-step h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+.page-create .wizard-step .home-note {
+  margin: 0 0 1rem;
+}
+.page-create .wizard-step label {
+  display: block;
+  font-weight: 600;
+  margin: 0.75rem 0;
+}
+.page-create .wizard-step label .input {
+  display: block;
+  margin-top: 0.3rem;
+  font-weight: 400;
+}
+.page-create .wizard-group-label {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+/* Pick-or-write chips (same pattern as .explore-chip). */
+.page-create .wizard-chips {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  margin: 0 0 1rem;
+}
+.page-create .wizard-chip {
+  min-height: 44px;
+  padding: 0.5rem 0.875rem;
+  border: 1px solid var(--color-card-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-card-bg);
+  color: var(--color-text-muted);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.page-create .wizard-chip:hover {
+  color: var(--color-text);
+}
+.page-create .wizard-chip:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-glow);
+}
+.page-create .wizard-chip-active {
+  background: var(--color-primary-soft);
+  color: var(--color-primary-hover);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+/* Step nav: Back left, status centre, Next/Assemble right. */
+.page-create .wizard-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+.page-create .wizard-nav .book-note {
+  flex: 1;
+  min-width: 0;
+}
+.page-create .wizard-nav .btn-primary {
+  margin-left: auto;
+}
+
+/* Pinned bottom bar (Emochi shape): on phones the wizard nav and
+   the review form's actions sit fixed just above the M1 tab bar,
+   so Next / Assemble / Generate is always reachable; on desktop
+   the shell is a left rail, so both flow normally in the card.
+   The extra page padding keeps the last step content from sliding
+   under the fixed bar. */
+@media (max-width: 1023px) {
+  .page-create {
+    padding-bottom: 92px;
+  }
+  .page-create .wizard-nav,
+  .page-create .wizard-pin {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(60px + env(safe-area-inset-bottom, 0px));
+    z-index: 40;
+    padding: 0.75rem 1rem;
+    background: var(--color-bg-primary);
+    border-top: 1px solid var(--color-card-border);
+    margin-top: 0;
+  }
+  .page-create .wizard-pin .book-note {
+    flex: 1;
+    min-width: 0;
+  }
+  .page-create .wizard-pin .btn-primary {
+    margin-left: auto;
+  }
+}
