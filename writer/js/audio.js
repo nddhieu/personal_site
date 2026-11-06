@@ -319,7 +319,10 @@ export function createAudioPlayer(deps = {}) {
   }
 
   /* Play exactly one paragraph, then stop: any queue is
-   * cancelled, any current reading stops first. */
+   * cancelled, any current reading stops first. A tap on
+   * another paragraph stops the current reading at once;
+   * the new paragraph plays once its audio is ready
+   * (cached or freshly generated). */
   async function playBeat(text, voice) {
     const key = cacheKeyFor(text, voice);
     if (current && current.cacheKey === key &&
@@ -327,8 +330,7 @@ export function createAudioPlayer(deps = {}) {
       stop();
       return;
     }
-    queueActive = false;
-    queue = [];
+    stop();
     await playEntry({ cacheKey: key, text, voice });
   }
 
