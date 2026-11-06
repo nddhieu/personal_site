@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Stories - AI Storytelling Co-Author</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./shell.css">
+<link rel="stylesheet" href="./stories.css">
+</head>
+<body class="light-theme">
+<div id="app-topbar"></div>
+<nav id="app-shell" aria-label="Primary"></nav>
+<main class="page-stories">
+  <section class="stories-feed">
+    <h1 class="stories-title">My Stories</h1>
+    <p id="welcome" class="stories-welcome" hidden></p>
+
+    <div id="state-loading" class="loading-row">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading your stories...</span>
+    </div>
+
+    <div id="state-in" hidden>
+      <ul id="story-list" class="story-list"></ul>
+      <div id="stories-empty" class="stories-empty" hidden>
+        <p>No stories in progress yet.</p>
+        <p class="stories-empty-note">Stories you start reading will wait for you here, ready to pick up where you left off.</p>
+        <a class="btn btn-primary" href="./home.html">Browse Explore</a>
+      </div>
+      <p id="stories-error" class="form-error" role="alert" hidden></p>
+    </div>
+
+    <div id="state-out" hidden>
+      <p>You are not signed in.</p>
+      <p id="out-note" class="stories-note" hidden></p>
+      <a class="btn btn-primary" href="./login.html">Sign in</a>
+    </div>
+  </section>
+</main>
+<script type="module" src="./stories.js"></script>
+</body>
+</html>

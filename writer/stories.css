@@ -1,0 +1,123 @@
+/* My Stories page styles, scoped under .page-stories.
+ * Emochi Chats structure on brand tokens: full-width rows with a
+ * round cover avatar, title + short timestamp on the first line,
+ * one muted preview line, hairline dividers. No panel wrapper -
+ * the list flows on the page background like the Explore feed. */
+.page-stories {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+.page-stories .stories-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0.4rem 0 0.6rem;
+}
+.page-stories .stories-welcome {
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  margin: 0 0 0.6rem;
+}
+.page-stories .stories-note {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+.page-stories .story-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.page-stories .story-row {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-height: 48px;
+  padding: 0.8rem 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+}
+.page-stories .story-row:active {
+  background: var(--color-bg-secondary);
+}
+@media (hover: hover) {
+  .page-stories .story-row:hover {
+    background: var(--color-bg-secondary);
+  }
+}
+.page-stories .story-avatar {
+  position: relative;
+  flex-shrink: 0;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  background: var(--color-bg-secondary);
+}
+.page-stories .story-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.page-stories .story-avatar-initial {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+.page-stories .story-row-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.page-stories .story-row-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+.page-stories .story-row-title {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-stories .story-row-time {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+.page-stories .story-row-preview {
+  font-size: 0.88rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-stories .stories-empty {
+  padding: 2.5rem 0 1rem;
+  text-align: left;
+}
+.page-stories .stories-empty p {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+}
+.page-stories .stories-empty .stories-empty-note {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin-bottom: 1.1rem;
+}

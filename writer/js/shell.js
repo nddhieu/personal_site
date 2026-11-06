@@ -9,10 +9,10 @@
  * simply never mounts the shell, so nothing here needs a special
  * case — renderShell no-ops when there is no #app-shell mount.
  *
- * My Stories / Saved / Profile have no pages yet (M2/M3 build
- * them): those tabs render disabled with a "Soon" badge and do
- * not navigate, rather than linking to a wrong destination.
- * Explore -> home.html, Create -> create.html (existing pages).
+ * Saved / Profile have no pages yet: those tabs render disabled
+ * with a "Soon" badge and do not navigate, rather than linking
+ * to a wrong destination. Explore -> home.html, My Stories ->
+ * stories.html, Create -> create.html (existing pages).
  *
  * Same pattern as renderTopbar in app-ui.js: plain DOM, no
  * framework, constants only (no user data reaches innerHTML). */
@@ -27,7 +27,7 @@ const TABS = [
   {
     id: "my-stories",
     label: "My Stories",
-    href: null, // M3 builds the page; disabled until then.
+    href: "./stories.html",
     icon: '<path d="M12 6.5C10 5 7.5 4.5 4 4.5v13.5c3.5 0 6 .5 8 2 2-1.5 4.5-2 8-2V4.5c-3.5 0-6 .5-8 2z"/><path d="M12 6.5v13.5"/>',
   },
   {
@@ -96,8 +96,9 @@ function buildTab(tab, activeId) {
 /* Renders the shell into <nav id="app-shell"> and marks the
  * body's shell class so CSS can reserve room for the bar/rail
  * (content bottom padding on phone, left padding on desktop).
- * Call with { active: "explore" | "create" } from the page module,
- * next to renderTopbar. No-ops when the page has no mount. */
+ * Call with { active: "explore" | "my-stories" | "create" } from
+ * the page module, next to renderTopbar. No-ops when the page
+ * has no mount. */
 export function renderShell(options = {}) {
   const host = document.getElementById("app-shell");
   if (!host) return;
