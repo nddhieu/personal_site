@@ -78,25 +78,27 @@
                  key the future reading-settings panel will use. -->
             <label class="stream-toggle" title="Show each scene as it is written">
               <input id="stream-toggle" data-testid="stream-toggle" type="checkbox">
-              Stream
+              <span class="toggle-label">Stream</span>
             </label>
             <!-- Scene audio (stream-audio v1, T3): auto-speak
                  flag (OFF by default, writer.autoSpeak) and
                  narrator voice (writer.narratorVoice) on the
                  same localStorage contract the future
                  reading-settings panel will bind to. -->
-            <label class="stream-toggle" title="Read each new scene aloud automatically once its audio is ready">
+            <label class="stream-toggle" title="Auto-speak: read each new scene aloud automatically once its audio is ready">
               <input id="auto-speak-toggle" data-testid="auto-speak-toggle" type="checkbox">
-              Auto-speak
+              <span class="toggle-label">Speak</span>
             </label>
             <label class="voice-select" title="Narrator voice">
-              Voice
-              <select id="narrator-voice" data-testid="narrator-voice">
+              <select id="narrator-voice" data-testid="narrator-voice" aria-label="Narrator voice">
                 <option value="vendetti">Vendetti</option>
                 <option value="klett">Klett</option>
               </select>
             </label>
-            <p class="input-hint">Enter to send &middot; Shift+Enter for a new line</p>
+            <!-- Send (Hieu, Nov 5): Enter now makes a new line;
+                 this button sends the turn. -->
+            <button id="send-btn" data-testid="send-btn" class="tool-btn send-btn" type="button"
+              aria-label="Send" title="Send"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
           </div>
         </div>
       </div>
