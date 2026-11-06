@@ -279,6 +279,27 @@
   scroll-margin-top: 5.5rem;
   margin: 0 0 1.25rem;
 }
+/* Beat icons inline (Hieu, Nov 5): the speaker + image
+ * icons float at the very start of the beat's paragraph,
+ * like the reference app - the first line of prose starts
+ * right after them on the same line and the lines below
+ * wrap full-width underneath, instead of the icons taking
+ * a controls line of their own above or below the text.
+ * The cluster is 24px tall, inside the ~33px first line
+ * box, so only line 1 indents; the small margin-top
+ * optically centres the icons on that line's text.
+ * App-only: gone in print with the buttons inside it. */
+.page-play .beat-icons {
+  float: left;
+  display: inline-flex;
+  gap: 0.5rem;
+  margin: 0.28rem 0.5rem 0 0;
+}
+@media print {
+  .page-play .beat-icons {
+    display: none !important;
+  }
+}
 .page-play .turn-tools {
   display: flex;
   gap: 0.5rem;
@@ -394,21 +415,19 @@
 }
 
 /* Scene audio (stream-audio v1, T3): one small speaker
- * button per paragraph, in the beat control row under it
- * (same row as the image buttons). About 18px, muted, an
- * icon-only button like Suggest/Continue; the paragraph
- * margin placement rides Milu's reading-view redesign,
- * which owns paragraph layout. States: playing shows a
- * stop square; generating waits; unavailable is dimmed and
- * disabled ("Audio unavailable"). App-only, hidden in
- * print like the other beat controls. */
+ * button per paragraph, floated at the start of its
+ * paragraph beside the image icon (see .beat-icons).
+ * About 18px, muted, an icon-only button like
+ * Suggest/Continue. States: playing shows a stop square;
+ * generating waits; unavailable is dimmed and disabled
+ * ("Audio unavailable"). App-only, hidden in print like
+ * the other beat controls. */
 .page-play .scene-audio-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  margin-left: 0.5rem;
   padding: 0;
   cursor: pointer;
   background: transparent;
@@ -492,10 +511,11 @@
   }
 }
 
-/* Scene images (todo, @Chubby): one small control under each
- * scene; the image itself renders inline under its scene once
- * loaded. The button is app-only (hidden in print, like the
- * input markers); the image is story content and prints. */
+/* Scene images (todo, @Chubby): the image itself renders
+ * inline under its paragraph once loaded. The controls sit
+ * at the paragraph's start (see .beat-icons) and are
+ * app-only (hidden in print, like the input markers); the
+ * image is story content and prints. */
 .page-play .scene-image-wrap {
   margin: 0.25rem 0 1rem;
 }
@@ -525,7 +545,6 @@
   justify-content: center;
   width: 1.5rem;
   height: 1.5rem;
-  margin-left: 0.5rem;
   padding: 0;
   cursor: pointer;
   background: transparent;
