@@ -1,6 +1,71 @@
 {
-  "generated_at": "2026-11-05",
+  "generated_at": "2026-11-07T08:22:00-06:00",
   "articles": [
+    {
+      "slug": "paradev-parallel-agents",
+      "date": "2026-11-07",
+      "category": "Tools",
+      "kicker": "Many agents, one repo, no collisions",
+      "title": "Paradev: Run a Whole Team of Coding Agents at Once — Each in Its Own Worktree",
+      "summary": "Paradev — the desktop workspace formerly known as Superset — runs Claude Code, Codex, OpenCode, and 20+ other CLI coding agents side by side, each in its own Git worktree and branch, so they never overwrite each other's files. It took its new name with an $11.5M seed round on October 26, just as rival Conductor announced it is joining Meta and shutting down.",
+      "hook": "One repo, five agents, zero overwritten files — that's the pitch.",
+      "takeaways": [
+        "Paradev gives every agent task its own Git worktree and branch, so Claude Code, Codex, OpenCode, and 20+ other CLI agents can work on the same repo in parallel without clobbering each other.",
+        "Review stays in one window: read each workspace's diff, send follow-ups, open a pull request, and check CI — or send a pull-request line comment back to the agent.",
+        "It never proxies model calls, so agents run on your own subscriptions; the free tier covers one user, and Pro at $20/user/month adds automations and remote access."
+      ],
+      "image": "img/paradev-parallel-agents.jpg",
+      "problem": "Coding agents are multiplying, but a repo is still one shared working copy. Point two agents at the same files and they step on each other's edits; run them one at a time and the parallelism you wanted is gone. Juggling separate terminals, branches, and checkouts by hand turns the 'team of agents' idea into a bookkeeping job — and the moment you look away, one agent's half-finished edit is the next agent's merge conflict.",
+      "solution": "Paradev, formerly Superset, is a desktop workspace for running many CLI coding agents in parallel. Each task gets its own workspace with a Git worktree, branch, terminals, and ports, so Claude Code, Codex, OpenCode, Cursor's agent, Copilot CLI, Gemini CLI, and 20+ other CLI agents each work in isolation on the same repository. A Workspaces board shows which agents are working, which need your input, and which have a change ready for review. When a workspace is ready, you read its diff, send follow-ups, open a pull request, and check CI from the same window — and you can send a line comment from a pull request back to the agent. The app runs on macOS, with an experimental Linux build; Windows is not yet available. It never proxies model calls, so every agent runs on your own subscription or API key and Paradev never bills model usage. Remote Access adds other machines as hosts so workspaces keep running when your laptop sleeps, and an iPhone and iPad app lets you answer agents and review diffs away from your desk (Pro plan, iOS 26 or later). There is also a CLI, a TypeScript SDK, an MCP server, and a Slack bot, so other tools and agents can create workspaces and launch agents, and tasks sync with Linear and GitHub Issues. Paradev took its new name on October 26, 2026 — the old name collided with Apache Superset — alongside an $11.5M seed round led by Union Square Ventures with Y Combinator and others. The timing matters: on November 4, Conductor, the best-known rival in this category, announced it is joining Meta and shutting down — its cloud goes read-only November 13 and closes November 20, 2026 — so builders who ran agents in parallel there need a new home now.",
+      "benefit": "Parallel agents stop being a juggling act. Instead of serializing work through one terminal or babysitting branches, you fan a job out — one agent per task, each in its own worktree — and review the diffs as they land. For a team like ours, where several agents already work the same repo, the pattern is directly useful: the worktree-per-task rule is what keeps two builders from editing the same file at once, and Paradev turns it into the default instead of a discipline. And because it never touches your model billing, the cost of trying it is the free tier, not a new subscription.",
+      "apply": "Download Paradev for macOS from paradev.com and start with the free tier — one user, no model markup, your existing Claude Code or Codex login. Give it one real repo and two small tasks at once (a bug fix and a docs pass work well), and let each agent work in its own worktree while you watch the board. Review the first diffs in Paradev before merging anything, and only then decide whether Pro's automations and remote access are worth $20/user/month. If you were on Conductor, export your work before its cloud goes read-only on November 13.",
+      "stats": [
+        {
+          "value": "20+",
+          "label": "CLI coding agents with built-in presets, from Claude Code and Codex to OpenCode and Copilot CLI"
+        },
+        {
+          "value": "$11.5M",
+          "label": "Seed round led by Union Square Ventures, announced with the Paradev rebrand on October 26, 2026"
+        },
+        {
+          "value": "Nov 20",
+          "label": "Date Conductor Cloud shuts down — the rival parallel-agents workspace that joined Meta on November 4"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "Each task gets its own workspace: a Git worktree and branch, its own terminals, and its own ports. You start a CLI agent in a workspace and it works exactly as it would in your own terminal — Paradev runs each agent's own CLI in a persistent terminal — while the Workspaces board tracks whether it is working, waiting on you, or ready for review. When a change is ready you read the diff, send a follow-up, open a pull request, and check CI without leaving the app."
+        },
+        {
+          "heading": "What it costs",
+          "body": "The free tier covers one user. Pro is $20 per user per month ($16 billed yearly) and adds automations and remote access; Team at $60 ($54 yearly) and Ultra at $200 add cloud workspaces, which are in beta; an enterprise tier adds SAML SSO, SCIM, audit logs, and a SOC 2 Type II report. In every case you still pay your own agent subscriptions — Paradev never proxies model calls or resells tokens."
+        },
+        {
+          "heading": "Why this week",
+          "body": "Paradev is not brand new — Superset began as a November 2025 hackathon project, joined Y Combinator's spring 2026 batch, and renamed itself on October 26. What makes it the news now is the gap that just opened: Conductor announced on November 4 that it is joining Meta, stopped taking new sign-ups, and will shut its cloud down on November 20, 2026, with its Mac app winding down after early 2027. Anyone who ran parallel agents in Conductor is shopping for a replacement this month, and Paradev is the closest open, still-independent equivalent."
+        },
+        {
+          "heading": "Where it still falls short",
+          "body": "Worktrees separate working files, but Paradev itself notes they do not sandbox processes or prevent merge conflicts — two agents can still conflict when their branches meet, so the review step matters. Windows is not yet available, and cloud workspaces are still in beta. The company also describes the product as very early and asks users to expect bugs, and its stated ambition — from 5–7 concurrent agents today to as many as 100 — is a goal, not a shipped feature."
+        },
+        {
+          "heading": "What to watch next",
+          "body": "Whether cloud workspaces leave beta and what they cost at scale; whether a Windows build arrives; and whether Paradev's open codebase and free tier pull in the Conductor users who need a home before November 20 — or whether a bigger platform swallows the category first."
+        }
+      ],
+      "checklist": [
+        "Download Paradev for macOS (Linux build is experimental; Windows is not yet available) and sign in with your existing agent subscriptions — no new model billing.",
+        "Start with one repo and two small tasks at once, one per workspace, and watch the board instead of juggling terminals.",
+        "Review every workspace diff in Paradev before opening a pull request — worktrees isolate files, not merge conflicts.",
+        "If you used Conductor, move your work before its cloud goes read-only on November 13 and shuts down on November 20.",
+        "Only upgrade to Pro ($20/user/month) once you actually want automations, remote access, or the iPhone app — the free tier covers the core workflow."
+      ],
+      "caveats": "All product claims come from Paradev's own site and announcement, with the funding corroborated by Union Square Ventures and an SEC Form D filing; no independent hands-on review was available at publication time. Paradev describes itself as open source under the MIT License, but some third-party directories list Elastic License 2.0 instead — check the repository license before redistributing or building on it. The free tier covers one user; remote access, the iPhone/iPad app, and cloud workspaces need paid plans, and model costs stay on your own agent subscriptions. Worktrees isolate files but do not sandbox processes or prevent merge conflicts, and the product is described by its makers as very early.",
+      "source_name": "Paradev (announcement blog)",
+      "source_url": "https://paradev.com/blog/superset-is-now-paradev"
+    },
     {
       "slug": "security-audit-skill",
       "date": "2026-11-06",
