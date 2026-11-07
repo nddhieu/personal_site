@@ -1,6 +1,225 @@
 {
-  "generated_at": "2026-11-07T08:22:00-06:00",
+  "generated_at": "2026-11-07T09:38:00-06:00",
   "articles": [
+    {
+      "slug": "token-economizer",
+      "date": "2026-11-07",
+      "category": "Tools",
+      "kicker": "Your agent's memory is the cheapest token you'll ever buy",
+      "title": "TokenEconomizer: Microsoft's Plugin That Teaches Your Coding Agent to Stop Re-Paying for the Same Work",
+      "summary": "TokenEconomizer — a free, open-source plugin from Microsoft Research and UC Berkeley — learns from your coding agent's past sessions in a repository and cuts the repeated work: re-learned repo facts, tools loaded but never used, and loops that fail the same way twice. On 277 SWE-Bench tasks across five agent–model combinations, the authors measured 18.4–30.9% lower mean cost, and it was cheaper than the default setup in all 30 repository-by-combination cells.",
+      "hook": "Same repo, same agent, up to 31% cheaper — by remembering what it already learned.",
+      "takeaways": [
+        "TokenEconomizer plugs into Claude Code, Codex, the GitHub Copilot CLI, and Pi, and attacks three repeated wastes: re-learning repo facts, loading tools a repo never uses, and re-running the same failing loop.",
+        "Measured on 277 SWE-Bench tasks from six repos, it cut mean cost 18.4–30.9% across five agent–model combinations — cheaper than default in all 30 cells — while Pass@1 rose in four of the five.",
+        "It changes nothing about the agent's model or code: facts form only from repeated evidence, removed tools can be given back, and the loop guard only redirects — stopping a turn stays your call."
+      ],
+      "image": "img/token-economizer.jpg",
+      "problem": "Coding agents are built to finish tasks, not to keep them cheap. Every turn pays again for the agent's instructions, every loaded tool, and the conversation so far — and developers run the same agent on the same repository again and again, so much of that cost repeats. Three kinds of waste recur: the agent re-learns the same repo facts every session (which test command to run, where generated files live), the model is sent the definitions of tools the repo never uses, and a turn that hits the same failure keeps retrying it. The README puts it plainly: most tokens in a session are cached re-reads, so the bill is dominated by work the agent has effectively already done.",
+      "solution": "TokenEconomizer is a free, open-source plugin from Microsoft Research and UC Berkeley that learns across a repository's sessions instead of treating each one on its own. It leaves the agent's model, weights, and code alone and applies three mechanisms through what the agent already reads. Micro-skills remember how the repository works: facts learned from failures that repeat across sessions and from a model that reviews session logs, delivered at session start. Tool pruning stops loading tools that go unused in this repo — definitions are removed through the agent's own settings, so nothing depends on the agent learning a new tool. Failure-loop intervention steps in when a turn keeps hitting the same failures: a judge model checks whether the turn is stuck and nudges it to try another way. It plugs into Claude Code, Codex, the GitHub Copilot CLI, and Pi, and also runs under Cursor and Grok, which load Claude Code plugins. It needs Python 3.10 or newer, no API key of its own, and it never handles credentials.",
+      "benefit": "The payoff is measured, not promised. The authors ran five agent–model combinations on the same 277 SWE-Bench tasks from six repositories and report 18.4–30.9% lower mean cost — cheaper than the default setup in all 30 repository-by-combination cells. Success held up too: Pass@1 rose in four of the five combinations, by 0.9 to 2.6 points, with the one exception a 1.0-point dip for Opus 4.8. Cost is computed with cache pricing and includes the plugin's own model calls, so the saving is net of what the plugin itself spends. And every action is reversible: a fact later sessions contradict is dropped, removed tools can be given back, and the loop guard only redirects — stopping a turn stays your call.",
+      "apply": "Our team is the use case this was built for. Our agents work the same storytelling repository session after session, re-discovering the same repo facts and re-loading the same unused tools — exactly the three wastes TokenEconomizer targets. The trial is small and concrete: install it as a Codex plugin on HieuPC, run the status command in the storytelling repo, and compare cost over a few sessions against the recent baseline. One boundary matters: it plugs into Codex, Claude Code, and the Copilot CLI — not into our custom Chubby/Milo loop directly — so the trial runs on the HieuPC coding-agent side, where Codex does the builds. If the measured saving lands anywhere near the paper's range, the plugin pays for itself in a week of sessions.",
+      "stats": [
+        {
+          "value": "18.4–30.9%",
+          "label": "Lower mean cost across five agent–model combinations"
+        },
+        {
+          "value": "277",
+          "label": "SWE-Bench tasks from six repositories"
+        },
+        {
+          "value": "30 of 30",
+          "label": "Repository × combination cells cheaper than default"
+        },
+        {
+          "value": "4,934",
+          "label": "GitHub stars — Apache-2.0, created Oct 13, 2026"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "The plugin keeps what it knows about a repository and applies the three mechanisms to your unchanged coding agent; each finished session's log updates all three. Facts enter the context at session start, and tools are removed through the agent's own settings — nothing depends on the agent learning a new tool."
+        },
+        {
+          "heading": "The three mechanisms, one by one",
+          "body": "Micro-skills learn repo facts in any language from two sources: failures that repeat across sessions, and a model that reviews session logs. Tool pruning targets a quiet cost: every loaded tool's definition is sent with every turn, so a tool the repo never uses is pure overhead. Failure-loop intervention watches a turn (the agent's work on one prompt); when it keeps hitting the same failures, a judge model checks whether it is stuck — the same error three times meets a nudge to try another way — while a turn that is still making progress is left alone."
+        },
+        {
+          "heading": "What the numbers actually say",
+          "body": "Per combination, the paper reports: Claude Code with Sonnet 5, cost 23.6% lower and Pass@1 up 1.3 points; Claude Code with Opus 4.8, 30.9% lower but Pass@1 down 1.0; Codex with GPT-5.6 Terra, 24.7% lower and Pass@1 up 0.9; Codex with GPT-5.6 Sol, 26.1% lower and Pass@1 up 1.6; Copilot CLI with Sonnet 5, 18.4% lower and Pass@1 up 2.6. The headline range — 18.4–30.9% — is the spread across those five, and the plugin was cheaper than default in every one of the 30 repository-by-combination cells."
+        },
+        {
+          "heading": "What it costs to run",
+          "body": "The plugin is not free to operate: its own model calls (the log review, the loop judge) cost tokens, and the authors count them — cost is computed with cache pricing and includes the plugin's own calls, so the reported saving is net. The safeguards are conservative by design: facts form only from repeated evidence, tools are removed only after going unused, and the loop guard leaves alone a turn that is still making progress."
+        },
+        {
+          "heading": "Where it fits our team — and where it doesn't",
+          "body": "The fit is on the HieuPC coding-agent side: Codex builds the storytelling repo session after session, which is exactly the repeated-repo pattern the plugin learns from. It does not plug into our custom Chubby/Milo loop, so the trial cannot cover the agents that run this research pipeline itself — only the CLI coding agents. Install is a marketplace add plus an install command per agent, then a status command confirms it is live."
+        },
+        {
+          "heading": "What to watch",
+          "body": "The project is young — created October 13, 2026 — so expect fast change and the occasional rough edge. The Opus 4.8 combination traded a 1.0-point Pass@1 dip for its 30.9% saving, a reminder that the cheapest run is not always the best one. And the figures are the authors' own SWE-Bench measurement, a coding benchmark; the honest test is our own repo, our own sessions, measured against our own baseline."
+        }
+      ],
+      "checklist": [
+        "Clone microsoft/TokenEconomizer on HieuPC and install it as a Codex plugin from the local marketplace.",
+        "Restart Codex and run the plugin's status command in the storytelling repo to confirm it is live.",
+        "Record the current per-session cost baseline from recent Codex runs before the first economized session.",
+        "Run a few real build sessions and compare cost — and task success — against that baseline.",
+        "If the saving holds, leave it installed; if a pruned tool is ever needed, give it back through the agent's settings."
+      ],
+      "caveats": "All cost and accuracy figures are the authors' own measurement on 277 SWE-Bench tasks — a coding benchmark, not our repository. The project is young (created October 13, 2026), and the Opus 4.8 combination traded a 1.0-point Pass@1 dip for its 30.9% saving. The plugin does not cover our custom Chubby/Milo agent loop, only the CLI coding agents it plugs into.",
+      "source_name": "Microsoft / TokenEconomizer on GitHub",
+      "source_url": "https://github.com/microsoft/TokenEconomizer"
+    },
+    {
+      "slug": "viggle-remake",
+      "date": "2026-11-07",
+      "category": "Tools",
+      "kicker": "Reshoot the film, keep the shot",
+      "title": "Viggle Remake: Open-Weight Video-to-Video That Reshoots a Film on One Sentence",
+      "summary": "Viggle Remake is a pair of open LoRAs (rank 256) on the MiniMax-H3 video model that reshoot existing footage: swap mode replaces the people, edit mode changes objects, backgrounds, weather, and lighting — while the original motion, camera, timing, and soundtrack stay untouched. It ships an MCP server so a coding agent can cut, render, and stitch a whole film, plus ComfyUI nodes and int8/GGUF builds that run on 12 GB of VRAM. The catch is the weight: the base model is about 144 GB, and the whole repository is roughly 210 GB.",
+      "hook": "Recast the band, change the weather, keep every camera move.",
+      "takeaways": [
+        "Two LoRA modes on MiniMax-H3 reshoot existing video: swap replaces people and characters, edit changes objects, background, weather, or light — motion, camera, timing, and sound are preserved.",
+        "It is built agent-first: an MCP server lets a coding agent cut the windows, paint the keyframes, render on your GPUs, and splice the finished film with its soundtrack.",
+        "The local path is heavy — a 144 GB base model and an 80 GB+ GPU at full precision — but int8/GGUF builds and a no-code Viggle app lower the floor to 12 GB of VRAM or no GPU at all."
+      ],
+      "image": "img/viggle-remake.jpg",
+      "problem": "Our video-clips phase — BookTok and Reels cut from the book — has no local, agent-driven reshoot path yet. The tools we have either generate video from scratch or edit short clips by hand. What is missing is the middle: take footage we already have, recast a character or change the weather and setting, and keep everything else — the motion, the camera work, the timing, the sound — exactly as shot. Doing that by hand is a VFX job; doing it with a closed video service means uploading our footage and paying per render, with no agent in the loop to drive a whole sequence of clips.",
+      "solution": "Viggle Remake is a pair of open LoRAs (rank 256) on MiniMax-H3's base transformer, built for exactly that reshoot. Swap mode replaces people and characters, one or several at once; edit mode swaps, removes, or inserts objects and changes the background, weather, or light. You drive it by painting one to four frames and writing a prompt in MiniMax-H3's six-section format; the sampler renders a window of 90–345 frames at 24 fps (about 12 seconds per render) with the source soundtrack carried over. For a whole film, the MCP server hands the job to a coding agent — Claude Code, Codex, anything that speaks MCP — which cuts the windows, paints the keyframes, renders on your GPUs, and splices the result. The code is Apache 2.0; the weights are a derivative of MiniMax H3 under its Community License.",
+      "benefit": "The win is the workflow, not just the model. One sentence to an agent — 'recast the band as US politicians', 'make it snow', 'turn everyone into cats' — and the agent does the cutting, keyframing, rendering, and stitching, checking its own work along the way. The demo films show the range: one shot from La La Land remade 22 ways, and a 116-second music video recast across 69 cuts with its original soundtrack. Because the weights are open and local, our own footage never has to leave our machines.",
+      "apply": "Start with the lightest possible trial: run one of our own scene clips through the no-code Viggle app and judge the quality against our current clip route. If the look holds up, the next step is the ComfyUI int8 path on HieuPC, which runs on 12 GB of VRAM — a realistic floor for our hardware — before anyone downloads the 144 GB base model. One rule from the start, straight from the project's own intended-use note: only our own footage, label everything AI-generated, and never run it on people who have not agreed to appear in it.",
+      "stats": [
+        {
+          "value": "144 GB",
+          "label": "Base-model files required for the local path"
+        },
+        {
+          "value": "~210 GB",
+          "label": "Whole repository if downloaded with git-lfs"
+        },
+        {
+          "value": "12 GB",
+          "label": "VRAM floor via int8/GGUF builds and ComfyUI"
+        },
+        {
+          "value": "116 s",
+          "label": "Longest example film — 69 cuts, rendered in ~1.5 h on two GPUs"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "You pass one to four painted frames — each optionally pinned to the source frame it was painted from — plus a prompt in MiniMax-H3's six-section format. The sampler renders one window of 90–345 frames at 24 fps (up to 294 frames recommended), with the source soundtrack carried over, not regenerated. Longer videos are split into windows at cuts where possible, and the MCP server does that splitting for whole films."
+        },
+        {
+          "heading": "The two modes",
+          "body": "Swap mode (lora/swap) replaces people and characters, one or several at once — the La La Land demo recasts the same shot 22 ways, and the Matrix demo turns Neo into a tuxedo cat and every Agent Smith into a shiba inu. Edit mode (lora/edit) does everything else: swap, remove, or insert objects, and change the background, weather, or light. Each mode is a 2.67 GB LoRA at rank 256; smaller rank-128 and rank-64 versions (1.34 and 0.67 GB) are reported to give near-identical output."
+        },
+        {
+          "heading": "The agent path",
+          "body": "The MCP server is what makes this agent-first rather than just model-first. A coding agent gets the video and one sentence, then finds the cuts, paints the keyframes, renders every window, checks its own work, and hands back the finished film with the original motion, camera, timing, and soundtrack. The worked example is the 116-second White House Funk video: 69 cuts, eight characters, rendered in about 1.5 hours on two GPUs with Codex driving."
+        },
+        {
+          "heading": "The small-GPU path",
+          "body": "Full precision is heavy: sample.py needs one 80 GB+ GPU at bf16, and the base model alone is about 144 GB of files. The ComfyUI route lowers the floor: a node pack, workflows, and merged int8 and GGUF transformers that run on cards down to 12 GB of VRAM. If you only want the LoRAs and sampler, the download is 5.5 GB — but do not git clone the repository, because with git-lfs that pulls all ~210 GB of weights. Smaller LoRAs at rank 128 or 64 cut the LoRA size to 1.34 or 0.67 GB with near-identical output."
+        },
+        {
+          "heading": "What it can't do yet",
+          "body": "Each render covers about 12 seconds, so long footage is always a windowed job. Sound is carried, not made: the output has the source soundtrack, and a silent source gives a silent result. The documented known failures are a non-humanoid character in one long take, small artifacts in fine detail, and shots drifting in time when a multi-shot clip is rendered without pins. And there is no quality score anywhere in the source — no published metrics, no benchmark — so the only honest evaluation is watching the output yourself."
+        },
+        {
+          "heading": "Consent and license — the line you draw yourself",
+          "body": "This model has no consent verification, and the project says so plainly: the identity comes from the frames you paint, any image editor's safeguards sit upstream of the model, and none of them are in it. It will just as readily put a real person's likeness into footage they never agreed to appear in. The intended use is re-shooting footage you have the right to change — a consenting performer, a set, a prop, the weather — and labeling what you generate as AI-generated. On licensing, the weights are a MiniMax H3 derivative: products making more than $20 million a year need written authorization from MiniMax first, and commercial products must display 'MiniMax H3' prominently."
+        }
+      ],
+      "checklist": [
+        "Try the no-code Viggle app on one of our own scene clips — no GPU, no download — and judge the look.",
+        "Compare the result against our current clip route for the same scene before spending anything.",
+        "If it holds up, try the ComfyUI int8 path on HieuPC (12 GB VRAM floor) rather than the 144 GB base model.",
+        "Download only the LoRAs and sampler (5.5 GB) — never git clone the whole ~210 GB repository.",
+        "Set the house rule first: only our own footage, label everything AI-generated, no real likenesses without consent."
+      ],
+      "caveats": "No quality metrics are published — nothing in the source measures output quality against alternatives, so judge by watching the output. The local path is heavy (144 GB base model, 80 GB+ GPU at full precision) and the ComfyUI route is the realistic one for our hardware. The example clips use third-party footage (La La Land, The Matrix, Uptown Funk) that the team must not copy, and the MiniMax H3 Community License conditions apply before shipping any product on these weights.",
+      "source_name": "Viggle / Viggle-Remake on Hugging Face",
+      "source_url": "https://huggingface.co/Viggle/Viggle-Remake"
+    },
+    {
+      "slug": "landlord-sms-inbox",
+      "date": "2026-11-07",
+      "category": "Opportunities",
+      "kicker": "Tenants text. Software should meet them there.",
+      "title": "Opportunity: Small Landlords Need Software That Meets Tenants Where They Text",
+      "summary": "Self-managing landlords use about 20% of their property-management software and do the rest by text message and spreadsheet — tenants text the landlord anyway, so the maintenance portal sits empty. The feature they actually lean on most is compliance tracking: rent caps, notice deadlines, and lease renewals, in states where the rules keep changing. The gap is a landlord-side SMS inbox with lease-aware answers.",
+      "hook": "They use 20% of the software and 100% of the text thread.",
+      "takeaways": [
+        "A Sacramento fourplex owner tried multiple PM tools and ended up using about 20% of the features — the rest runs on text messages and spreadsheets, because tenants text instead of using the portal.",
+        "The feature self-managers actually use most is compliance tracking: rent caps, notice deadlines, and lease renewals — and 'none of the mainstream tools do this well. Most don't do it at all.'",
+        "The opening is a landlord-side SMS inbox plus lease RAG: tenant texts triaged and logged against the lease, with state-rule answers delivered as drafts for the landlord's approval."
+      ],
+      "image": "img/landlord-sms-inbox.jpg",
+      "problem": "Property-management software assumes tenants will use a portal. They don't. In a BiggerPockets thread active this week, a Sacramento fourplex owner writes that he 'tried multiple PM tools, ended up using about 20% of the features and doing the rest via text messages and spreadsheets. The maintenance portal? Tenants texted me anyway.' Another landlord in the same thread: the maintenance portal lasted about two weeks before the tenants were 'still just texting me pictures of leaky faucets at weird hours.' The diagnosis from the thread is blunt: the software 'was built for PM companies managing 500 doors with a staff of 10, then watered down for individual landlords,' and the workflows don't match how a self-managing owner with 4–20 units actually operates. So landlords run two systems — the software for their records, their phone for the actual communication.",
+      "solution": "Build the tool around the text thread instead of fighting it: a landlord-side SMS inbox plus lease RAG. Tenants text a dedicated number; each message is triaged (emergency vs. routine) and logged with photos against the lease, so the paper trail builds itself. The lease and the state's rules answer the questions landlords actually ask: the maximum legal increase for that unit, the notice deadline, the required notice text — delivered as a draft for the landlord's approval, never sent on its own. The thread itself points the same way: one contributor describes the fix as a dedicated number that receives tenant texts, logs the request, sends an acknowledgment, and notifies the landlord with full context, 'without the landlord's personal number ever being involved.'",
+      "benefit": "This meets landlords where the money already goes. Hiring a property manager costs 8–10% of gross rent — real money on eight properties — and a missed rent-cap or notice deadline risks a lawsuit or a voided increase. Compliance tracking is the feature self-managers say they use most: one California landlord writes that software flagging 'this lease renews in 60 days, and here's the rent cap for this unit' saves him from accidentally violating AB 1482, and that in a regulated state 'that alone is worth more than fancy dashboards.' The paper trail pays too: timestamped photos and a full maintenance history resolved a security-deposit dispute in five minutes — 'what could have become a lawsuit.' A focused tool at $19–$29 a month per landlord (our proposed price) undercuts the 8–10% manager fee while doing the two jobs landlords actually value: triage and compliance.",
+      "apply": "The smallest first build is SMS triage plus lease-upload Q&A for one state — California first, where the pain is sharpest: AB 1482 rent caps, local rent control in 20+ cities each with different rules, and three major landlord-tenant law changes in two years. The MVP answers three questions per unit: maximum legal increase, notice deadline, required notice text. Every compliance answer ships as a draft with a disclaimer and human review — legal accuracy is the risk that sinks this product, so the human stays in the loop by design.",
+      "stats": [
+        {
+          "value": "20%",
+          "label": "Of PM software features a self-managing landlord actually uses"
+        },
+        {
+          "value": "8–10%",
+          "label": "Of gross rent a property manager takes"
+        },
+        {
+          "value": "3",
+          "label": "Major California landlord-tenant law changes in 2 years"
+        },
+        {
+          "value": "20+",
+          "label": "California cities with their own local rent control"
+        }
+      ],
+      "details": [
+        {
+          "heading": "What landlords actually use",
+          "body": "Across the thread, the features that earn their keep are consistent: rent collection (autopay is a must), expense tracking and accounting, tenant communication and records, and document storage for leases, applications, and notices. The rest — listing syndication, screening workflows, full communication logs, fancy dashboards — gets used rarely or never. One landlord's summary: 'the features that actually get used are the ones that meet operators where they already are.'"
+        },
+        {
+          "heading": "Why tenants text",
+          "body": "Tenants don't want to log into a portal. They want to text — and once they have the landlord's personal number, there is no clean way to redirect them. As one contributor puts it, the gap between what PM software assumes ('tenants will use our app') and what actually happens ('they text you at 9 PM') is where most self-managers end up running two systems. The fix the thread converges on is not asking tenants to change behavior: give them a dedicated number that receives their texts, logs the request, acknowledges it, and notifies the landlord with full context — the landlord's personal number never involved."
+        },
+        {
+          "heading": "The compliance gap",
+          "body": "Compliance tracking is the surprise most-used feature in the thread. In California, AB 1482 sets rent caps, 20+ cities add their own local rent control with different rules, and the state has had three major landlord-tenant law changes in two years — a spreadsheet 'can't flag what you don't know to look for.' One self-manager: 'The feature I use most isn't rent collection or accounting — it's compliance tracking. Knowing which units are approaching lease renewal, what the maximum allowable rent increase is in that specific jurisdiction, and whether I've completed the required notices on time. None of the mainstream tools do this well. Most don't do it at all.'"
+        },
+        {
+          "heading": "The product shape",
+          "body": "Two halves, both in our wheelhouse. First, the SMS inbox: a dedicated number per landlord, incoming texts triaged into emergency vs. routine, logged with photos against the lease and the unit, with an automatic acknowledgment to the tenant. Second, lease RAG: the uploaded lease plus state rules answer 'maximum legal increase, notice deadline, required notice text' — and every answer arrives as a draft for landlord approval, with a disclaimer, never auto-sent."
+        },
+        {
+          "heading": "The money",
+          "body": "A property manager takes 8–10% of gross rent — on eight properties, that is real money, and it is the price of the problem today. A missed rent-cap or notice deadline risks a lawsuit or a voided increase, which is the cost of getting the compliance half wrong. Our proposed price, $19–$29 a month per landlord, is a fraction of either — but it is our proposal, not a market figure, and the thread gives no pricing evidence."
+        },
+        {
+          "heading": "Risks and the first build",
+          "body": "The biggest risk is legal accuracy: a wrong rent-cap or notice answer is worse than no answer, which is why every compliance response must be a draft with a disclaimer and human review, by design, not as a later patch. The second risk is scope: 50 states means 50 rule sets, so the MVP covers one state (California) and one job (SMS triage plus lease Q&A) before anything else. The third risk is evidence quality: this is a forum thread, not a survey. Validate with the landlords in the thread itself before spending on marketing."
+        }
+      ],
+      "checklist": [
+        "Pick the MVP scope: SMS triage plus lease-upload Q&A for one state — California, where AB 1482 and 20+ local rent-control regimes make the pain sharpest.",
+        "Define the three answers the MVP must get right per unit: maximum legal increase, notice deadline, required notice text.",
+        "Design the compliance answer as a draft with a disclaimer and human review — never auto-sent.",
+        "Talk to the landlords in the BiggerPockets thread: confirm they would pay $19–$29 a month for the SMS inbox plus compliance answers.",
+        "Prototype the triage on real tenant texts (emergency vs. routine) before building the lease RAG half."
+      ],
+      "caveats": "The evidence is a BiggerPockets forum thread — anecdotes from self-managing landlords, not a survey — and several posts in the thread come from a vendor account (LeaseBase.ai) promoting compliance features, so treat its claims with care. The $19–$29 a month price is the team's proposed price, not a market figure, and no market sizing was verified. Legal-accuracy risk is real: every compliance answer must be a draft with a disclaimer and human review.",
+      "source_name": "BiggerPockets forum thread",
+      "source_url": "https://www.biggerpockets.com/forums/899/topics/1280392-what-do-you-actually-use-your-property-management-software-for?page=2"
+    },
     {
       "slug": "paradev-parallel-agents",
       "date": "2026-11-07",
