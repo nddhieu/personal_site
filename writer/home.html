@@ -17,10 +17,7 @@
 <nav id="app-shell" aria-label="Primary"></nav>
 <main class="page-home">
   <section class="home-feed">
-    <div class="home-head">
-      <h1 class="home-title">Explore</h1>
-      <a class="btn btn-primary btn-sm home-create" href="./create.html" data-testid="create-book-link">+ New book</a>
-    </div>
+    <h1 class="page-home-visually-hidden">Explore</h1>
     <p id="welcome" class="home-welcome" hidden></p>
 
     <div id="state-loading" class="loading-row">
@@ -47,13 +44,14 @@
           <span class="explore-recent-label">Recent:</span>
           <span id="explore-recent-chips" class="explore-chips"></span>
         </div>
-        <div class="explore-tabs" role="tablist" aria-label="Sort books" id="explore-tabs">
-          <button role="tab" type="button" data-sort="explore" aria-selected="true" class="explore-tab explore-tab-active" data-testid="sort-explore">Explore</button>
-          <button role="tab" type="button" data-sort="trending" aria-selected="false" class="explore-tab" data-testid="sort-trending">Trending</button>
-          <button role="tab" type="button" data-sort="new" aria-selected="false" class="explore-tab" data-testid="sort-new">New</button>
-          <button role="tab" type="button" data-sort="top" aria-selected="false" class="explore-tab" data-testid="sort-top">Top</button>
-        </div>
-        <div class="explore-filters">
+        <div class="explore-filterrow">
+          <div class="explore-tabs" role="tablist" aria-label="Sort books" id="explore-tabs">
+            <button role="tab" type="button" data-sort="explore" aria-selected="true" class="explore-tab explore-tab-active" data-testid="sort-explore">Explore</button>
+            <button role="tab" type="button" data-sort="trending" aria-selected="false" class="explore-tab" data-testid="sort-trending">Trending</button>
+            <button role="tab" type="button" data-sort="new" aria-selected="false" class="explore-tab" data-testid="sort-new">New</button>
+            <button role="tab" type="button" data-sort="top" aria-selected="false" class="explore-tab" data-testid="sort-top">Top</button>
+          </div>
+          <span class="explore-filterrow-div" aria-hidden="true"></span>
           <div id="explore-genres" class="explore-chips" aria-label="Filter by genre"></div>
         </div>
         <p id="explore-count" class="explore-count" aria-live="polite"></p>
