@@ -20,7 +20,7 @@
 
 import { apiFetch } from "./js/app-api.js";
 import { getToken, getMe, clearToken } from "./js/app-auth.js";
-import { renderTopbar, friendlyError } from "./js/app-ui.js";
+import { friendlyError } from "./js/app-ui.js";
 import { renderShell } from "./js/shell.js";
 
 const el = (id) => document.getElementById(id);
@@ -578,7 +578,10 @@ function bindExplore() {
 }
 
 async function init() {
-  renderTopbar();
+  // No topbar on Explore (Nov 7): Dark + Log out moved to the
+  // shell's Menu tab, so the page opens with the search row and
+  // the filter row only. app-ui.js is still imported above, so
+  // the saved theme is applied on load as before.
   renderShell({ active: "explore" });
   if (!getToken()) {
     show("out");
