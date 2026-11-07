@@ -2,8 +2,8 @@
  *
  * Bottom tab bar on phone/tablet (<1024px), left rail on desktop
  * (>=1024px), following mobile-app-navigation-design.md §3.1 and
- * §6 slice 1. Five destinations: Explore, My Stories, + Create
- * (centre, raised), Saved, Profile. Labels always visible.
+ * §6 slice 1. Six destinations: Explore, My Stories, + Create
+ * (centre, raised), Saved, Profile, Menu. Labels always visible.
  *
  * Play/read screens show NO tab bar (design §3.1): play.html
  * simply never mounts the shell, so nothing here needs a special
@@ -13,6 +13,11 @@
  * with a "Soon" badge and do not navigate, rather than linking
  * to a wrong destination. Explore -> home.html, My Stories ->
  * stories.html, Create -> create.html (existing pages).
+ *
+ * Menu -> menu.html carries the Dark theme toggle and Log out,
+ * moved off the topbar at Hieu's direction (Nov 7) so Explore
+ * can drop its topbar and match Emochi's two rows before the
+ * first book cover.
  *
  * Same pattern as renderTopbar in app-ui.js: plain DOM, no
  * framework, constants only (no user data reaches innerHTML). */
@@ -48,6 +53,12 @@ const TABS = [
     label: "Profile",
     href: null, // M3 builds the page; disabled until then.
     icon: '<circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.5-4 4.5-5.5 7.5-5.5s6 1.5 7.5 5.5"/>',
+  },
+  {
+    id: "menu",
+    label: "Menu",
+    href: "./menu.html",
+    icon: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   },
 ];
 
@@ -96,9 +107,9 @@ function buildTab(tab, activeId) {
 /* Renders the shell into <nav id="app-shell"> and marks the
  * body's shell class so CSS can reserve room for the bar/rail
  * (content bottom padding on phone, left padding on desktop).
- * Call with { active: "explore" | "my-stories" | "create" } from
- * the page module, next to renderTopbar. No-ops when the page
- * has no mount. */
+ * Call with { active: "explore" | "my-stories" | "create" |
+ * "menu" } from the page module, next to renderTopbar (pages
+ * that still carry one). No-ops when the page has no mount. */
 export function renderShell(options = {}) {
   const host = document.getElementById("app-shell");
   if (!host) return;

@@ -227,3 +227,17 @@ body.has-app-shell {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3), 0 0 0 3px var(--color-glow);
   }
 }
+
+/* Six tabs now share the phone bar (Menu added Nov 7): tighten
+ * labels and side padding so the longest label ("My Stories")
+ * still fits its sixth of the bar at 360px. */
+@media (max-width: 640px) {
+  .app-shell-label {
+    font-size: 0.7rem;
+  }
+
+  .app-shell-tab {
+    padding-left: 0.05rem;
+    padding-right: 0.05rem;
+  }
+}

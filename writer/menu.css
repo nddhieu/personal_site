@@ -1,0 +1,45 @@
+/* Menu page styles, scoped under .page-menu.
+ * Settings rows on brand tokens, following the My Stories
+ * page pattern: content flows on the page background with
+ * hairline dividers, no panel wrapper. */
+.page-menu {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+.page-menu .menu-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0.4rem 0 0.6rem;
+}
+.page-menu .menu-welcome {
+  color: var(--color-text-muted);
+  font-size: 0.88rem;
+  margin: 0 0 0.6rem;
+}
+.page-menu .menu-note {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+.page-menu .menu-list {
+  margin: 0;
+  padding: 0;
+}
+.page-menu .menu-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.85rem;
+  min-height: 48px;
+  padding: 0.8rem 0.25rem;
+  border-bottom: 1px solid var(--color-border);
+}
+.page-menu .menu-row-label {
+  font-weight: 600;
+  font-size: 1rem;
+  line-height: 1.3;
+}
