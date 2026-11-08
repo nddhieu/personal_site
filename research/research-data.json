@@ -1,6 +1,76 @@
 {
-  "generated_at": "2026-11-07T09:38:00-06:00",
+  "generated_at": "2026-11-08T08:22:00-06:00",
   "articles": [
+    {
+      "slug": "makoda-local-api",
+      "date": "2026-11-08",
+      "category": "Tools",
+      "kicker": "Your plan, now your API",
+      "title": "Makoda: Turn the ChatGPT or Claude Plan You Already Pay For Into a Local API",
+      "summary": "Makoda, a free Mac and Ubuntu app launched November 6, routes your dev project's AI calls through the Codex or Claude Code sign-in already on your computer — no API key, no per-token bill. Requests count against your plan's normal limits, and a free MIT-licensed SDK sends dev calls through Makoda and production calls to a real API, with no silent fallback.",
+      "hook": "You already pay for the AI. Stop paying per token to test with it.",
+      "takeaways": [
+        "Makoda is a free desktop app (Mac beta, Ubuntu 24.04) that turns the Codex or Claude Code sign-in on your computer into a local job API at 127.0.0.1 — no API key, no per-token bill.",
+        "It is a custom async job API, not a drop-in OpenAI or Anthropic replacement: POST /v1/jobs, poll by ID, one job at a time, no tool calling or token streaming.",
+        "The free MIT npm SDK routes dev calls through Makoda and production calls to your own OpenAI or Anthropic client — same code, no silent paid fallback."
+      ],
+      "image": "img/makoda-local-api.jpg",
+      "problem": "Building an AI feature means paying twice. You already pay for a ChatGPT or Claude plan, and then you pay again — per token — for an API key just to test your own app against a model. The creator of Makoda says he was paying about $120 a month in API bills on top of his ChatGPT and Claude plans, just to test his own app. That double billing is the normal shape of AI development: the subscription covers chatting, the API covers building, and the testing phase — where you burn the most calls on half-finished code — is the most expensive part of all.",
+      "solution": "Makoda, launched November 6, 2026, is a free desktop app for Apple silicon Mac (beta) and Ubuntu 24.04 that reuses the Codex or Claude Code sign-in already on your computer as a local API. Install it with one curl command or the app download, and it confirms Codex and Claude Code are signed in, then runs a gateway on 127.0.0.1 (port 6256 by default). Your app hands it a job — POST /v1/jobs with a provider, model, and reasoning effort — and gets a job ID back at once; you poll GET /v1/jobs/{id} until it succeeds, fails, or is cancelled. Each project gets one revocable token, results are kept for 24 hours, and an idempotency key returns the same job for 7 days, so a lost connection never pays for the same run twice. The gateway runs at most 8 queued jobs and executes one at a time, with a default 3-minute timeout and a 15-minute maximum. A free npm SDK (MIT, zero dependencies, Node.js 22+) wires it up in code: development and test calls go through Makoda, production calls go to your own OpenAI or Anthropic client, and the configuration never silently falls back to another route or billing account. Remote access is in beta: a free Makoda account gives your machine a private relay address so a deployed server or CI can reach the same gateway, as long as your computer stays online.",
+      "benefit": "Testing stops costing per token. The calls your dev loop already makes — summarise this ticket, draft this reply, classify this input — run on the plan you already pay for, with no API key to create, guard, or rotate. Because the gateway lives on your own machine, nothing is hosted anywhere else: there is no Makoda inference service and no second bill. And the dev/prod split is the part that makes it safe to adopt: the same code calls Makoda in development and a real API key in production, so a test never becomes an accidental production dependency, and a production deploy never inherits a dev shortcut.",
+      "apply": "Install Makoda on an Apple silicon Mac or an Ubuntu 24.04 desktop with Codex signed in to ChatGPT (Claude Code support is beta — see the caveats). Create one project token and keep it in private server-side configuration, never in a URL, frontend bundle, log, or source control. Point your dev backend at the local gateway and read the running gateway's /v1/models and /v1/capabilities before enabling a feature, so you use the model IDs your install actually supports. Use the npm SDK's environment profiles so production still goes to your own OpenAI or Anthropic client. Run one Codex job end to end first — submit, poll by ID, read the result — then decide whether the Claude side is worth trying once you can verify a live Claude success yourself.",
+      "stats": [
+        {
+          "value": "$120/mo",
+          "label": "API bills the creator says he paid on top of his ChatGPT and Claude plans, just to test his own app (author-reported)"
+        },
+        {
+          "value": "0",
+          "label": "API keys needed, and zero paid API fallbacks — requests count against your plan's normal limits"
+        },
+        {
+          "value": "8",
+          "label": "Jobs the gateway queues at most, executing one at a time; results kept 24 hours, idempotency keys 7 days"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "Your application's backend calls Makoda; Makoda uses the desktop owner's provider sign-in. A job submission is POST /v1/jobs with a provider (codex or claude), a model, a reasoning effort, one user message, and an optional response format — text or a bounded JSON schema. An accepted submission returns HTTP 202 with a job object; you poll GET /v1/jobs/{id} until the status is succeeded, failed, or cancelled. Results stay available for 24 hours, and the same idempotency key and body replay the same job for 7 days instead of starting a second inference run. Attachments are supported in bounded form: up to 4 files, 4 MiB each, 5 MiB combined, for images and plain text formats — PDFs, audio, and video are not supported."
+        },
+        {
+          "heading": "What it is not",
+          "body": "Makoda's own docs are blunt about this: /v1/jobs is a custom asynchronous job contract, not a drop-in OpenAI Chat Completions, OpenAI Responses, or Anthropic Messages API. It does not implement their messages, tool-calling, sampling, or token-streaming formats, and unknown request fields are rejected. There is no conversation memory between jobs — a chat UI has to keep its own history and build it into the single user message — and there is no provider or model fallback: a failed job is not automatically resubmitted anywhere. Generated text arrives final-only, not token-streamed, and lifecycle events come over SSE without text deltas. If your app needs tool calls or streaming, Makoda is the wrong shape; if it needs one prompt answered, it fits."
+        },
+        {
+          "heading": "Dev in Makoda, prod on the API",
+          "body": "The npm SDK is the adoption path the maker designed: createMakoda takes an environment, a Makoda token for dev, and your own OpenAI or Anthropic client for direct mode. Development and test default to Makoda; production defaults to the direct client. Each client can override any profile, but configuration never silently falls back to another route or billing account — a misconfiguration errors instead of quietly spending. The SDK is MIT-licensed with no runtime dependencies and needs Node.js 22+ and ESM; browser use is rejected, and credentials belong on the backend. Plain HTTP works without the SDK if you prefer to call the gateway directly."
+        },
+        {
+          "heading": "Remote access, in beta",
+          "body": "Version 0.2.0 adds owner-started remote access through Makoda Relay. Sign in with a free Makoda account (a one-time code by email), flip one switch, and your account gets one permanent address at relay.makoda.ai/t/<id> — set it as MAKODA_BASE_URL in your deployed app, preview environment, or CI. No inbound port opens on your computer; Makoda keeps one outbound WebSocket to the relay, a Cloudflare Worker run by Makoda. Limits: 8 MiB request bodies, up to 16 requests in flight and 300 a minute per tunnel, 100 seconds for Makoda to start answering, responses ended after 5 minutes. The relay sees request and response bodies in memory and does not store or log them. The local gateway works without any account at all."
+        },
+        {
+          "heading": "Where it still falls short",
+          "body": "The Claude side is the honest weak spot: the docs say the Claude adapter's fake-provider tests pass, but live Claude requests have not yet succeeded in the maker's own verification, and the latest authorized Claude text checks failed or timed out — Codex text inference is the part that has passed live checks. The terms question is real too: Makoda's FAQ allows production use only 'where your provider's terms permit it,' and routing a consumer plan through an API is the kind of use providers have historically restricted. Requests count against plan limits, provider-managed extra usage or credits may still be billed if enabled on your account, and Makoda enforces no hard spending cap. There is no Windows build, and the gateway's quota display is informational and can be stale — it does not gate admission, so a provider can still reject a request after readiness checks pass."
+        },
+        {
+          "heading": "What to watch next",
+          "body": "Whether live Claude requests start succeeding in the maker's verification — that is the difference between a Codex-only tool and a two-provider one. Whether the relay leaves beta and what its limits become at scale. And whether OpenAI or Anthropic react to subscription-as-API tools at all: Makoda's whole premise is a use of consumer plans the providers never designed for, so the terms question, not the technology, is the thing that decides how far this pattern goes."
+        }
+      ],
+      "checklist": [
+        "Install Makoda on an Apple silicon Mac or Ubuntu 24.04 desktop, and confirm Codex is signed in to ChatGPT.",
+        "Create one project token per project and keep it in private server-side configuration — never in a URL, frontend bundle, log, or source control.",
+        "Read the running gateway's /v1/models and /v1/capabilities before enabling a feature, and use the model IDs it actually lists.",
+        "Use the npm SDK's environment profiles so development goes through Makoda and production still uses your own OpenAI or Anthropic client.",
+        "Run one Codex job end to end — submit, poll by ID, read the result — before wiring Claude, which is beta and unverified live.",
+        "Check your plan's terms before routing anything beyond local development, and revoke project tokens you stop using."
+      ],
+      "caveats": "The $120-a-month figure is the creator's own reported spend, not a measured average, and your plan's limits will cap how much testing Makoda can absorb. Claude Code support is beta: Makoda's own docs say live Claude requests have not yet succeeded in their own verification, while Codex text inference has passed live checks. The /v1/jobs contract is a custom async job API, not a drop-in OpenAI or Anthropic API — no tool calling, token streaming, or sampling controls. Reusing a consumer plan as an API may conflict with provider terms; Makoda's own FAQ limits production use to 'where your provider's terms permit it.' Requests count against plan limits, provider-managed extra usage may still be billed if enabled, and Makoda enforces no hard spending cap. Apple silicon Mac or Ubuntu 24.04 only; no Windows build. We have not run it yet, so its behaviour on our stack is untested.",
+      "source_name": "Makoda (makoda.ai)",
+      "source_url": "https://makoda.ai/"
+    },
     {
       "slug": "token-economizer",
       "date": "2026-11-07",
