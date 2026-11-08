@@ -1668,7 +1668,7 @@ async function init() {
     return;
   }
   el("book-title").textContent = book.title;
-  document.title = book.title + " - AI Storytelling Co-Author";
+  document.title = book.title + " - Story Realm";
   renderBible(null);
   try {
     // Reload resumes the same playthrough (its scenes and

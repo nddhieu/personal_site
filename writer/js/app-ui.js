@@ -25,7 +25,7 @@ export function renderTopbar(options = {}) {
   const brand = document.createElement("a");
   brand.className = "app-topbar-brand";
   brand.href = "./home.html";
-  brand.textContent = "AI Storytelling Co-Author";
+  brand.textContent = "Story Realm";
   host.append(brand);
   if (options.backHref) {
     const back = document.createElement("a");
