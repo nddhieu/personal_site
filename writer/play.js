@@ -1638,6 +1638,10 @@ async function init() {
   renderTopbar({
     backHref: "./book.html?id=" + encodeURIComponent(BOOK_ID),
     backLabel: "Back to book",
+    // Icon-only back control on this page (Hieu, Nov 7): a
+    // left-arrow at the start of the bar, no text label; the
+    // label survives as the aria-label.
+    backIconOnly: true,
   });
   // Theme + Log out live in this page's header menu (above), so
   // the shared topbar's copies come off the play page; the other
