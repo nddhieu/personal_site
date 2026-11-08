@@ -404,18 +404,35 @@
 
 /* User-input markers (Hieu, Oct 28): a small icon before each
  * scene that came from a turn; click expands the input text.
- * App-only: hidden in print so the printed book is clean prose. */
+ * The face is the player's chosen avatar from the library
+ * (js/avatars.js; Hieu, Nov 8 — it replaces the pencil glyph),
+ * painted by play.js: a 24px round disc inside a round button
+ * whose footprint matches the old pencil pill. App-only:
+ * hidden in print so the printed book is clean prose. */
 .page-play .turn-input-marker {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   margin: 1.5rem 0 0.1rem;
-  padding: 0.1rem 0.35rem;
-  font-size: 0.85rem;
-  line-height: 1;
+  padding: 1px;
+  line-height: 0;
   cursor: pointer;
   background: transparent;
   border: 1px solid var(--color-card-border);
-  border-radius: 999px;
+  border-radius: 50%;
   color: var(--color-text-muted);
+}
+.page-play .turn-input-marker .avatar-disc {
+  display: block;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  overflow: hidden;
+}
+.page-play .turn-input-marker .avatar-disc svg {
+  width: 100%;
+  height: 100%;
+  display: block;
 }
 .page-play .turn-input-marker:hover,
 .page-play .turn-input-marker[aria-expanded="true"] {
