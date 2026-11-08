@@ -189,6 +189,42 @@
     white-space: nowrap;
 }
 
+/* Small muted source line on cards, matching the footer type. One line,
+   truncated if the source name is long; the link opens in a new tab. */
+.research-card-source {
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 0.78rem;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.research-card-source a {
+    color: var(--color-primary);
+    font-weight: 600;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: var(--transition-fast);
+}
+
+.research-card-source a:hover {
+    border-bottom-color: var(--color-primary);
+}
+
+/* Grid cards: the source sits below the image, so it needs the
+   card's horizontal inset, like the footer below it. */
+.research-card > .research-card-source {
+    padding: 0.6rem 1.1rem 0;
+}
+
+/* Featured card: the source sits inside the copy column, above the
+   footer, so it only needs top spacing. */
+.research-featured-body .research-card-source {
+    padding-top: 0.6rem;
+}
+
 /* Article detail overlay */
 .article-detail {
     position: fixed;
