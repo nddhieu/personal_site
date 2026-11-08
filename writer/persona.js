@@ -27,7 +27,6 @@ import {
   getPersonaImage,
   invalidatePersonaImage,
   personaHasCustomImage,
-  personaImageLabel,
   personaImageSrc,
 } from "./js/personas.js";
 
@@ -310,11 +309,12 @@ function renderImageGrid() {
   const grid = el("persona-image-grid");
   grid.innerHTML = "";
   renderUploadTile(grid);
-  for (const image of PERSONA_IMAGES) {
+  for (const [index, image] of PERSONA_IMAGES.entries()) {
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "persona-image-option";
     btn.dataset.imageId = image.id;
+    btn.setAttribute("aria-label", "Portrait " + (index + 1));
     btn.setAttribute("aria-pressed",
       !formUseUpload && image.id === formImageId ? "true" : "false");
     if (!formUseUpload && image.id === formImageId) {
@@ -324,10 +324,6 @@ function renderImageGrid() {
     img.src = image.src;
     img.alt = "";
     btn.append(img);
-    const label = document.createElement("span");
-    label.className = "persona-image-label";
-    label.textContent = personaImageLabel(image.id);
-    btn.append(label);
     btn.addEventListener("click", () => {
       formUseUpload = false;
       formImageId = image.id;
