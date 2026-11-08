@@ -23,14 +23,6 @@
          button; the items keep the diary/reset ids so play.js's
          handlers are unchanged, and init() removes the topbar's
          Theme / Log out buttons on this page only. -->
-    <!-- Background adjust (Hieu, Nov 8): with a scene
-         background active, this icon button enters adjust
-         mode - drag the image to reposition it, Fill / Fit
-         chooses how it meets the screen. Icon-only per the
-         standing mobile rule; CSS shows it only while the
-         page carries a background (.has-scene-bg). -->
-    <button id="bg-adjust-btn" data-testid="bg-adjust-btn" class="btn btn-secondary bg-adjust-btn" type="button"
-      aria-label="Adjust background" title="Adjust background" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v18"/><path d="M8.5 6.5 12 3l3.5 3.5"/><path d="M8.5 17.5 12 21l3.5-3.5"/><path d="M3 12h18"/><path d="M6.5 8.5 3 12l3.5 3.5"/><path d="M17.5 8.5 21 12l-3.5 3.5"/></svg></button>
     <div id="play-menu-wrap" class="play-menu-wrap">
       <button id="play-menu-btn" data-testid="play-menu-btn" class="btn btn-secondary play-menu-btn" type="button"
         aria-haspopup="true" aria-expanded="false" aria-controls="play-menu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -225,6 +217,7 @@
         <img id="gallery-full-img" class="gallery-full-img" alt="Story photo, full view">
         <p id="gallery-full-caption" class="gallery-full-caption"></p>
         <button id="gallery-bg-btn" data-testid="gallery-bg-btn" class="gallery-bg-btn" type="button">Use as background</button>
+        <button id="gallery-adjust-btn" data-testid="gallery-adjust-btn" class="gallery-adjust-btn" type="button" hidden>Adjust background</button>
       </div>
     </div>
     <!-- Story bible panel (Hieu, Nov 8): the bible summary

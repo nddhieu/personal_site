@@ -673,10 +673,13 @@ function loadExistingBeatImages() {
 /* Background adjust (Hieu, Nov 8): with a scene background
  * active, the reader can move the image and choose how it
  * fits the screen - Fill (cover: fills the screen, may
- * crop) or Fit (contain: the whole image visible). The
- * #bg-adjust-btn icon in the header enters adjust mode:
- * dragging on the reading area repositions the image live,
- * the bar's chips switch the fit, Done leaves. Like the
+ * crop) or Fit (contain: the whole image visible). Adjust
+ * mode is entered from the gallery, never the header:
+ * setting a photo as the background flows straight into
+ * it, and the full view's Adjust background button
+ * re-enters it for the current background. Dragging on
+ * the reading area repositions the image live, the bar's
+ * chips switch the fit, Done leaves. Like the
  * background choice itself, the adjustment is reader-local:
  * localStorage per playthrough + the background's source
  * scene ("writer.bgAdjust.<playthroughId>.<sceneIndex>" =
@@ -2133,10 +2136,13 @@ el("play-menu-logout").addEventListener("click", () => {
  * the paragraphs use: sceneImageSrc object URLs and the
  * beat GET route via beatImagePath/toggleSceneBackground.
  * No new endpoint, no new background state: the full view's
- * background button calls toggleSceneBackground, the same
- * function the per-paragraph icon drives, so the filled
- * icon, the localStorage choice and the adjust controls all
- * stay in sync. */
+ * background button is the one caller of
+ * toggleSceneBackground (the per-paragraph icon drives
+ * generate/regenerate since the four-state model), so the
+ * filled icon, the localStorage choice and the background
+ * state all stay in sync. Setting a photo flows straight
+ * into background adjust; the full view also carries the
+ * Adjust background re-entry for the current background. */
 const settingsBtn = el("settings-btn");
 const settingsSheet = el("settings-sheet");
 const settingsBackdrop = el("settings-backdrop");
@@ -2286,15 +2292,41 @@ function syncGalleryBgBtn() {
   if (!galleryPhoto) return;
   const key = beatKey(galleryPhoto.sceneIndex,
     galleryPhoto.beatIndex);
+  const isBackground =
+    !!(sceneBackground && sceneBackground.key === key);
   el("gallery-bg-btn").textContent =
-    sceneBackground && sceneBackground.key === key
-      ? "Clear background" : "Use as background";
+    isBackground ? "Clear background" : "Use as background";
+  /* The Adjust background re-entry (Hieu, Nov 8) shows
+   * only while THIS photo is the current background. */
+  el("gallery-adjust-btn").hidden = !isBackground;
 }
 el("gallery-bg-btn").addEventListener("click", async () => {
   if (!galleryPhoto) return;
+  const photo = galleryPhoto;
   await toggleSceneBackground(
-    galleryPhoto.sceneIndex, galleryPhoto.beatIndex);
+    photo.sceneIndex, photo.beatIndex);
   syncGalleryBgBtn();
+  /* Hieu, Nov 8: setting the background flows straight
+   * into alignment - the sheet closes and adjust mode
+   * opens on the page, where the reader drags the image
+   * into place and taps Done. Clearing (or a set that
+   * failed - toggleSceneBackground shows its own error)
+   * stays in the gallery: the key check below is false
+   * in both cases, so adjust mode never opens. */
+  if (sceneBackground &&
+      sceneBackground.key ===
+        beatKey(photo.sceneIndex, photo.beatIndex)) {
+    closeSettingsSheet();
+    enterBgAdjust();
+  }
+});
+el("gallery-adjust-btn").addEventListener("click", () => {
+  if (!galleryPhoto) return;
+  const key = beatKey(galleryPhoto.sceneIndex,
+    galleryPhoto.beatIndex);
+  if (!sceneBackground || sceneBackground.key !== key) return;
+  closeSettingsSheet();
+  enterBgAdjust();
 });
 el("gallery-full-back").addEventListener("click", () => {
   galleryPhoto = null;
@@ -2367,15 +2399,18 @@ function openBible() {
 el("settings-tile-bible").addEventListener("click", openBible);
 el("bible-back").addEventListener("click", showSettingsTiles);
 
-/* Background adjust controls (Hieu, Nov 8): the header icon
- * toggles adjust mode; the bar's chips set the fit; Done
- * (or the icon again, or Escape) leaves. While adjusting,
- * play.css takes pointer events off the layout and header
- * so a drag anywhere on the reading area is a drag of the
+/* Background adjust controls (Hieu, Nov 8): entry lives
+ * in the gallery - setting a photo as the background
+ * closes the sheet into adjust mode, and the full view's
+ * Adjust background button re-enters it (the header icon
+ * that used to toggle it is retired; the main book
+ * interface stays clean). The bar's chips set the fit;
+ * Done (or Escape) leaves. While adjusting, play.css
+ * takes pointer events off the layout and header so a
+ * drag anywhere on the reading area is a drag of the
  * image; the document-level handlers below still see the
- * bar's own buttons first because their targets are inside
- * the bar, which the pointerdown handler excludes. */
-const bgAdjustBtn = el("bg-adjust-btn");
+ * bar's own buttons first because their targets are
+ * inside the bar, which the pointerdown handler excludes. */
 const bgAdjustBar = el("bg-adjust-bar");
 const bgFitFillBtn = el("bg-fit-fill");
 const bgFitFitBtn = el("bg-fit-fit");
@@ -2388,8 +2423,6 @@ function syncBgAdjustControls() {
   bgFitFitBtn.classList.toggle("is-on", !fill);
   bgFitFitBtn.setAttribute("aria-pressed",
     !fill ? "true" : "false");
-  bgAdjustBtn.setAttribute("aria-pressed",
-    bgAdjusting ? "true" : "false");
 }
 
 function enterBgAdjust() {
@@ -2413,10 +2446,6 @@ function exitBgAdjust() {
   syncBgAdjustControls();
 }
 
-bgAdjustBtn.addEventListener("click", () => {
-  if (bgAdjusting) exitBgAdjust();
-  else enterBgAdjust();
-});
 el("bg-adjust-done").addEventListener("click", exitBgAdjust);
 bgFitFillBtn.addEventListener("click", () => {
   bgAdjust.fit = "cover";
@@ -2434,7 +2463,7 @@ document.addEventListener("pointerdown", (event) => {
   if (!bgAdjusting) return;
   const target = event.target;
   if (target && typeof target.closest === "function" &&
-      target.closest("#bg-adjust-bar, #bg-adjust-btn")) {
+      target.closest("#bg-adjust-bar")) {
     return;
   }
   bgDragPoint = { x: event.clientX, y: event.clientY };
