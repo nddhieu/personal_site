@@ -21,6 +21,24 @@
       <h1 id="book-heading">Loading your book...</h1>
       <button id="join-btn" class="btn btn-primary" type="button">Join this book</button>
     </div>
+    <div id="char-rows" class="char-rows" hidden>
+      <div class="char-row" id="mc-row">
+        <span class="char-avatar" id="mc-avatar" aria-hidden="true"></span>
+        <span class="char-meta">
+          <span class="char-name" id="mc-name"></span>
+          <span class="char-trait" id="mc-trait"></span>
+        </span>
+        <span class="char-role">Main character</span>
+      </div>
+      <div class="char-row" id="ant-row" hidden>
+        <span class="char-avatar" id="ant-avatar" aria-hidden="true"></span>
+        <span class="char-meta">
+          <span class="char-name" id="ant-name"></span>
+          <span class="char-trait" id="ant-trait"></span>
+        </span>
+        <span class="char-role">Antagonist</span>
+      </div>
+    </div>
     <p id="join-note" class="book-note" hidden></p>
     <div id="book-status" class="loading-row">
       <span class="spinner" aria-hidden="true"></span>

@@ -7,7 +7,9 @@
  * Steps 1-3 compose into the plain-words description sent to
  * POST /api/books/enhance (F2 T3), which returns a bible draft
  * and saves nothing. Step 4 reuses the review form: the reader
- * edits the fields, confirms with POST /api/books (201), then
+ * edits the fields - the main character AND the antagonist
+ * the bible locks in (the enhance step guarantees both) -
+ * confirms with POST /api/books (201), then
  * navigates to play.html?id=<book id>: the play screen starts
  * (or resumes) a playthrough of the saved book, scene 0 being
  * its opening premise. A 409 at confirm means a book with that
@@ -55,9 +57,18 @@ function fill(d) {
   const sheet = mc.sheet || {};
   el("f-mc-name").value = mc.name || "";
   el("f-mc-identity").value = sheet.identity || "";
+  el("f-mc-appearance").value = sheet.appearance || "";
   el("f-mc-traits").value = (sheet.traits || []).join(", ");
   el("f-mc-tone").value = sheet.tone || "";
   el("f-mc-voice").value = sheet.voice || "";
+  const ant = d.antagonist || {};
+  const antSheet = ant.sheet || {};
+  el("f-ant-name").value = ant.name || "";
+  el("f-ant-identity").value = antSheet.identity || "";
+  el("f-ant-appearance").value = antSheet.appearance || "";
+  el("f-ant-traits").value = (antSheet.traits || []).join(", ");
+  el("f-ant-tone").value = antSheet.tone || "";
+  el("f-ant-voice").value = antSheet.voice || "";
   el("f-opening").value = d.opening_scene || "";
 }
 
@@ -70,10 +81,31 @@ function collect() {
   book.main_character.sheet = book.main_character.sheet || {};
   const sheet = book.main_character.sheet;
   sheet.identity = el("f-mc-identity").value.trim();
+  sheet.appearance = el("f-mc-appearance").value.trim();
   sheet.traits = el("f-mc-traits").value
     .split(",").map((t) => t.trim()).filter(Boolean);
   sheet.tone = el("f-mc-tone").value.trim();
   sheet.voice = el("f-mc-voice").value.trim();
+  /* The antagonist rides along as its own locked entry; its
+   * role (motivation) comes from the draft untouched - the
+   * review edits the sheet, not the story's stakes. A name
+   * cleared in review drops the entry entirely rather than
+   * saving a hollow one. */
+  const antName = el("f-ant-name").value.trim();
+  if (antName) {
+    book.antagonist = book.antagonist || {};
+    book.antagonist.name = antName;
+    book.antagonist.sheet = book.antagonist.sheet || {};
+    const antSheet = book.antagonist.sheet;
+    antSheet.identity = el("f-ant-identity").value.trim();
+    antSheet.appearance = el("f-ant-appearance").value.trim();
+    antSheet.traits = el("f-ant-traits").value
+      .split(",").map((t) => t.trim()).filter(Boolean);
+    antSheet.tone = el("f-ant-tone").value.trim();
+    antSheet.voice = el("f-ant-voice").value.trim();
+  } else {
+    delete book.antagonist;
+  }
   book.opening_scene = el("f-opening").value.trim();
   return book;
 }

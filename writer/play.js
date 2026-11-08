@@ -420,9 +420,13 @@ function clearSceneBackground() {
     // Private mode or similar: the background still works
     // for this visit, it just is not remembered.
   }
+  // Clearing the reader's own photo falls back to the
+  // book's default background when the book has one - the
+  // page only goes fully plain for portrait-less books.
+  applyBookDefaultBackground();
 }
 
-function applySceneBackground(key, url) {
+function applySceneBackground(key, url, remember = true) {
   const page = document.querySelector(".page-play");
   if (!page) return;
   page.style.backgroundImage =
@@ -439,11 +443,54 @@ function applySceneBackground(key, url) {
   bgAdjust = readBgAdjust(bgAdjustSceneIndex());
   applyBgAdjust();
   ensureBgDims(url);
+  if (!remember) return;
   try {
     localStorage.setItem(sceneBackgroundKey(), String(key));
   } catch {
     // As above: unremembered, not broken.
   }
+}
+
+/* Book default background (Hieu, Nov 8): the book's main
+ * character portrait (main_character_image on the book
+ * definition) is the background a playthrough opens with,
+ * until the reader sets one of their own photos. Precedence:
+ * a user-set background (the localStorage choice above)
+ * beats the book default, which beats a plain page. The
+ * default rides the same applySceneBackground path - same
+ * three-zone scrim, same has-scene-bg treatment (glass
+ * composer, white prose) - but it is never written to the
+ * user-choice storage and never adjustable: its key is not
+ * a "scene:beat" key, so the adjust machinery reads it as
+ * cover/center defaults and the gallery's Adjust button
+ * (which matches on the open photo's key) never offers it.
+ * Clearing a user background falls back to the default
+ * (clearSceneBackground below), and a book without a
+ * portrait behaves exactly as before. */
+const BOOK_DEFAULT_BG_KEY = "book:main-character";
+
+/* Book-image fields resolve in two shapes: writer-relative
+ * paths for statically hosted art ("characters/<id>.jpg",
+ * the covers' shape) and API-relative paths for portraits
+ * the backend generated at book-creation time
+ * ("api/books/<id>/main-character-image"), which resolve
+ * against the same API base every fetch uses. */
+function resolveBookImageUrl(value) {
+  const v = String(value || "").trim();
+  if (!v) return null;
+  return v.startsWith("api/") ? API_BASE + "/" + v : v;
+}
+
+function bookDefaultBackgroundUrl() {
+  if (!book) return null;
+  return resolveBookImageUrl(book.main_character_image);
+}
+
+function applyBookDefaultBackground() {
+  if (sceneBackground) return;
+  const url = bookDefaultBackgroundUrl();
+  if (!url) return;
+  applySceneBackground(BOOK_DEFAULT_BG_KEY, url, false);
 }
 
 /* Beat image URL path for one beat: the beat GET route,
@@ -2640,6 +2687,10 @@ async function init() {
     renderScenes();
     refreshRetryButton();
     await restoreSceneBackground();
+    // No remembered photo background: the book's main
+    // character portrait is the default backdrop (a no-op
+    // when one was restored, or the book has no portrait).
+    applyBookDefaultBackground();
     // Stored beat images show on their own (see
     // loadExistingBeatImages): after the background
     // restore, so its beat is already in sceneImageSrc
