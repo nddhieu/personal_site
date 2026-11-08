@@ -5,10 +5,11 @@
  *   GET  /api/auth/google-client-id           -> {client_id}
  *   POST /api/auth/guest                      -> {access_token}
  * No credential, key, or token value is stored in this file.
- * Google sign-in is parked: the Google button is disabled with a
- * "Coming soon" badge in login.html until the backend is
- * configured. Re-enabling it is one HTML change (remove disabled
- * + the badge); the flow below stays intact. */
+ * Google sign-in is live in the UI (f1-t3): the Google button is
+ * enabled in login.html and the Google Identity Services script
+ * loads with the page. startGoogle() fetches the client ID from
+ * the backend; if the server has no GOOGLE_CLIENT_ID configured
+ * it shows a clear error instead of opening the prompt. */
 
 import { apiFetch } from "./js/app-api.js";
 import { setToken } from "./js/app-auth.js";
@@ -71,8 +72,10 @@ form.addEventListener("submit", async (e) => {
 });
 
 /* --- Google (Identity Services -> backend google route) ---
- * Parked: the button is disabled in the HTML, so this never runs
- * until Google is configured and the button is re-enabled. */
+ * Enabled (f1-t3): the button is live in login.html and the GIS
+ * script loads with the page. If the backend has no
+ * GOOGLE_CLIENT_ID configured, startGoogle() shows a clear error
+ * and returns without opening the prompt. */
 async function startGoogle() {
   if (googleBtn.disabled) return;
   showError("");
