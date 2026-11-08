@@ -6,7 +6,7 @@
  * with the edited fields in place, so untouched fields survive
  * by construction. Join navigates to the play screen. */
 
-import { apiFetch } from "./js/app-api.js";
+import { apiFetch, API_BASE } from "./js/app-api.js";
 import { getToken, clearToken } from "./js/app-auth.js";
 import { renderTopbar, friendlyError } from "./js/app-ui.js";
 import { renderShell } from "./js/shell.js";
@@ -25,8 +25,52 @@ function setStatusError(msg) {
   status.hidden = false;
 }
 
+/* Book-image fields resolve in two shapes (same rule as
+ * play.js): writer-relative paths for statically hosted art
+ * ("characters/<id>.jpg") and API-relative paths for the
+ * portraits the backend generates at book-creation time
+ * ("api/books/<id>/main-character-image"). */
+function resolveBookImageUrl(value) {
+  const v = String(value || "").trim();
+  if (!v) return null;
+  return v.startsWith("api/") ? API_BASE + "/" + v : v;
+}
+
+/* One locked character's presentation row: round avatar
+ * (the portrait when one is attached, the name's initial
+ * until then), name, and a one-line trait from the sheet.
+ * The .char-avatar markup + class is the seam the reading
+ * view's Character rows reuse (Milu) - keep it standalone. */
+function fillCharRow(prefix, entry, imageValue) {
+  const avatar = el(prefix + "-avatar");
+  avatar.innerHTML = "";
+  const url = resolveBookImageUrl(imageValue);
+  if (url) {
+    const img = document.createElement("img");
+    img.src = url;
+    img.alt = "";
+    avatar.appendChild(img);
+  } else {
+    avatar.textContent = (entry.name || "?").trim().charAt(0) || "?";
+  }
+  el(prefix + "-name").textContent = entry.name || "";
+  const sheet = entry.sheet || {};
+  const traits = (sheet.traits || []).filter(Boolean);
+  el(prefix + "-trait").textContent =
+    traits.length ? traits.slice(0, 2).join(" · ")
+      : (sheet.identity || "");
+}
+
 function fill(book) {
   el("book-heading").textContent = book.title;
+  fillCharRow("mc", book.main_character || {},
+    book.main_character_image);
+  const antagonist = book.antagonist;
+  el("ant-row").hidden = !antagonist;
+  if (antagonist) {
+    fillCharRow("ant", antagonist, book.antagonist_image);
+  }
+  el("char-rows").hidden = false;
   document.title = book.title + " - Story Realm";
   el("f-title").value = book.title || "";
   el("f-language").value = book.language || "";
