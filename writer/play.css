@@ -925,6 +925,7 @@
   --sheet-nav-bg: rgba(255, 255, 255, 0.12);
   --sheet-muted: rgba(244, 245, 250, 0.78);
   --sheet-heading: rgba(244, 245, 250, 0.6);
+  --sheet-accent: #f2b25c;
   --sheet-divider: rgba(244, 245, 250, 0.08);
   --sheet-cell-img-bg: rgba(255, 255, 255, 0.08);
   --sheet-collage-border: rgba(255, 255, 255, 0.55);
@@ -968,6 +969,7 @@ body.light-theme .page-play .settings-sheet {
   --sheet-nav-bg: rgba(15, 23, 42, 0.08);
   --sheet-muted: rgba(15, 23, 42, 0.72);
   --sheet-heading: rgba(15, 23, 42, 0.55);
+  --sheet-accent: #b45309;
   --sheet-divider: rgba(15, 23, 42, 0.08);
   --sheet-cell-img-bg: rgba(15, 23, 42, 0.06);
   --sheet-collage-border: rgba(15, 23, 42, 0.25);
@@ -1126,10 +1128,15 @@ body.light-theme .page-play .settings-sheet {
    space and difficult to read" on a phone - labels held a
    ~35% column while the prose squeezed into the rest):
    inside the panel the list STACKS. Each dt becomes a
-   small muted section heading and its dd runs the full
+   section heading and its dd runs the full
    panel width beneath it; a hairline divides sections
    (none above the first). Panel-scoped only - the base
-   .bible-list rules above stay exactly as they are. */
+   .bible-list rules above stay exactly as they are.
+   Headings (Hieu, Nov 8 follow-up: "make it bold,
+   different color, bigger font to standout"): dt takes
+   the sheet accent (warm amber, --sheet-accent) at
+   0.95rem / 700, so the sections read as markers
+   against the muted prose beneath them. */
 .page-play .bible-panel[hidden] {
   display: none;
 }
@@ -1142,12 +1149,12 @@ body.light-theme .page-play .settings-sheet {
   margin-top: 0.65rem;
   padding-top: 0.55rem;
   border-top: 1px solid var(--sheet-divider);
-  font-size: 0.72rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  line-height: 1.4;
-  color: var(--sheet-heading);
+  letter-spacing: 0.05em;
+  line-height: 1.35;
+  color: var(--sheet-accent);
 }
 .page-play .bible-panel .bible-list dt:first-of-type {
   margin-top: 0;
