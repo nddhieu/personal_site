@@ -119,7 +119,7 @@ export function renderShell(options = {}) {
   const brand = document.createElement("a");
   brand.className = "app-shell-brand";
   brand.href = "./home.html";
-  brand.textContent = "AI Storytelling Co-Author";
+  brand.textContent = "Story Realm";
   host.append(brand);
   for (const tab of TABS) {
     host.append(buildTab(tab, options.active));

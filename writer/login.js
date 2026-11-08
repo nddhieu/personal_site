@@ -1,4 +1,4 @@
-/* Login page logic - AI Storytelling Co-Author (T0, GUI fix pass).
+/* Login page logic - Story Realm (T0, GUI fix pass).
  * Talks to the backend auth routes as-is:
  *   POST /api/auth/login   {email, password}  -> {access_token}
  *   POST /api/auth/google  {id_token}         -> {access_token}

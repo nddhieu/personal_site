@@ -27,7 +27,7 @@ function setStatusError(msg) {
 
 function fill(book) {
   el("book-heading").textContent = book.title;
-  document.title = book.title + " - AI Storytelling Co-Author";
+  document.title = book.title + " - Story Realm";
   el("f-title").value = book.title || "";
   el("f-language").value = book.language || "";
   el("f-genre").value = (book.style && book.style.genre) || "";
