@@ -739,41 +739,15 @@
  * (.has-scene-bg shows it); in image mode it takes the same
  * dark translucent chip treatment as the beat icons. The
  * adjust bar floats above the shell nav: while adjusting,
- * the layout and header take no pointer events (the bar and
- * the Adjust icon re-enable theirs), so a drag anywhere on
- * the reading area moves the image, and touch-action: none
- * keeps a touch drag from scrolling the page instead. The
- * shape chooser sits in the composer column like the audio
- * transport, on a card so it reads over a photo background
- * as well as over the plain page. */
-.page-play .bg-adjust-btn {
-  display: none;
-  align-items: center;
-  justify-content: center;
-  margin-left: auto;
-  padding: 0.45rem 0.6rem;
-}
-.page-play.has-scene-bg .bg-adjust-btn {
-  display: inline-flex;
-  background: rgba(20, 22, 28, 0.55);
-  border-color: rgba(255, 255, 255, 0.28);
-  color: #f8fafc;
-}
-.page-play .bg-adjust-btn[aria-pressed="true"] {
-  background: var(--color-primary);
-  border-color: var(--color-primary);
-  color: #fff;
-}
-.page-play .bg-adjust-btn svg {
-  width: 1.25rem;
-  height: 1.25rem;
-  display: block;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
+ * the layout and header take no pointer events (the bar
+ * re-enables its own), so a drag anywhere on the reading
+ * area moves the image, and touch-action: none keeps a
+ * touch drag from scrolling the page instead. The bar is
+ * entered from the gallery (setting a background, or its
+ * Adjust background button) since Nov 8 - no header icon.
+ * The shape chooser sits in the composer column like the
+ * audio transport, on a card so it reads over a photo
+ * background as well as over the plain page. */
 .page-play .bg-adjust-bar {
   position: fixed;
   left: 50%;
@@ -832,7 +806,6 @@
 .page-play.bg-adjusting .play-topbar {
   pointer-events: none;
 }
-.page-play.bg-adjusting .bg-adjust-btn,
 .page-play.bg-adjusting .bg-adjust-bar {
   pointer-events: auto;
 }
@@ -887,7 +860,6 @@
   padding: 0.4rem 0.55rem;
 }
 @media print {
-  .page-play .bg-adjust-btn,
   .page-play .bg-adjust-bar,
   .page-play .orientation-chooser {
     display: none !important;
@@ -1279,6 +1251,26 @@ body.light-theme .page-play .settings-sheet {
   border-radius: 999px;
   color: var(--sheet-close-text);
   cursor: pointer;
+}
+/* Re-entry into background adjust for the photo that IS
+   the current background (Hieu, Nov 8): a quieter outline
+   pill under the primary background button, shown only in
+   that state (syncGalleryBgBtn toggles its hidden flag). */
+.page-play .gallery-adjust-btn {
+  display: block;
+  width: 100%;
+  margin-top: 0.5rem;
+  padding: 0.7rem;
+  font: inherit;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--sheet-border);
+  border-radius: 999px;
+  color: var(--sheet-text);
+  cursor: pointer;
+}
+.page-play .gallery-adjust-btn[hidden] {
+  display: none;
 }
 @media print {
   .page-play .settings-btn,
