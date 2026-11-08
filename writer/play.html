@@ -138,6 +138,15 @@
                  this button sends the turn. -->
             <button id="send-btn" data-testid="send-btn" class="tool-btn send-btn" type="button"
               aria-label="Send" title="Send"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
+            <!-- Story settings (Hieu, Nov 8): ONE circular
+                 icon-only button at the end of the composer
+                 bar opens the settings sheet below - the book's
+                 photo gallery, Diary, Theme and Restart in a
+                 tile grid, after the reference app's Chat
+                 Setting sheet. Icon-only per the standing
+                 mobile rule; the bar stays one line. -->
+            <button id="settings-btn" data-testid="settings-btn" class="tool-btn settings-btn" type="button"
+              aria-label="Story settings" title="Story settings" aria-expanded="false" aria-controls="settings-sheet"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
           </div>
         </div>
       </div>
@@ -155,6 +164,60 @@
     <button id="bg-fit-fit" data-testid="bg-fit-fit" class="bg-fit-chip" type="button" aria-pressed="false">Fit</button>
     <button id="bg-adjust-done" data-testid="bg-adjust-done" class="bg-adjust-done" type="button">Done</button>
   </div>
+
+  <!-- Story settings sheet (Hieu, Nov 8): a dark translucent
+       bottom sheet over the story, after the reference app's
+       Chat Setting sheet - centered title, X close top-right,
+       and a 3-column grid of tiles (visual on top of the tile,
+       label under it in the reference; here the label sits
+       above its visual, matching the reference tiles). V1
+       tiles only, every one working: Images (the book's photo
+       gallery), Diary, Theme, Restart. The gallery swaps the
+       tiles for its own panel inside the same sheet. -->
+  <div id="settings-backdrop" data-testid="settings-backdrop" class="settings-backdrop" hidden></div>
+  <section id="settings-sheet" data-testid="settings-sheet" class="settings-sheet" role="dialog"
+    aria-modal="false" aria-label="Story settings" hidden>
+    <header class="settings-head">
+      <h2 id="settings-title">Story settings</h2>
+      <button id="settings-close" data-testid="settings-close" class="settings-close" type="button"
+        aria-label="Close settings" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    </header>
+    <div id="settings-tiles" class="settings-tiles">
+      <button id="settings-tile-images" data-testid="settings-tile-images" class="settings-tile" type="button">
+        <span class="settings-tile-label">Images</span>
+        <span class="settings-tile-visual settings-collage" id="settings-collage" aria-hidden="true"></span>
+      </button>
+      <button id="settings-tile-diary" data-testid="settings-tile-diary" class="settings-tile" type="button">
+        <span class="settings-tile-label">Diary</span>
+        <span class="settings-tile-visual" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M6 3h13v18H6z"/><path d="M6 3a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2"/><path d="M9 8h7M9 12h5"/></svg></span>
+      </button>
+      <button id="settings-tile-theme" data-testid="settings-tile-theme" class="settings-tile" type="button"
+        aria-label="Switch color theme">
+        <span class="settings-tile-label">Theme</span>
+        <span class="settings-tile-visual settings-theme-visual" aria-hidden="true"><span class="settings-theme-bubble" id="settings-theme-target">Dark</span></span>
+      </button>
+      <button id="settings-tile-restart" data-testid="settings-tile-restart" class="settings-tile" type="button"
+        aria-label="Reset the story and start over">
+        <span class="settings-tile-label" id="settings-restart-label">Restart</span>
+        <span class="settings-tile-visual" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 5v6h6"/><path d="M4.5 11a8 8 0 1 1-.6 4"/></svg></span>
+      </button>
+    </div>
+    <div id="gallery-panel" data-testid="gallery-panel" class="gallery-panel" hidden>
+      <div class="gallery-nav">
+        <button id="gallery-back" data-testid="gallery-back" class="gallery-nav-btn" type="button"
+          aria-label="Back to settings"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg><span>Settings</span></button>
+      </div>
+      <p id="gallery-empty" data-testid="gallery-empty" class="gallery-empty" hidden>No photos yet. Generate one from a paragraph's image icon.</p>
+      <div id="gallery-grid" data-testid="gallery-grid" class="gallery-grid"></div>
+      <div id="gallery-full" data-testid="gallery-full" class="gallery-full" hidden>
+        <button id="gallery-full-back" data-testid="gallery-full-back" class="gallery-nav-btn" type="button"
+          aria-label="Back to the gallery"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg><span>Gallery</span></button>
+        <img id="gallery-full-img" class="gallery-full-img" alt="Story photo, full view">
+        <p id="gallery-full-caption" class="gallery-full-caption"></p>
+        <button id="gallery-bg-btn" data-testid="gallery-bg-btn" class="gallery-bg-btn" type="button">Use as background</button>
+      </div>
+    </div>
+  </section>
 
   <p id="play-out" hidden>You are not signed in.
     <a href="./login.html">Sign in</a> to play.</p>

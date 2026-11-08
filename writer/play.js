@@ -1043,6 +1043,7 @@ function setBusy(b) {
   el("action-input").disabled = b;
   el("suggest-toggle").disabled = b;
   el("reset-btn").disabled = b;
+  el("settings-tile-restart").disabled = b;
   el("send-btn").disabled = b;
   refreshRetryButton();
   document
@@ -1688,6 +1689,13 @@ function disarmReset() {
   btn.textContent = "Reset story";
   btn.setAttribute("aria-label", "Reset the story and start over");
   btn.classList.remove("confirming");
+  // The settings sheet's Restart tile shares this confirm
+  // state (see onResetTap): disarming resets its label too.
+  const tileLabel = el("settings-restart-label");
+  tileLabel.textContent = "Restart";
+  el("settings-tile-restart").classList.remove("confirming");
+  el("settings-tile-restart").setAttribute(
+    "aria-label", "Reset the story and start over");
 }
 
 async function resetPlaythrough() {
@@ -1768,11 +1776,22 @@ async function resetPlaythrough() {
   }
 }
 
-el("reset-btn").addEventListener("click", () => {
+/* One reset tap handler, two entry points: the header
+ * menu's Reset story item and the settings sheet's Restart
+ * tile share the SAME armed state and the same reset flow -
+ * arming on either surface shows the confirm on both, and
+ * the second tap on either runs resetPlaythrough. The
+ * origin only decides which surface closes when the reset
+ * actually runs (and where the "nothing to reset" note
+ * leaves the reader): the arming tap keeps its surface
+ * open so the confirm stays visible as the second tap's
+ * target, exactly as the menu item always behaved. */
+function onResetTap(origin) {
   if (busy) return;
   if (!playthroughId) {
     showPlayNote("No story in progress to reset.");
-    closePlayMenu();
+    if (origin === "sheet") closeSettingsSheet();
+    else closePlayMenu();
     return;
   }
   if (!resetArmed) {
@@ -1782,12 +1801,20 @@ el("reset-btn").addEventListener("click", () => {
     btn.setAttribute(
       "aria-label", "Tap again to confirm resetting the story");
     btn.classList.add("confirming");
+    const tileLabel = el("settings-restart-label");
+    tileLabel.textContent = "Tap again to confirm";
+    el("settings-tile-restart").classList.add("confirming");
+    el("settings-tile-restart").setAttribute(
+      "aria-label", "Tap again to confirm resetting the story");
     resetTimer = setTimeout(disarmReset, 5000);
     return;
   }
-  closePlayMenu();
+  if (origin === "sheet") closeSettingsSheet();
+  else closePlayMenu();
   resetPlaythrough();
-});
+}
+
+el("reset-btn").addEventListener("click", () => onResetTap("menu"));
 
 /* Play header menu (Hieu, Nov 7): the Diary / Reset story /
  * Theme / Log out items in the dropdown behind #play-menu-btn.
@@ -1841,6 +1868,241 @@ el("play-menu-logout").addEventListener("click", () => {
   closePlayMenu();
   logout();
 });
+
+/* Story settings sheet + photo gallery (Hieu, Nov 8): the
+ * circular #settings-btn at the end of the composer bar opens
+ * a bottom sheet after the reference app's Chat Setting sheet
+ * (dark translucent panel, centered title, X close, tile
+ * grid). It is an ADDITIONAL entry point - the header menu
+ * above keeps working unchanged. Tiles, v1 (every tile
+ * works):
+ *  - Images: a collage of the book's photos; opens the
+ *    gallery (below).
+ *  - Diary: the same diary toggle #diary-btn drives, and
+ *    the sheet closes (the panel lives behind it).
+ *  - Theme: the same toggleTheme the header item calls; its
+ *    bubble names the TARGET theme, synced with the header
+ *    item's label by syncSettingsTheme. The sheet stays open
+ *    so the flip is visible around it.
+ *  - Restart: onResetTap("sheet") - the shared two-tap
+ *    confirm, never a one-tap wipe.
+ * The gallery collects every photo of the current
+ * playthrough in story order (scene-level image, then each
+ * beat image, per scene), reusing the exact image machinery
+ * the paragraphs use: sceneImageSrc object URLs and the
+ * beat GET route via beatImagePath/toggleSceneBackground.
+ * No new endpoint, no new background state: the full view's
+ * background button calls toggleSceneBackground, the same
+ * function the per-paragraph icon drives, so the filled
+ * icon, the localStorage choice and the adjust controls all
+ * stay in sync. */
+const settingsBtn = el("settings-btn");
+const settingsSheet = el("settings-sheet");
+const settingsBackdrop = el("settings-backdrop");
+const settingsTiles = el("settings-tiles");
+const galleryPanel = el("gallery-panel");
+let galleryPhoto = null; // { sceneIndex, beatIndex, caption }
+
+function showSettingsTiles() {
+  galleryPanel.hidden = true;
+  galleryPhoto = null;
+  settingsTiles.hidden = false;
+  el("settings-title").textContent = "Story settings";
+}
+function setSettingsSheet(open) {
+  settingsSheet.hidden = !open;
+  settingsBackdrop.hidden = !open;
+  settingsBtn.setAttribute(
+    "aria-expanded", open ? "true" : "false");
+  if (open) {
+    showSettingsTiles();
+    syncSettingsTheme();
+    refreshSettingsCollage();
+  }
+}
+function closeSettingsSheet() {
+  setSettingsSheet(false);
+}
+settingsBtn.addEventListener("click", () => {
+  setSettingsSheet(settingsSheet.hidden);
+});
+el("settings-close").addEventListener("click", closeSettingsSheet);
+settingsBackdrop.addEventListener("click", closeSettingsSheet);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeSettingsSheet();
+});
+
+function syncSettingsTheme() {
+  el("settings-theme-target").textContent =
+    getTheme() === "dark" ? "Light" : "Dark";
+}
+el("settings-tile-theme").addEventListener("click", () => {
+  toggleTheme();
+  syncPlayMenuTheme();
+  syncSettingsTheme();
+});
+syncSettingsTheme();
+
+el("settings-tile-diary").addEventListener("click", () => {
+  closeSettingsSheet();
+  // The diary button's own listeners do the toggle + diary
+  // refresh (and close the header menu, which is shut here);
+  // a programmatic click keeps ONE diary code path.
+  el("diary-btn").click();
+});
+
+el("settings-tile-restart").addEventListener("click",
+  () => onResetTap("sheet"));
+
+/* Every photo in the playthrough, in story order. A scene's
+ * legacy per-scene image IS its beat-0 image (beatImageState
+ * folds them together and the beat GET serves it), so the
+ * scene-level entry is collected as beat 0 captioned
+ * "Scene N"; beat entries follow in beat order captioned
+ * "Scene N · Paragraph M", skipping a beat-0 entry that is
+ * the same file as the scene-level one (never show one
+ * photo twice). */
+function collectGalleryPhotos() {
+  const photos = [];
+  scenes.forEach((scene, si) => {
+    if (scene && scene.image_file) {
+      photos.push({ sceneIndex: si, beatIndex: 0,
+        caption: "Scene " + (si + 1) });
+    }
+    const entries = (scene && scene.beat_images) || {};
+    const beatIndexes = Object.keys(entries)
+      .map((k) => Number(k))
+      .filter((n) => Number.isInteger(n))
+      .sort((a, b) => a - b);
+    for (const bi of beatIndexes) {
+      const file = entries[String(bi)] &&
+        entries[String(bi)].image_file;
+      if (!file) continue;
+      if (bi === 0 && scene.image_file && file === scene.image_file) {
+        continue;
+      }
+      photos.push({ sceneIndex: si, beatIndex: bi,
+        caption: "Scene " + (si + 1) + " · Paragraph " + (bi + 1) });
+    }
+  });
+  return photos;
+}
+
+/* The object URL for one gallery photo: sceneImageSrc first
+ * (the same cache the inline images use), else the beat GET
+ * through apiFetch - loaded into that same cache, so the
+ * inline slot and the gallery never hold two copies. */
+async function galleryPhotoUrl(photo) {
+  const key = beatKey(photo.sceneIndex, photo.beatIndex);
+  let url = sceneImageSrc.get(key);
+  if (url) return url;
+  const blob = await apiFetch(
+    beatImagePath(photo.sceneIndex, photo.beatIndex),
+    { response: "blob" });
+  url = URL.createObjectURL(blob);
+  sceneImageSrc.set(key, url);
+  return url;
+}
+
+async function refreshSettingsCollage() {
+  const host = el("settings-collage");
+  host.innerHTML = "";
+  const photos = collectGalleryPhotos().slice(0, 3);
+  if (!photos.length) {
+    host.innerHTML = IMAGE_SVG;
+    return;
+  }
+  for (const photo of photos) {
+    try {
+      const img = document.createElement("img");
+      img.src = await galleryPhotoUrl(photo);
+      img.alt = "";
+      host.appendChild(img);
+    } catch {
+      // A photo that will not load just leaves the collage
+      // one image shorter; the tile still opens the gallery.
+    }
+  }
+  if (!host.children.length) host.innerHTML = IMAGE_SVG;
+}
+
+function openGalleryFull(photo, url) {
+  galleryPhoto = photo;
+  el("gallery-grid").hidden = true;
+  el("gallery-empty").hidden = true;
+  const full = el("gallery-full");
+  full.hidden = false;
+  const img = el("gallery-full-img");
+  img.src = url;
+  img.alt = photo.caption;
+  el("gallery-full-caption").textContent = photo.caption;
+  syncGalleryBgBtn();
+}
+function syncGalleryBgBtn() {
+  if (!galleryPhoto) return;
+  const key = beatKey(galleryPhoto.sceneIndex,
+    galleryPhoto.beatIndex);
+  el("gallery-bg-btn").textContent =
+    sceneBackground && sceneBackground.key === key
+      ? "Clear background" : "Use as background";
+}
+el("gallery-bg-btn").addEventListener("click", async () => {
+  if (!galleryPhoto) return;
+  await toggleSceneBackground(
+    galleryPhoto.sceneIndex, galleryPhoto.beatIndex);
+  syncGalleryBgBtn();
+});
+el("gallery-full-back").addEventListener("click", () => {
+  galleryPhoto = null;
+  el("gallery-full").hidden = true;
+  el("gallery-grid").hidden = false;
+});
+
+async function openGallery() {
+  settingsTiles.hidden = true;
+  galleryPanel.hidden = false;
+  el("settings-title").textContent = "Photos";
+  el("gallery-full").hidden = true;
+  galleryPhoto = null;
+  const grid = el("gallery-grid");
+  grid.innerHTML = "";
+  grid.hidden = false;
+  const photos = collectGalleryPhotos();
+  el("gallery-empty").hidden = photos.length > 0;
+  for (const photo of photos) {
+    const cell = document.createElement("button");
+    cell.type = "button";
+    cell.className = "gallery-cell";
+    cell.setAttribute("aria-label", photo.caption);
+    const img = document.createElement("img");
+    img.alt = photo.caption;
+    const cap = document.createElement("span");
+    cap.className = "gallery-cell-caption";
+    cap.textContent = photo.caption;
+    cell.append(img, cap);
+    cell.addEventListener("click", async () => {
+      try {
+        openGalleryFull(photo, await galleryPhotoUrl(photo));
+      } catch (err) {
+        if (err.status === 401) {
+          clearToken();
+          showSignedOut();
+          return;
+        }
+        showPlayError(friendlyError(err));
+      }
+    });
+    grid.appendChild(cell);
+    try {
+      img.src = await galleryPhotoUrl(photo);
+    } catch {
+      // Cell keeps its caption; the photo itself can still
+      // be retried from a fresh gallery open.
+    }
+  }
+}
+el("settings-tile-images").addEventListener("click", openGallery);
+el("gallery-back").addEventListener("click", showSettingsTiles);
 
 /* Background adjust controls (Hieu, Nov 8): the header icon
  * toggles adjust mode; the bar's chips set the fit; Done
