@@ -17,23 +17,27 @@
  * stare. Photographic, matching the app's scene / character
  * art; no text; adults only.
  *
- * The ageLabel is the portrait's presentation age band for
- * the picker grid ("Male · 30s"); a persona's own age is a
- * number the reader enters and does not have to match it. */
+ * The set was regenerated IDOL-TIER (Hieu, Nov 8): every face
+ * is a star at their peak, because readers want the best
+ * version of who they will be in the story.
+ *
+ * Portraits carry NO age label (Hieu, Nov 8): a persona's age
+ * is whatever the reader enters in the form; the library must
+ * not label or steer it. Tiles show gender only. */
 
 export const PERSONA_IMAGES = [
-  { id: "m1", gender: "male", ageLabel: "20s", src: "./personas/m1.jpg" },
-  { id: "m2", gender: "male", ageLabel: "30s", src: "./personas/m2.jpg" },
-  { id: "m3", gender: "male", ageLabel: "40s", src: "./personas/m3.jpg" },
-  { id: "m4", gender: "male", ageLabel: "50s", src: "./personas/m4.jpg" },
-  { id: "m5", gender: "male", ageLabel: "20s", src: "./personas/m5.jpg" },
-  { id: "m6", gender: "male", ageLabel: "40s", src: "./personas/m6.jpg" },
-  { id: "f1", gender: "female", ageLabel: "20s", src: "./personas/f1.jpg" },
-  { id: "f2", gender: "female", ageLabel: "30s", src: "./personas/f2.jpg" },
-  { id: "f3", gender: "female", ageLabel: "30s", src: "./personas/f3.jpg" },
-  { id: "f4", gender: "female", ageLabel: "40s", src: "./personas/f4.jpg" },
-  { id: "f5", gender: "female", ageLabel: "20s", src: "./personas/f5.jpg" },
-  { id: "f6", gender: "female", ageLabel: "50s", src: "./personas/f6.jpg" },
+  { id: "m1", gender: "male", src: "./personas/m1.jpg" },
+  { id: "m2", gender: "male", src: "./personas/m2.jpg" },
+  { id: "m3", gender: "male", src: "./personas/m3.jpg" },
+  { id: "m4", gender: "male", src: "./personas/m4.jpg" },
+  { id: "m5", gender: "male", src: "./personas/m5.jpg" },
+  { id: "m6", gender: "male", src: "./personas/m6.jpg" },
+  { id: "f1", gender: "female", src: "./personas/f1.jpg" },
+  { id: "f2", gender: "female", src: "./personas/f2.jpg" },
+  { id: "f3", gender: "female", src: "./personas/f3.jpg" },
+  { id: "f4", gender: "female", src: "./personas/f4.jpg" },
+  { id: "f5", gender: "female", src: "./personas/f5.jpg" },
+  { id: "f6", gender: "female", src: "./personas/f6.jpg" },
 ];
 
 const BY_ID = new Map(PERSONA_IMAGES.map((img) => [img.id, img]));
@@ -51,10 +55,10 @@ export function personaImageSrc(id) {
   return img ? img.src : "";
 }
 
-/* "Male · 30s" for the picker grid and sheet rows. */
+/* "Male" / "Female" for the picker grid and sheet rows.
+ * No age: the reader chooses their persona's age themself. */
 export function personaImageLabel(id) {
   const img = getPersonaImage(id);
   if (!img) return "";
-  const gender = img.gender === "male" ? "Male" : "Female";
-  return gender + " · " + img.ageLabel;
+  return img.gender === "male" ? "Male" : "Female";
 }
