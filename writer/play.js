@@ -208,12 +208,22 @@ async function onAudioButton(sceneIndex, beatIndex, beatText) {
   }
   try {
     if (autoSpeakOn()) {
-      const scene = scenes[sceneIndex];
-      if (!scene) return;
+      if (!scenes[sceneIndex]) return;
       const from = Number.isInteger(beatIndex) ? beatIndex : 0;
-      const beats = splitBeats(sceneText(scene))
-        .map((text, j) => ({ key: beatKey(sceneIndex, j), text }))
-        .slice(from);
+      // Read to the end of the book (Hieu, Nov 7): from the
+      // tapped beat through the last beat of the last scene
+      // that exists - scenes not yet written cannot play.
+      // A new turn cancels this queue before it can read a
+      // replaced scene's beats (runTurnBody -> cancelQueue),
+      // and the player's lookahead synthesis keeps up with
+      // scenes whose audio was never pre-generated.
+      const beats = [];
+      for (let si = sceneIndex; si < scenes.length; si++) {
+        splitBeats(sceneText(scenes[si])).forEach((text, j) => {
+          if (si === sceneIndex && j < from) return;
+          beats.push({ key: beatKey(si, j), text });
+        });
+      }
       if (!beats.length) return;
       await audioPlayer.playQueue(beats, voice);
     } else {
@@ -659,7 +669,7 @@ function renderScenes() {
       // audio (background pre-generation, design section
       // 6). Auto-speak off: only this paragraph, then it
       // stops. Auto-speak on: keeps going from here
-      // through the rest of the scene. Tapping another
+      // through the end of the book. Tapping another
       // speaker stops the current one at once and plays
       // the new one once ready; tap again stops it. Its
       // state (idle / generating / ready / playing /
