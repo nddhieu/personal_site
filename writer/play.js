@@ -379,10 +379,14 @@ function beatImageState(scene, beatIndex) {
  * local to the reader: localStorage keeps only the beat key
  * ("scene:beat"), keyed by book + playthrough, and restore
  * re-fetches the bytes on load (object URLs do not survive
- * a reload). The page background is a dark, bottom-
- * weighted scrim over the image and the prose turns white
- * over it (see play.css), so the reading stays legible the
- * way the reference app does it; print drops it. Reset
+ * a reload). The page background is a dark scrim over the
+ * image in three zones (Hieu, Nov 8, the reference app's
+ * veil): strong at the top so the header and first lines
+ * read over any photo, a clear window in the middle
+ * (~0.26) so the photo itself shows through, and deep
+ * again at the bottom behind the latest text and the
+ * composer. The prose turns white over it (see play.css),
+ * so the reading stays legible; print drops it. Reset
  * clears it first, because
  * clearSceneImages revokes the object URL the background
  * would otherwise point at; Regenerate re-applies it to the
@@ -417,8 +421,10 @@ function applySceneBackground(key, url) {
   const page = document.querySelector(".page-play");
   if (!page) return;
   page.style.backgroundImage =
-    "linear-gradient(rgba(8,10,16,0.16), " +
-    "rgba(8,10,16,0.52) 55%, rgba(8,10,16,0.86)), " +
+    "linear-gradient(180deg, rgba(8,10,16,0.66) 0%, " +
+    "rgba(8,10,16,0.44) 16%, rgba(8,10,16,0.26) 34%, " +
+    "rgba(8,10,16,0.26) 55%, rgba(8,10,16,0.52) 76%, " +
+    "rgba(8,10,16,0.90) 100%), " +
     "url(\"" + url + "\")";
   page.classList.add("has-scene-bg");
   sceneBackground = { key, url };
