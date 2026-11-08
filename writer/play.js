@@ -833,7 +833,6 @@ function setBusy(b) {
   el("continue-btn").disabled = b;
   el("action-input").disabled = b;
   el("suggest-toggle").disabled = b;
-  el("stream-toggle").disabled = b;
   el("reset-btn").disabled = b;
   el("send-btn").disabled = b;
   refreshRetryButton();
@@ -881,8 +880,8 @@ function scrollToLatestScene() {
   if (target) target.scrollIntoView({ block: "start", behavior: "smooth" });
 }
 
-/* Streaming turns (todo stream-replies): with the Stream
- * toggle on, a turn goes to the streaming sibling endpoint
+/* Streaming turns (todo stream-replies): every turn goes to
+ * the streaming sibling endpoint
  * (POST /api/playthroughs/{id}/turns/stream) and the new
  * scene's prose appears sentence by sentence as the pipeline
  * writes it, instead of landing all at once. The endpoint
@@ -907,19 +906,12 @@ function scrollToLatestScene() {
  * a backend without the streaming endpoint behaves as
  * before.
  *
- * The toggle persists to localStorage under the key below.
- * That key is the shared contract the future
- * reading-settings panel binds to: same key, same "1" = on
- * value, so either control flips the same switch. */
-const STREAM_REPLIES_KEY = "writer.streamReplies";
-
-function streamRepliesOn() {
-  try {
-    return localStorage.getItem(STREAM_REPLIES_KEY) === "1";
-  } catch {
-    return false;
-  }
-}
+ * Streaming is unconditional (Hieu, Nov 7): the composer
+ * Stream toggle and its writer.streamReplies key are gone -
+ * every turn streams. (fetchStreamedTurn still falls back
+ * to the classic POST once if the stream cannot start, so a
+ * backend without the streaming endpoint behaves as
+ * before.) */
 
 /* The friendly wording for a streamed turn's error event:
  * the same sentences apiFetch produces for the same status
@@ -1149,11 +1141,11 @@ async function fetchStreamedTurn(body, actionText) {
  * generated a set) replace the cards and the panel opens -
  * that is the moment the reader looks for them (Hieu, Oct 27).
  * When generation failed open (empty set), the current cards
- * and panel state are left exactly as they were. With the
- * Stream toggle on, the turn goes through fetchStreamedTurn
- * instead; both paths land in applyTurnResult and surface
- * failures through handleTurnError, so a streamed turn ends
- * exactly like a classic one. */
+ * and panel state are left exactly as they were. Every turn
+ * goes through fetchStreamedTurn; it lands in
+ * applyTurnResult and surfaces failures through
+ * handleTurnError, so a streamed turn ends exactly like a
+ * classic one. */
 async function runTurnBody(body, actionText) {
   if (busy || !playthroughId) return;
   // A new turn cancels the auto-read queue for the scene it
@@ -1163,13 +1155,7 @@ async function runTurnBody(body, actionText) {
   setBusy(true);
   showLoading(el("play-note"), "Writing the next scene...");
   try {
-    const result = streamRepliesOn()
-      ? await fetchStreamedTurn(body, actionText)
-      : await apiFetch(
-          "/api/playthroughs/" + encodeURIComponent(playthroughId) +
-            "/turns",
-          { method: "POST", body },
-        );
+    const result = await fetchStreamedTurn(body, actionText);
     await applyTurnResult(result, actionText, body);
   } catch (err) {
     handleTurnError(err, body);
@@ -1303,38 +1289,27 @@ el("suggest-toggle").addEventListener("click", () => {
   );
 });
 
-/* Stream replies toggle: reflects the saved preference on
- * load; flipping it writes the localStorage key the turn
- * dispatcher reads (see STREAM_REPLIES_KEY above - the
- * shared contract the reading-settings panel will bind
- * to). */
-const streamToggle = el("stream-toggle");
-streamToggle.checked = streamRepliesOn();
-streamToggle.addEventListener("change", () => {
-  try {
-    if (streamToggle.checked) {
-      localStorage.setItem(STREAM_REPLIES_KEY, "1");
-    } else {
-      localStorage.removeItem(STREAM_REPLIES_KEY);
-    }
-  } catch {
-    // Private mode or similar: the preference just is not
-    // remembered for the next visit.
-  }
-});
-
 /* Scene audio controls (T3): the auto-speak flag and the
- * narrator voice live in the composer bar beside the Stream
- * toggle, on the same localStorage contract the future
- * reading-settings panel binds to (writer.autoSpeak "1" =
- * on, OFF by default; writer.narratorVoice vendetti/klett).
- * The transport (pause/resume, stop, mute) appears only
- * while something plays; it never changes the flag. */
+ * narrator voice live in the composer bar, on the same
+ * localStorage contract the future reading-settings panel
+ * binds to (writer.autoSpeak "1" = on, OFF by default;
+ * writer.narratorVoice vendetti/klett). The Audio toggle is
+ * a text button (Hieu, Nov 7): no checkbox - the .is-on
+ * class (accent color + bold) vs the muted default carries
+ * the state, mirrored by aria-pressed. The transport
+ * (pause/resume, stop, mute) appears only while something
+ * plays; it never changes the flag. */
 const autoSpeakToggle = el("auto-speak-toggle");
 if (autoSpeakToggle) {
-  autoSpeakToggle.checked = autoSpeakOn();
-  autoSpeakToggle.addEventListener("change", () => {
-    setAutoSpeak(autoSpeakToggle.checked);
+  const syncAudioToggle = () => {
+    const on = autoSpeakOn();
+    autoSpeakToggle.classList.toggle("is-on", on);
+    autoSpeakToggle.setAttribute("aria-pressed", String(on));
+  };
+  syncAudioToggle();
+  autoSpeakToggle.addEventListener("click", () => {
+    setAutoSpeak(!autoSpeakOn());
+    syncAudioToggle();
   });
 }
 const voiceSelect = el("narrator-voice");

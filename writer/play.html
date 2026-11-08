@@ -73,22 +73,19 @@
               <button id="continue-btn" data-testid="continue-btn" class="tool-btn" type="button"
                 title="Continue the story" aria-label="Continue the story"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 4.5 12.5 12 5 19.5zM12.5 4.5 20 12l-7.5 7.5z"/></svg></button>
             </div>
-            <!-- Stream replies toggle: binds the localStorage
-                 key writer.streamReplies ("1" = on) - the same
-                 key the future reading-settings panel will use. -->
-            <label class="stream-toggle" title="Show each scene as it is written">
-              <input id="stream-toggle" data-testid="stream-toggle" type="checkbox">
-              <span class="toggle-label">Stream</span>
-            </label>
+            <!-- Turns always stream (Hieu, Nov 7): the Stream
+                 toggle is gone; every turn goes to the
+                 streaming endpoint (see play.js). -->
             <!-- Scene audio (stream-audio v1, T3): auto-speak
                  flag (OFF by default, writer.autoSpeak) and
                  narrator voice (writer.narratorVoice) on the
                  same localStorage contract the future
-                 reading-settings panel will bind to. -->
-            <label class="stream-toggle" title="Auto-speak: read each new scene aloud automatically once its audio is ready">
-              <input id="auto-speak-toggle" data-testid="auto-speak-toggle" type="checkbox">
-              <span class="toggle-label">Speak</span>
-            </label>
+                 reading-settings panel will bind to. The
+                 toggle is a text button (Hieu, Nov 7): no
+                 checkbox - font color and weight carry the
+                 state (accent + bold = on, muted = off). -->
+            <button id="auto-speak-toggle" data-testid="auto-speak-toggle" class="audio-toggle" type="button"
+              aria-pressed="false" title="Audio: read each new scene aloud automatically once its audio is ready">Audio</button>
             <label class="voice-select" title="Narrator voice">
               <select id="narrator-voice" data-testid="narrator-voice" aria-label="Narrator voice">
                 <option value="vendetti">Vendetti</option>
