@@ -21,9 +21,11 @@
  * is a star at their peak, because readers want the best
  * version of who they will be in the story.
  *
- * Portraits carry NO age label (Hieu, Nov 8): a persona's age
- * is whatever the reader enters in the form; the library must
- * not label or steer it. Tiles show gender only.
+ * Portraits carry NO age or gender captions (Hieu, Nov 8):
+ * a persona's age is whatever the reader enters in the form,
+ * and the photos speak for themselves; the library must not
+ * label or steer either. Gender stays as data because picking
+ * a portrait proposes the form's gender on create.
  *
  * A persona can also carry the reader's OWN uploaded photo
  * (persona.has_custom_image, set by POST
@@ -61,14 +63,6 @@ export function getPersonaImage(id) {
 export function personaImageSrc(id) {
   const img = getPersonaImage(id);
   return img ? img.src : "";
-}
-
-/* "Male" / "Female" for the picker grid and sheet rows.
- * No age: the reader chooses their persona's age themself. */
-export function personaImageLabel(id) {
-  const img = getPersonaImage(id);
-  if (!img) return "";
-  return img.gender === "male" ? "Male" : "Female";
 }
 
 /* ── Effective persona image ───────────────────────────────
