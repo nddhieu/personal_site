@@ -571,9 +571,11 @@
   margin: 0.25rem 0 1rem;
 }
 /* Scene background (todo, @Chubby): the chosen image sits
- * behind the whole play page, sized to cover, with a dark,
- * bottom-weighted gradient scrim over it (the scrim is the
- * first background layer, set inline by play.js) and the
+ * behind the whole play page, sized to cover, with a dark
+ * three-zone gradient scrim over it - strong at the top, a
+ * clear window in the middle so the photo shows through,
+ * deep at the bottom (Hieu, Nov 8; the scrim is the first
+ * background layer, set inline by play.js) and the
  * prose turned white over it - the alignment block at the
  * end of this file. One treatment serves both themes: over
  * a photo there is no light/dark variant. */
