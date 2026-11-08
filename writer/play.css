@@ -407,8 +407,12 @@
  * The face is the player's chosen avatar from the library
  * (js/avatars.js; Hieu, Nov 8 — it replaces the pencil glyph),
  * painted by play.js: a 24px round disc inside a round button
- * whose footprint matches the old pencil pill. App-only:
- * hidden in print so the printed book is clean prose. */
+ * whose footprint matches the old pencil pill. When the run
+ * is played as a persona, the same disc carries the persona's
+ * PHOTO instead (Hieu, Nov 8): the img fills the disc and the
+ * disc's round overflow crop does the rest, face-weighted
+ * like .char-avatar on the book page. App-only: hidden in
+ * print so the printed book is clean prose. */
 .page-play .turn-input-marker {
   display: inline-flex;
   align-items: center;
@@ -433,6 +437,13 @@
   width: 100%;
   height: 100%;
   display: block;
+}
+.page-play .turn-input-marker .avatar-disc img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  object-position: center 20%;
 }
 .page-play .turn-input-marker:hover,
 .page-play .turn-input-marker[aria-expanded="true"] {

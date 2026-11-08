@@ -1082,13 +1082,22 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
   }
 }
 
-/* User-input marker face (Hieu, Nov 8): the player's chosen
- * avatar from the library (js/avatars.js), replacing the pencil
- * glyph the marker used to show. The pick comes from
- * GET /api/auth/me, fetched in parallel at init — rendering
- * never waits on it: markers paint with the default avatar
- * (wanderer) right away and swap in place when /me resolves.
- * A failed fetch simply leaves the default. */
+/* User-input marker face (Hieu, Nov 8): inside a book, the
+ * player's face is their persona. When the open playthrough
+ * has a persona bound, the markers wear the PERSONA'S PHOTO
+ * (library portrait or the reader's uploaded photo, resolved
+ * through the one persona image path in js/personas.js). With
+ * no persona bound (the book's default character), the face
+ * is the player's chosen ACCOUNT avatar from the library
+ * (js/avatars.js), replacing the pencil glyph the marker used
+ * to show. The pick comes from GET /api/auth/me, fetched in
+ * parallel at init — rendering never waits on it: markers
+ * paint with the default avatar (wanderer) right away and
+ * swap in place when /me resolves. A failed fetch simply
+ * leaves the default. Persona precedence is absolute:
+ * applyMarkerFaces dispatches on the current binding, so a
+ * late /me can never paint the account avatar over a persona
+ * face. */
 let userAvatarId = DEFAULT_AVATAR_ID;
 
 function paintMarkerAvatar(marker) {
@@ -1104,10 +1113,44 @@ function paintMarkerAvatar(marker) {
   marker.title = "Your input · " + avatar.label;
 }
 
-function applyUserAvatarToMarkers() {
+function paintMarkerPersona(marker, persona) {
+  const disc = document.createElement("span");
+  disc.className = "avatar-disc";
+  // The button carries the accessible name; the photo inside
+  // is decorative, exactly like the avatar disc.
+  disc.setAttribute("aria-hidden", "true");
+  const img = document.createElement("img");
+  img.className = "avatar-disc-img";
+  img.alt = "";
+  disc.append(img);
+  // The one resolver every persona face uses: the library
+  // portrait paints synchronously, the uploaded photo swaps
+  // in when its fetch lands, and a failed fetch keeps the
+  // portrait (never a broken image).
+  applyPersonaImage(img, persona);
+  marker.textContent = "";
+  marker.append(disc);
+  marker.title = "Your input · " + persona.name;
+}
+
+/* The current marker face: the bound persona's photo when
+ * the run is played as a persona (and that persona has any
+ * usable image); otherwise the account avatar. */
+function paintMarkerFace(marker) {
+  const persona = playthroughPersona;
+  if (persona &&
+      (personaImageSrc(persona.image_id) ||
+        personaHasCustomImage(persona))) {
+    paintMarkerPersona(marker, persona);
+  } else {
+    paintMarkerAvatar(marker);
+  }
+}
+
+function applyMarkerFaces() {
   document
     .querySelectorAll(".turn-input-marker")
-    .forEach((marker) => paintMarkerAvatar(marker));
+    .forEach((marker) => paintMarkerFace(marker));
 }
 
 async function loadUserAvatar() {
@@ -1117,7 +1160,7 @@ async function loadUserAvatar() {
   } catch {
     /* Keep the default avatar; the markers already show it. */
   }
-  applyUserAvatarToMarkers();
+  applyMarkerFaces();
 }
 
 /* Persona chip + sheet (persona system): who THIS run is
@@ -1156,6 +1199,11 @@ function setPlaythroughPersona(state) {
   playthroughPersonaId = (state && state.persona_id) || null;
   playthroughPersona = (state && state.persona) || null;
   renderPersonaChip();
+  // The input markers wear the same face as the chip:
+  // repaint them in the same pass, so a persona switch (or
+  // a switch back to the book's default) lands everywhere
+  // at once.
+  applyMarkerFaces();
 }
 
 function renderPersonaChip() {
@@ -1375,7 +1423,7 @@ function renderScenes() {
       marker.setAttribute("aria-expanded", String(expanded));
       marker.setAttribute("aria-label",
         "Your input for this scene: " + action);
-      paintMarkerAvatar(marker);
+      paintMarkerFace(marker);
       const input = document.createElement("div");
       input.className = "turn-input";
       input.dataset.testid = "input-text-" + key;
