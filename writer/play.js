@@ -366,9 +366,11 @@ function beatImageState(scene, beatIndex) {
  * local to the reader: localStorage keeps only the beat key
  * ("scene:beat"), keyed by book + playthrough, and restore
  * re-fetches the bytes on load (object URLs do not survive
- * a reload). The page background is a light wash over the
- * image, so prose stays readable; print drops it (see
- * play.css). Reset clears it first, because
+ * a reload). The page background is a dark, bottom-
+ * weighted scrim over the image and the prose turns white
+ * over it (see play.css), so the reading stays legible the
+ * way the reference app does it; print drops it. Reset
+ * clears it first, because
  * clearSceneImages revokes the object URL the background
  * would otherwise point at; Regenerate re-applies it to the
  * new URL for the same reason. A failed restore is silent:
@@ -399,8 +401,9 @@ function applySceneBackground(key, url) {
   const page = document.querySelector(".page-play");
   if (!page) return;
   page.style.backgroundImage =
-    "linear-gradient(rgba(255,255,255,0.72), " +
-    "rgba(255,255,255,0.72)), url(\"" + url + "\")";
+    "linear-gradient(rgba(8,10,16,0.16), " +
+    "rgba(8,10,16,0.52) 55%, rgba(8,10,16,0.86)), " +
+    "url(\"" + url + "\")";
   page.classList.add("has-scene-bg");
   sceneBackground = { key, url };
   try {
