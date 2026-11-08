@@ -23,6 +23,14 @@
          button; the items keep the diary/reset ids so play.js's
          handlers are unchanged, and init() removes the topbar's
          Theme / Log out buttons on this page only. -->
+    <!-- Background adjust (Hieu, Nov 8): with a scene
+         background active, this icon button enters adjust
+         mode - drag the image to reposition it, Fill / Fit
+         chooses how it meets the screen. Icon-only per the
+         standing mobile rule; CSS shows it only while the
+         page carries a background (.has-scene-bg). -->
+    <button id="bg-adjust-btn" data-testid="bg-adjust-btn" class="btn btn-secondary bg-adjust-btn" type="button"
+      aria-label="Adjust background" title="Adjust background" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3v18"/><path d="M8.5 6.5 12 3l3.5 3.5"/><path d="M8.5 17.5 12 21l3.5-3.5"/><path d="M3 12h18"/><path d="M6.5 8.5 3 12l3.5 3.5"/><path d="M17.5 8.5 21 12l-3.5 3.5"/></svg></button>
     <div id="play-menu-wrap" class="play-menu-wrap">
       <button id="play-menu-btn" data-testid="play-menu-btn" class="btn btn-secondary play-menu-btn" type="button"
         aria-haspopup="true" aria-expanded="false" aria-controls="play-menu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -78,6 +86,25 @@
             <button id="correct-btn" data-testid="correct-btn" class="btn btn-secondary" type="button" disabled aria-disabled="true">Correct <span class="badge">Soon</span></button>
           </div>
         </div>
+        <!-- Generation orientation (Hieu, Nov 8): tapping
+             Generate on a paragraph first opens this shape
+             chooser - landscape or portrait, so a portrait
+             image can fit the phone screen edge-to-edge as a
+             background. One tap on a shape generates in that
+             shape and remembers the choice
+             (writer.imageOrientation); the remembered shape
+             is the preselected one next time, and on a fresh
+             profile a phone-width viewport preselects
+             portrait, a wide one landscape. -->
+        <div id="orientation-chooser" data-testid="orientation-chooser" class="orientation-chooser" hidden>
+          <span class="orientation-label">Image shape</span>
+          <button id="orientation-landscape" data-testid="orientation-landscape" class="orientation-chip" type="button"
+            aria-pressed="false" aria-label="Generate a landscape image" title="Landscape"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="6" width="19" height="12" rx="2"/></svg><span>Landscape</span></button>
+          <button id="orientation-portrait" data-testid="orientation-portrait" class="orientation-chip" type="button"
+            aria-pressed="false" aria-label="Generate a portrait image" title="Portrait"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="6" y="2.5" width="12" height="19" rx="2"/></svg><span>Portrait</span></button>
+          <button id="orientation-cancel" data-testid="orientation-cancel" class="orientation-chip orientation-cancel" type="button"
+            aria-label="Cancel" title="Cancel"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+        </div>
         <div class="composer">
           <textarea id="action-input" data-testid="action-input" class="input" rows="1"
             placeholder="What do you do? (*...* = instruction for the AI)"></textarea>
@@ -115,6 +142,18 @@
         </div>
       </div>
     </aside>
+  </div>
+
+  <!-- Background adjust bar (Hieu, Nov 8): shown only in
+       adjust mode. Fill = cover (fills the screen, may
+       crop); Fit = contain (whole image visible). The drag
+       itself happens on the reading area while this bar is
+       up; Done leaves adjust mode. -->
+  <div id="bg-adjust-bar" data-testid="bg-adjust-bar" class="bg-adjust-bar" hidden>
+    <span class="bg-adjust-label">Background</span>
+    <button id="bg-fit-fill" data-testid="bg-fit-fill" class="bg-fit-chip" type="button" aria-pressed="true">Fill</button>
+    <button id="bg-fit-fit" data-testid="bg-fit-fit" class="bg-fit-chip" type="button" aria-pressed="false">Fit</button>
+    <button id="bg-adjust-done" data-testid="bg-adjust-done" class="bg-adjust-done" type="button">Done</button>
   </div>
 
   <p id="play-out" hidden>You are not signed in.
