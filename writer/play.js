@@ -1913,6 +1913,9 @@ document.addEventListener("pointerdown", (event) => {
     return;
   }
   bgDragPoint = { x: event.clientX, y: event.clientY };
+  if (typeof event.preventDefault === "function") {
+    event.preventDefault();
+  }
 });
 document.addEventListener("pointermove", (event) => {
   if (!bgAdjusting || !bgDragPoint) return;
