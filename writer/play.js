@@ -383,9 +383,12 @@ function sceneBackgroundKey() {
 }
 
 function clearSceneBackground() {
+  if (bgAdjusting) exitBgAdjust();
   const page = document.querySelector(".page-play");
   if (page) {
     page.style.backgroundImage = "";
+    page.style.backgroundSize = "";
+    page.style.backgroundPosition = "";
     page.classList.remove("has-scene-bg");
   }
   sceneBackground = null;
@@ -406,6 +409,12 @@ function applySceneBackground(key, url) {
     "url(\"" + url + "\")";
   page.classList.add("has-scene-bg");
   sceneBackground = { key, url };
+  // The scene's saved position/fit rides every application
+  // (first set, restore on load, regenerate follow) - see
+  // the adjust block below.
+  bgAdjust = readBgAdjust(bgAdjustSceneIndex());
+  applyBgAdjust();
+  ensureBgDims(url);
   try {
     localStorage.setItem(sceneBackgroundKey(), String(key));
   } catch {
@@ -497,6 +506,130 @@ async function restoreSceneBackground() {
   }
 }
 
+/* Background adjust (Hieu, Nov 8): with a scene background
+ * active, the reader can move the image and choose how it
+ * fits the screen - Fill (cover: fills the screen, may
+ * crop) or Fit (contain: the whole image visible). The
+ * #bg-adjust-btn icon in the header enters adjust mode:
+ * dragging on the reading area repositions the image live,
+ * the bar's chips switch the fit, Done leaves. Like the
+ * background choice itself, the adjustment is reader-local:
+ * localStorage per playthrough + the background's source
+ * scene ("writer.bgAdjust.<playthroughId>.<sceneIndex>" =
+ * {x, y, fit} as background-position percentages), applied
+ * by applySceneBackground whenever that scene's image is
+ * the background. Clearing the background KEEPS the saved
+ * adjustment - it is harmless, and it is still right if the
+ * same scene's image becomes the background again.
+ * Percentages follow the CSS rule: position p% offsets the
+ * image by (area - rendered image) * p/100 per axis, so a
+ * pointer drag of d pixels moves p by d / (area - rendered)
+ * * 100 (the range is negative under Fill, positive under
+ * Fit - the sign carries). The background is
+ * fixed-attachment, so the positioning area is the
+ * viewport. The scrim layer is never adjusted: it stays
+ * "cover, center" as the first size/position value. */
+const BG_ADJUST_DEFAULT = { x: 50, y: 50, fit: "cover" };
+let bgAdjust = { ...BG_ADJUST_DEFAULT };
+let bgAdjusting = false;
+let bgDragPoint = null; // last pointer point while dragging
+let bgDims = null; // natural { w, h } of the current bg image
+let bgDimsUrl = null;
+
+function bgAdjustSceneIndex() {
+  if (!sceneBackground) return null;
+  const n = Number(String(sceneBackground.key).split(":")[0]);
+  return Number.isInteger(n) ? n : null;
+}
+
+function bgAdjustKey(sceneIndex) {
+  return "writer.bgAdjust." + (playthroughId || "") + "." +
+    sceneIndex;
+}
+
+function readBgAdjust(sceneIndex) {
+  if (sceneIndex === null) return { ...BG_ADJUST_DEFAULT };
+  try {
+    const raw = localStorage.getItem(bgAdjustKey(sceneIndex));
+    if (!raw) return { ...BG_ADJUST_DEFAULT };
+    const parsed = JSON.parse(raw);
+    const x = Math.min(100, Math.max(0, Number(parsed.x)));
+    const y = Math.min(100, Math.max(0, Number(parsed.y)));
+    return {
+      x: Number.isFinite(x) ? x : BG_ADJUST_DEFAULT.x,
+      y: Number.isFinite(y) ? y : BG_ADJUST_DEFAULT.y,
+      fit: parsed.fit === "contain" ? "contain" : "cover",
+    };
+  } catch {
+    return { ...BG_ADJUST_DEFAULT };
+  }
+}
+
+function saveBgAdjust() {
+  const sceneIndex = bgAdjustSceneIndex();
+  if (sceneIndex === null) return;
+  try {
+    localStorage.setItem(bgAdjustKey(sceneIndex),
+      JSON.stringify(bgAdjust));
+  } catch {
+    // Private mode: the adjustment lasts the visit, like an
+    // unremembered background.
+  }
+}
+
+function applyBgAdjust() {
+  const page = document.querySelector(".page-play");
+  if (!page || !sceneBackground) return;
+  const pct = (v) => String(Math.round(v * 10) / 10);
+  page.style.backgroundSize =
+    "cover, " + (bgAdjust.fit === "contain" ? "contain" : "cover");
+  page.style.backgroundPosition =
+    "center, " + pct(bgAdjust.x) + "% " + pct(bgAdjust.y) + "%";
+}
+
+/* The drag math needs the image's natural size; probe it
+ * off the same object URL the background uses (the bytes
+ * are already local, so this resolves immediately). Until
+ * it lands, drags are inert rather than wrong. */
+function ensureBgDims(url) {
+  if (bgDimsUrl === url) return;
+  bgDims = null;
+  bgDimsUrl = url;
+  try {
+    const probe = new Image();
+    probe.onload = () => {
+      if (bgDimsUrl === url && probe.naturalWidth) {
+        bgDims = { w: probe.naturalWidth, h: probe.naturalHeight };
+      }
+    };
+    probe.src = url;
+  } catch {
+    // No Image constructor available: adjust still offers
+    // the fit choice; drags simply never engage.
+  }
+}
+
+function bgDragBy(dx, dy) {
+  if (!bgDims) return;
+  const vw = window.innerWidth || 0;
+  const vh = window.innerHeight || 0;
+  if (!vw || !vh) return;
+  const scale = bgAdjust.fit === "contain"
+    ? Math.min(vw / bgDims.w, vh / bgDims.h)
+    : Math.max(vw / bgDims.w, vh / bgDims.h);
+  const rangeX = vw - bgDims.w * scale;
+  const rangeY = vh - bgDims.h * scale;
+  if (rangeX) {
+    bgAdjust.x = Math.min(100, Math.max(0,
+      bgAdjust.x + (dx / rangeX) * 100));
+  }
+  if (rangeY) {
+    bgAdjust.y = Math.min(100, Math.max(0,
+      bgAdjust.y + (dy / rangeY) * 100));
+  }
+  applyBgAdjust();
+}
+
 function clearSceneImages() {
   for (const url of sceneImageSrc.values()) {
     URL.revokeObjectURL(url);
@@ -504,7 +637,74 @@ function clearSceneImages() {
   sceneImageSrc.clear();
 }
 
-async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
+/* Generation orientation (Hieu, Nov 8): tapping Generate
+ * on a paragraph first opens the shape chooser in the
+ * composer (play.html) - landscape or portrait, so a
+ * portrait image can fit a phone screen edge-to-edge as a
+ * background. One tap on a shape generates in that shape.
+ * The choice is remembered (writer.imageOrientation) and
+ * preselected next time; on a fresh profile a phone-width
+ * viewport preselects portrait, a wide one landscape. The
+ * backend maps the value to the bridge's width/height
+ * (1216x704 / 704x1216); the stored image's real dimensions
+ * govern how it displays. */
+const ORIENTATION_KEY = "writer.imageOrientation";
+let pendingGeneration = null; // { sceneIndex, beatIndex, btn, img }
+
+function defaultOrientation() {
+  try {
+    const saved = localStorage.getItem(ORIENTATION_KEY);
+    if (saved === "landscape" || saved === "portrait") {
+      return saved;
+    }
+  } catch {
+    // Storage unavailable: the viewport rule still applies.
+  }
+  return (window.innerWidth || 1024) <= 640
+    ? "portrait" : "landscape";
+}
+
+function openOrientationChooser(sceneIndex, beatIndex, btn, img) {
+  if (busy || !playthroughId) return;
+  pendingGeneration = { sceneIndex, beatIndex, btn, img };
+  syncOrientationChips();
+  el("orientation-chooser").hidden = false;
+}
+
+function closeOrientationChooser() {
+  pendingGeneration = null;
+  el("orientation-chooser").hidden = true;
+}
+
+function syncOrientationChips() {
+  const current = defaultOrientation();
+  for (const [id, value] of [
+    ["orientation-landscape", "landscape"],
+    ["orientation-portrait", "portrait"],
+  ]) {
+    const chip = el(id);
+    chip.classList.toggle("is-on", current === value);
+    chip.setAttribute("aria-pressed",
+      current === value ? "true" : "false");
+  }
+}
+
+function chooseOrientation(choice) {
+  if (!pendingGeneration) return;
+  const pending = pendingGeneration;
+  try {
+    localStorage.setItem(ORIENTATION_KEY, choice);
+  } catch {
+    // Unremembered is fine: the generation still honors
+    // this tap's shape.
+  }
+  closeOrientationChooser();
+  generateBeatImage(pending.sceneIndex, pending.beatIndex,
+    pending.btn, pending.img, choice);
+}
+
+async function generateBeatImage(sceneIndex, beatIndex, btn, img,
+    orientation) {
   if (busy || !playthroughId) return;
   const scene = scenes[sceneIndex];
   if (!scene) return;
@@ -535,7 +735,10 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img) {
       }
       btn.title = "Generating image…";
       btn.setAttribute("aria-label", "Generating image…");
-      const genRes = await apiFetch(base + "/image", { method: "POST" });
+      const genRes = await apiFetch(base + "/image", {
+        method: "POST",
+        body: { orientation: orientation || defaultOrientation() },
+      });
       scene.beat_images = scene.beat_images || {};
       scene.beat_images[String(beatIndex)] =
         scene.beat_images[String(beatIndex)] || {};
@@ -650,10 +853,12 @@ function renderScenes() {
         img.hidden = true;
       }
       // One image icon (Hieu, Nov 5), state-aware like the
-      // speaker beside it: no image yet -> tap generates;
-      // image exists -> tap sets it as the page background
-      // (the toggle shows it inline too); the current
-      // background's icon is filled and taps back to plain.
+      // speaker beside it: no image yet -> tap opens the
+      // shape chooser and generates in the picked shape
+      // (Hieu, Nov 8); image exists -> tap sets it as the
+      // page background (the toggle shows it inline too);
+      // the current background's icon is filled and taps
+      // back to plain.
       const imgBtn = document.createElement("button");
       imgBtn.type = "button";
       imgBtn.className = "scene-image-btn";
@@ -662,7 +867,7 @@ function renderScenes() {
       imgBtn.disabled = busy;
       imgBtn.addEventListener("click", () => {
         if (!beatImageState(scene, j).file) {
-          generateBeatImage(i, j, imgBtn, img);
+          openOrientationChooser(i, j, imgBtn, img);
         } else {
           toggleSceneBackground(i, j);
         }
@@ -1636,6 +1841,109 @@ el("play-menu-logout").addEventListener("click", () => {
   closePlayMenu();
   logout();
 });
+
+/* Background adjust controls (Hieu, Nov 8): the header icon
+ * toggles adjust mode; the bar's chips set the fit; Done
+ * (or the icon again, or Escape) leaves. While adjusting,
+ * play.css takes pointer events off the layout and header
+ * so a drag anywhere on the reading area is a drag of the
+ * image; the document-level handlers below still see the
+ * bar's own buttons first because their targets are inside
+ * the bar, which the pointerdown handler excludes. */
+const bgAdjustBtn = el("bg-adjust-btn");
+const bgAdjustBar = el("bg-adjust-bar");
+const bgFitFillBtn = el("bg-fit-fill");
+const bgFitFitBtn = el("bg-fit-fit");
+
+function syncBgAdjustControls() {
+  const fill = bgAdjust.fit !== "contain";
+  bgFitFillBtn.classList.toggle("is-on", fill);
+  bgFitFillBtn.setAttribute("aria-pressed",
+    fill ? "true" : "false");
+  bgFitFitBtn.classList.toggle("is-on", !fill);
+  bgFitFitBtn.setAttribute("aria-pressed",
+    !fill ? "true" : "false");
+  bgAdjustBtn.setAttribute("aria-pressed",
+    bgAdjusting ? "true" : "false");
+}
+
+function enterBgAdjust() {
+  if (!sceneBackground || bgAdjusting) return;
+  bgAdjusting = true;
+  document.querySelector(".page-play")
+    .classList.add("bg-adjusting");
+  bgAdjustBar.hidden = false;
+  ensureBgDims(sceneBackground.url);
+  syncBgAdjustControls();
+}
+
+function exitBgAdjust() {
+  if (!bgAdjusting) return;
+  bgAdjusting = false;
+  bgDragPoint = null;
+  document.querySelector(".page-play")
+    .classList.remove("bg-adjusting");
+  bgAdjustBar.hidden = true;
+  saveBgAdjust();
+  syncBgAdjustControls();
+}
+
+bgAdjustBtn.addEventListener("click", () => {
+  if (bgAdjusting) exitBgAdjust();
+  else enterBgAdjust();
+});
+el("bg-adjust-done").addEventListener("click", exitBgAdjust);
+bgFitFillBtn.addEventListener("click", () => {
+  bgAdjust.fit = "cover";
+  applyBgAdjust();
+  saveBgAdjust();
+  syncBgAdjustControls();
+});
+bgFitFitBtn.addEventListener("click", () => {
+  bgAdjust.fit = "contain";
+  applyBgAdjust();
+  saveBgAdjust();
+  syncBgAdjustControls();
+});
+document.addEventListener("pointerdown", (event) => {
+  if (!bgAdjusting) return;
+  const target = event.target;
+  if (target && typeof target.closest === "function" &&
+      target.closest("#bg-adjust-bar, #bg-adjust-btn")) {
+    return;
+  }
+  bgDragPoint = { x: event.clientX, y: event.clientY };
+});
+document.addEventListener("pointermove", (event) => {
+  if (!bgAdjusting || !bgDragPoint) return;
+  const dx = event.clientX - bgDragPoint.x;
+  const dy = event.clientY - bgDragPoint.y;
+  bgDragPoint = { x: event.clientX, y: event.clientY };
+  if (dx || dy) bgDragBy(dx, dy);
+  if (typeof event.preventDefault === "function") {
+    event.preventDefault();
+  }
+});
+document.addEventListener("pointerup", () => {
+  if (bgDragPoint) {
+    bgDragPoint = null;
+    saveBgAdjust();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") exitBgAdjust();
+});
+
+/* Orientation chooser controls (Hieu, Nov 8): a tap on a
+ * shape chip is the whole interaction - it remembers the
+ * shape, closes the chooser, and generates. Cancel just
+ * closes. */
+el("orientation-landscape").addEventListener("click",
+  () => chooseOrientation("landscape"));
+el("orientation-portrait").addEventListener("click",
+  () => chooseOrientation("portrait"));
+el("orientation-cancel").addEventListener("click",
+  closeOrientationChooser);
 
 async function init() {
   renderTopbar({
