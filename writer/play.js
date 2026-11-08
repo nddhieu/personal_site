@@ -960,6 +960,24 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
     btn.title = "Loading image…";
     btn.setAttribute("aria-label", "Loading image…");
     const blob = await waitForBeatImage(base);
+    if (!beatImageState(scene, beatIndex).file) {
+      // The async POST (202) never names the stored file,
+      // so record it locally in the backend's own derived
+      // form (<id>.scene-<s>.beat-<b>.png - the sidecar
+      // name is derived from id + indices only, never from
+      // stored state). Without this the local state keeps
+      // reading "no image" until the next full reload: the
+      // icon would stay in Generate state after a successful
+      // generation, the regenerate confirm could never be
+      // reached in-session, and the gallery would miss the
+      // photo. The blob above is the proof the file exists.
+      scene.beat_images = scene.beat_images || {};
+      scene.beat_images[String(beatIndex)] =
+        scene.beat_images[String(beatIndex)] || {};
+      scene.beat_images[String(beatIndex)].image_file =
+        playthroughId + ".scene-" + sceneIndex +
+        ".beat-" + beatIndex + ".png";
+    }
     const url = URL.createObjectURL(blob);
     const old = sceneImageSrc.get(key);
     if (old) URL.revokeObjectURL(old);
