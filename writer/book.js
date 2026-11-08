@@ -60,6 +60,9 @@ function fillCharRow(prefix, entry, imageValue) {
 
 function fill(book) {
   el("book-heading").textContent = book.title;
+  const hook = (book.hook_line || "").trim();
+  el("book-hook").textContent = hook;
+  el("book-hook").hidden = !hook;
   fillCharRow("mc", book.main_character || {},
     book.main_character_image);
   el("char-rows").hidden = false;
