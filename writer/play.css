@@ -733,6 +733,142 @@
   }
 }
 
+/* Composer column over a photo (Hieu, Nov 8): the reading
+ * column went white-over-scrim under .has-scene-bg, but the
+ * composer column kept the page theme - on a phone the fixed
+ * composer wrap paints the whole bottom band in
+ * --color-bg-primary and the composer card sits on it in
+ * --color-card-bg, so in the light theme the bottom chrome
+ * was a white slab clashing with the photo above it (Hieu's
+ * screenshot: white Pause/Stop/Mute band + white input card
+ * under photo prose). Over a photo the whole composer column
+ * takes the settings sheet's dark-glass treatment instead,
+ * in BOTH themes (the photo treatment has no light/dark
+ * variant): the wrap goes transparent so photo + scrim show
+ * through the transport row, and the floating cards - the
+ * composer, the suggest sheet, the orientation chooser, the
+ * bg-adjust bar - become dark frosted glass in the sheet's
+ * values (rgba(17,19,27,0.85) + blur(14px) + the sheet
+ * border) with light text and translucent chips. Pages with
+ * no background keep the theme surfaces exactly as before;
+ * every rule here is scoped to .has-scene-bg. */
+.page-play.has-scene-bg .composer-wrap {
+  background: transparent;
+  border-top-color: transparent;
+}
+.page-play.has-scene-bg .composer {
+  background: rgba(17, 19, 27, 0.85);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+}
+.page-play.has-scene-bg .composer textarea.input {
+  color: #f4f5fa;
+  caret-color: #f4f5fa;
+}
+.page-play.has-scene-bg .composer textarea::placeholder {
+  color: rgba(244, 245, 250, 0.5);
+}
+/* Composer-bar and transport controls as dark chips on the
+ * glass (the transport buttons are .tool-btn too, so one
+ * rule covers both rows). Send is the bar's primary action:
+ * re-asserted after the chip rule, which would otherwise
+ * wash out its accent fill. */
+.page-play.has-scene-bg .tool-btn,
+.page-play.has-scene-bg .voice-select select {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f4f5fa;
+}
+.page-play.has-scene-bg .send-btn {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+/* The Audio toggle keeps its state language on glass: off
+ * is a muted light, on is bold accent - the dark theme's
+ * sky, because the light theme's #0284c7 is too dark to
+ * read on the glass. */
+.page-play.has-scene-bg .audio-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: rgba(244, 245, 250, 0.7);
+}
+.page-play.has-scene-bg .audio-toggle.is-on {
+  color: #38bdf8;
+}
+/* Suggest sheet on glass: the sheet frosts like the
+ * composer; its cards and the Retry/Correct row become
+ * translucent chips with light text. */
+.page-play.has-scene-bg .suggest-sheet {
+  background: rgba(17, 19, 27, 0.85);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.35);
+}
+.page-play.has-scene-bg .suggest-sheet .suggestion-card {
+  background: rgba(255, 255, 255, 0.09);
+  color: #f4f5fa;
+}
+.page-play.has-scene-bg .suggest-sheet .btn-secondary {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f4f5fa;
+}
+.page-play.has-scene-bg .suggest-sheet .badge {
+  background-color: rgba(255, 255, 255, 0.14);
+  color: #f4f5fa;
+}
+/* Orientation chooser on glass (it only ever opens over
+ * the reading page, photo included). The preselected shape
+ * keeps its primary fill. */
+.page-play.has-scene-bg .orientation-chooser {
+  background: rgba(17, 19, 27, 0.85);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3);
+}
+.page-play.has-scene-bg .orientation-label {
+  color: rgba(244, 245, 250, 0.7);
+}
+.page-play.has-scene-bg .orientation-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f4f5fa;
+}
+.page-play.has-scene-bg .orientation-chip.is-on {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+/* Bg-adjust bar on glass: it only exists while a
+ * background is set, so it always floats over the photo.
+ * Fill/Fit's active chip and Done keep the primary fill. */
+.page-play.has-scene-bg .bg-adjust-bar {
+  background: rgba(17, 19, 27, 0.85);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border-color: rgba(255, 255, 255, 0.14);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+.page-play.has-scene-bg .bg-adjust-label {
+  color: rgba(244, 245, 250, 0.7);
+}
+.page-play.has-scene-bg .bg-fit-chip {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f4f5fa;
+}
+.page-play.has-scene-bg .bg-fit-chip.is-on,
+.page-play.has-scene-bg .bg-adjust-done {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
 /* Background adjust + generation orientation (Hieu, Nov 8).
  * The Adjust icon lives in the header beside the menu
  * button and exists only while a background does
