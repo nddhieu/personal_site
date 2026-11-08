@@ -1,0 +1,245 @@
+/* Persona page styles, scoped under .page-persona.
+ * Same brand tokens and page measure as the Profile page:
+ * the showcase (Emochi's persona screen) - hero portrait,
+ * thumbnail strip, name / age / characteristics - then the
+ * actions; the create / edit form below it swaps in place.
+ * The .persona-inuse-chip pill matches profile.css / play.css
+ * so "In Use" reads the same on every surface. */
+.page-persona {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+.page-persona .persona-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.page-persona .persona-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0.4rem 0 0.6rem;
+}
+.page-persona .persona-add-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--color-card-border);
+  background: var(--color-primary, #b45309);
+  color: #fff;
+  font-size: 1.45rem;
+  line-height: 1;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.page-persona .persona-intro,
+.page-persona .persona-note {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0 0 1rem;
+}
+
+/* Showcase hero: the persona's portrait, full width of the
+ * measure, face-weighted crop (portraits carry the face in
+ * the upper half by art direction). */
+.page-persona .persona-hero {
+  border-radius: 1.1rem;
+  overflow: hidden;
+  line-height: 0;
+  background: var(--color-primary-soft, rgba(127, 127, 127, 0.15));
+}
+.page-persona .persona-hero img {
+  width: 100%;
+  aspect-ratio: 4 / 3.4;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+.page-persona .persona-thumbs {
+  display: flex;
+  gap: 0.55rem;
+  margin: 0.7rem 0 0.4rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+.page-persona .persona-thumb {
+  position: relative;
+  width: 52px;
+  height: 66px;
+  border-radius: 0.55rem;
+  overflow: hidden;
+  border: 2px solid transparent;
+  padding: 0;
+  cursor: pointer;
+  flex-shrink: 0;
+  background: none;
+  line-height: 0;
+}
+.page-persona .persona-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+.page-persona .persona-thumb.is-selected {
+  border-color: var(--color-primary, #b45309);
+}
+.page-persona .persona-thumb-inuse {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: var(--color-primary, #b45309);
+  color: #fff;
+  font-size: 0.62rem;
+  line-height: 17px;
+  text-align: center;
+}
+.page-persona .persona-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin: 0.55rem 0 0.1rem;
+  flex-wrap: wrap;
+}
+.page-persona .persona-name {
+  font-family: var(--font-heading);
+  font-size: 1.35rem;
+  font-weight: 700;
+}
+.page-persona .persona-gender {
+  font-size: 1.05rem;
+  color: var(--color-text-muted);
+}
+.persona-inuse-chip {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary, #b45309);
+  color: #fff;
+}
+.page-persona .persona-age {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0.15rem 0 0;
+}
+.page-persona .persona-desc {
+  font-size: 0.98rem;
+  line-height: 1.5;
+  margin: 0.45rem 0 0;
+  white-space: pre-wrap;
+}
+.page-persona .persona-actions {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.page-persona .persona-actions .btn-primary {
+  flex: 1 1 10rem;
+}
+.page-persona .persona-delete-btn.is-armed {
+  background: rgba(190, 40, 40, 0.16);
+  border-color: rgba(190, 40, 40, 0.55);
+  color: #b91c1c;
+  font-weight: 600;
+}
+.page-persona .persona-empty-text {
+  line-height: 1.55;
+  margin: 0.4rem 0 1rem;
+}
+
+/* Create / edit form */
+.page-persona .persona-form-title {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.6rem 0 0.4rem;
+}
+.page-persona .persona-form-label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.92rem;
+  margin: 0.9rem 0 0.45rem;
+}
+.page-persona .persona-image-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.55rem;
+}
+.page-persona .persona-image-option {
+  position: relative;
+  border: 2px solid transparent;
+  border-radius: 0.7rem;
+  overflow: hidden;
+  padding: 0;
+  cursor: pointer;
+  background: none;
+  line-height: 0;
+}
+.page-persona .persona-image-option img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+.page-persona .persona-image-option.is-selected {
+  border-color: var(--color-primary, #b45309);
+}
+.page-persona .persona-image-label {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 0.5rem 0.3rem 0.28rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: #fff;
+  background: linear-gradient(transparent, rgba(5, 6, 10, 0.78));
+  text-align: center;
+}
+.page-persona .persona-gender-row {
+  display: flex;
+  gap: 0.5rem;
+}
+.page-persona .persona-gender-btn {
+  flex: 1 1 0;
+  padding: 0.55rem 0.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid var(--color-card-border);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
+.page-persona .persona-gender-btn.is-selected {
+  border-color: var(--color-primary, #b45309);
+  background: var(--color-primary-soft, rgba(180, 83, 9, 0.12));
+  font-weight: 700;
+}
+.page-persona .persona-form-actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+.page-persona textarea,
+.page-persona input[type="text"],
+.page-persona input[type="number"] {
+  width: 100%;
+  box-sizing: border-box;
+}

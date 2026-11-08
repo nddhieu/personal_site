@@ -24,6 +24,7 @@ import {
   getAvatar,
   avatarNode,
 } from "./js/avatars.js";
+import { personaImageSrc } from "./js/personas.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -124,6 +125,56 @@ async function choose(id) {
   }
 }
 
+/* The Persona entry row: the In Use persona's portrait +
+ * name when there is one; otherwise an invitation that still
+ * says how many personas exist. Persona data is best-effort
+ * here - the entry always links to the persona page, and a
+ * failed fetch just leaves the generic label (an older
+ * backend without the personas routes must not break the
+ * profile page). */
+async function renderPersonaEntry() {
+  const nameEl = el("persona-entry-name");
+  const subEl = el("persona-entry-sub");
+  const thumbEl = el("persona-entry-thumb");
+  const chipEl = el("persona-entry-chip");
+  let data;
+  try {
+    data = await apiFetch("/api/personas");
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      show("out");
+    }
+    return;
+  }
+  const personas = (data && data.personas) || [];
+  const active = personas.find((p) => p.id === data.active_persona_id);
+  thumbEl.innerHTML = "";
+  if (active) {
+    const src = personaImageSrc(active.image_id);
+    if (src) {
+      const img = document.createElement("img");
+      img.src = src;
+      img.alt = "";
+      thumbEl.append(img);
+    }
+    nameEl.textContent = active.name;
+    subEl.textContent =
+      "Age " + active.age + " · the character you play as";
+    chipEl.hidden = false;
+  } else if (personas.length) {
+    nameEl.textContent = "No persona in use";
+    subEl.textContent =
+      personas.length + (personas.length === 1 ? " persona" : " personas") +
+      " · tap to choose who you play as";
+    chipEl.hidden = true;
+  } else {
+    nameEl.textContent = "Create your persona";
+    subEl.textContent = "The character you play as in every story";
+    chipEl.hidden = true;
+  }
+}
+
 async function init() {
   renderTopbar();
   renderShell({ active: "profile" });
@@ -147,6 +198,7 @@ async function init() {
   renderHeader(me);
   renderGrid();
   show("in");
+  renderPersonaEntry();
 }
 
 init();

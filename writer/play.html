@@ -135,6 +135,20 @@
                  this button sends the turn. -->
             <button id="send-btn" data-testid="send-btn" class="tool-btn send-btn" type="button"
               aria-label="Send" title="Send"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button>
+            <!-- Persona chip (persona system): who this run is
+                 played as - the bound persona's portrait +
+                 first name, or the book's default player
+                 character. Tapping opens the persona sheet
+                 (below) to switch for this book. Compact by
+                 design: the bar is crowded, so the name is
+                 capped and ellipsized (see play.css). -->
+            <button id="persona-chip" data-testid="persona-chip" class="persona-chip" type="button"
+              aria-haspopup="dialog" aria-expanded="false" aria-controls="persona-sheet"
+              title="Choose who you play as">
+              <img id="persona-chip-img" data-testid="persona-chip-img" class="persona-chip-img" alt="" hidden>
+              <span id="persona-chip-initial" class="persona-chip-initial" aria-hidden="true"></span>
+              <span id="persona-chip-name" data-testid="persona-chip-name" class="persona-chip-name">Persona</span>
+            </button>
             <!-- Story settings (Hieu, Nov 8): ONE circular
                  icon-only button at the end of the composer
                  bar opens the settings sheet below - the book's
@@ -232,6 +246,30 @@
       </div>
       <div id="bible-summary"></div>
     </div>
+  </section>
+
+  <!-- Persona sheet (persona system): switch who THIS run is
+       played as, opened from the composer's persona chip. A
+       sibling of the settings sheet and styled from it (same
+       .settings-sheet / .settings-backdrop classes): the
+       reader's personas, the Book default row, and the manage
+       link to the persona page. Rows are built by play.js
+       from GET /api/personas each time the sheet opens -
+       personas are profile data, so the list is never cached
+       from an earlier visit. -->
+  <div id="persona-backdrop" data-testid="persona-backdrop" class="settings-backdrop" hidden></div>
+  <section id="persona-sheet" data-testid="persona-sheet" class="settings-sheet persona-sheet" role="dialog"
+    aria-modal="false" aria-label="Choose who you play as" hidden>
+    <header class="settings-head">
+      <h2 id="persona-sheet-title">Play as</h2>
+      <button id="persona-sheet-close" data-testid="persona-sheet-close" class="settings-close" type="button"
+        aria-label="Close persona picker" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    </header>
+    <p class="persona-sheet-note">The story is written for whoever you play as.</p>
+    <div id="persona-sheet-list" data-testid="persona-sheet-list" class="persona-sheet-list"></div>
+    <p id="persona-sheet-empty" class="persona-sheet-empty" hidden>No personas yet - create one and it can step into this story.</p>
+    <p id="persona-sheet-error" data-testid="persona-sheet-error" class="form-error" role="alert" hidden></p>
+    <a id="persona-sheet-manage" data-testid="persona-sheet-manage" class="persona-sheet-manage" href="./persona.html">Manage personas</a>
   </section>
 
   <p id="play-out" hidden>You are not signed in.
