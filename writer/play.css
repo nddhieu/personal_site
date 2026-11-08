@@ -110,12 +110,6 @@
   white-space: pre-wrap;
   max-width: 65ch;
 }
-.page-play .bible-box summary {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  cursor: pointer;
-  padding: 0.5rem 0;
-}
 .page-play .bible-list {
   display: grid;
   grid-template-columns: auto 1fr;
@@ -128,9 +122,6 @@
 .page-play .bible-list dd {
   margin: 0;
   color: var(--color-text-muted);
-}
-.page-play .bible-box {
-  margin-top: 1.5rem;
 }
 .page-play .pane-play {
   width: 340px;
@@ -665,8 +656,8 @@
  * the photo; thoughts step down to a lighter white; the
  * per-beat speaker/image chips become the reference app's
  * dark translucent circles with light glyphs. The header
- * title and the bible box sit over the same photo, so they
- * take the same treatment. Placed last so these rules win
+ * title sits over the same photo, so it takes the same
+ * treatment. Placed last so these rules win
  * their ties with the state rules above; the one state that
  * must survive - the filled "current background" image icon
  * - is re-asserted explicitly. */
@@ -681,13 +672,6 @@
 .page-play.has-scene-bg .play-topbar h1 {
   color: #fff;
   text-shadow: 0 1px 10px rgba(0, 0, 0, 0.5);
-}
-.page-play.has-scene-bg .bible-box {
-  color: #fff;
-  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.45);
-}
-.page-play.has-scene-bg .bible-list dd {
-  color: rgba(255, 255, 255, 0.78);
 }
 .page-play.has-scene-bg .turn-input-marker {
   color: rgba(255, 255, 255, 0.88);
@@ -717,7 +701,6 @@
   /* The background image drops out in print (above), so the
      white reading treatment must drop with it. */
   .page-play.has-scene-bg .prose,
-  .page-play.has-scene-bg .bible-box,
   .page-play.has-scene-bg .play-topbar h1 {
     color: #000;
     text-shadow: none;
@@ -1074,6 +1057,26 @@
    a full view with the background toggle. */
 .page-play .gallery-panel[hidden] {
   display: none;
+}
+/* Bible panel: the story bible summary inside the sheet,
+   behind the Bible tile. The sheet itself is the fixed dark
+   panel in BOTH themes, so the list takes the sheet's light
+   colors here (the base .bible-list dd rule uses the page
+   theme's muted color, which fails on this panel in light
+   theme). The sheet's own overflow scrolls the panel, like
+   the gallery panel. */
+.page-play .bible-panel[hidden] {
+  display: none;
+}
+.page-play .bible-panel .bible-list {
+  margin-top: 0.1rem;
+  color: #f4f5fa;
+}
+.page-play .bible-panel .bible-list dt {
+  color: #f4f5fa;
+}
+.page-play .bible-panel .bible-list dd {
+  color: rgba(244, 245, 250, 0.78);
 }
 .page-play .gallery-nav {
   display: flex;

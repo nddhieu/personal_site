@@ -1878,6 +1878,8 @@ el("play-menu-logout").addEventListener("click", () => {
  * works):
  *  - Images: a collage of the book's photos; opens the
  *    gallery (below).
+ *  - Bible: opens the bible panel (below) holding the story
+ *    bible summary that used to sit under the prose.
  *  - Diary: the same diary toggle #diary-btn drives, and
  *    the sheet closes (the panel lives behind it).
  *  - Theme: the same toggleTheme the header item calls; its
@@ -1901,10 +1903,12 @@ const settingsSheet = el("settings-sheet");
 const settingsBackdrop = el("settings-backdrop");
 const settingsTiles = el("settings-tiles");
 const galleryPanel = el("gallery-panel");
+const biblePanel = el("bible-panel");
 let galleryPhoto = null; // { sceneIndex, beatIndex, caption }
 
 function showSettingsTiles() {
   galleryPanel.hidden = true;
+  biblePanel.hidden = true;
   galleryPhoto = null;
   settingsTiles.hidden = false;
   el("settings-title").textContent = "Story settings";
@@ -2106,6 +2110,23 @@ async function openGallery() {
 }
 el("settings-tile-images").addEventListener("click", openGallery);
 el("gallery-back").addEventListener("click", showSettingsTiles);
+
+/* Story bible panel (Hieu, Nov 8): the Bible tile swaps the
+ * tiles for the bible panel, the same swap the gallery uses.
+ * The panel holds #bible-summary - the very element
+ * renderBible has always filled - so the summary content,
+ * its load/turn refreshes, and its styling hooks are all
+ * unchanged; only its home moved (it used to be a <details>
+ * block under the prose). Opening the sheet always lands on
+ * the tiles: showSettingsTiles hides this panel too. */
+function openBible() {
+  settingsTiles.hidden = true;
+  galleryPanel.hidden = true;
+  biblePanel.hidden = false;
+  el("settings-title").textContent = "Story bible";
+}
+el("settings-tile-bible").addEventListener("click", openBible);
+el("bible-back").addEventListener("click", showSettingsTiles);
 
 /* Background adjust controls (Hieu, Nov 8): the header icon
  * toggles adjust mode; the bar's chips set the fit; Done
