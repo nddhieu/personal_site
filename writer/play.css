@@ -1064,18 +1064,42 @@
    colors here (the base .bible-list dd rule uses the page
    theme's muted color, which fails on this panel in light
    theme). The sheet's own overflow scrolls the panel, like
-   the gallery panel. */
+   the gallery panel.
+   Layout (Hieu, Nov 8: the base two-column grid "is wasting
+   space and difficult to read" on a phone - labels held a
+   ~35% column while the prose squeezed into the rest):
+   inside the panel the list STACKS. Each dt becomes a
+   small muted section heading and its dd runs the full
+   panel width beneath it; a hairline divides sections
+   (none above the first). Panel-scoped only - the base
+   .bible-list rules above stay exactly as they are. */
 .page-play .bible-panel[hidden] {
   display: none;
 }
 .page-play .bible-panel .bible-list {
+  display: block;
   margin-top: 0.1rem;
   color: #f4f5fa;
 }
 .page-play .bible-panel .bible-list dt {
-  color: #f4f5fa;
+  margin-top: 0.65rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid rgba(244, 245, 250, 0.08);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+  color: rgba(244, 245, 250, 0.6);
+}
+.page-play .bible-panel .bible-list dt:first-of-type {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
 }
 .page-play .bible-panel .bible-list dd {
+  margin: 0.3rem 0 0;
+  line-height: 1.55;
   color: rgba(244, 245, 250, 0.78);
 }
 .page-play .gallery-nav {
