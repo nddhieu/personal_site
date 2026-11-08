@@ -506,6 +506,84 @@ async function restoreSceneBackground() {
   }
 }
 
+/* Auto-show stored beat images (Hieu, Nov 8): a beat whose
+ * image already exists server-side shows inline as soon as
+ * the page loads the playthrough - the reader who generated
+ * images, left, and came back sees the book exactly as they
+ * left it, no tap needed. The loader walks the scenes in
+ * story order and fetches each missing beat's blob (the
+ * same owner-only GET the background toggle uses) with at
+ * most three fetches in flight, then reveals that beat's
+ * <img> in place - no re-render, so the reading position
+ * never jumps. Beats already in sceneImageSrc (generated
+ * this visit, or the background restore, which runs first
+ * at load) are skipped, and the in-flight set keeps
+ * overlapping calls from fetching the same beat twice. A
+ * failed fetch is silent and leaves the slot hidden - the
+ * image icon still loads it on tap; a 401 signs out, like
+ * the other loaders here. Called explicitly after the
+ * initial load and after a completed turn, never from
+ * renderScenes, so re-renders stay free of network work. */
+const beatImageLoading = new Set();
+
+async function loadExistingBeatImages() {
+  if (!playthroughId) return;
+  const ptId = playthroughId;
+  const queue = [];
+  scenes.forEach((scene, i) => {
+    splitBeats(sceneText(scene)).forEach((_, j) => {
+      const key = beatKey(i, j);
+      if (sceneImageSrc.has(key) || beatImageLoading.has(key)) return;
+      if (beatImageState(scene, j).file) queue.push([i, j, key]);
+    });
+  });
+  let next = 0;
+  async function worker() {
+    while (next < queue.length) {
+      const [sceneIndex, beatIndex, key] = queue[next++];
+      beatImageLoading.add(key);
+      try {
+        const blob = await apiFetch(
+          beatImagePath(sceneIndex, beatIndex),
+          { response: "blob" },
+        );
+        // A reset swapped the playthrough mid-flight: these
+        // bytes belong to the old run, drop them.
+        if (playthroughId !== ptId) return;
+        const url = URL.createObjectURL(blob);
+        if (sceneImageSrc.has(key)) {
+          // Generated or restored while this fetch was in
+          // flight: that fresher copy wins, drop ours.
+          URL.revokeObjectURL(url);
+          continue;
+        }
+        sceneImageSrc.set(key, url);
+        const img = document.querySelector(
+          '[data-testid="scene-image-' + key + '"]',
+        );
+        if (img) {
+          img.src = url;
+          img.hidden = false;
+        }
+      } catch (err) {
+        if (err.status === 401) {
+          clearToken();
+          showSignedOut();
+          return;
+        }
+        // Silent per image: the slot stays hidden and the
+        // beat's icon still loads it on tap.
+      } finally {
+        beatImageLoading.delete(key);
+      }
+    }
+  }
+  const lanes = Math.min(3, queue.length);
+  const workers = [];
+  for (let k = 0; k < lanes; k++) workers.push(worker());
+  await Promise.all(workers);
+}
+
 /* Background adjust (Hieu, Nov 8): with a scene background
  * active, the reader can move the image and choose how it
  * fits the screen - Fill (cover: fills the screen, may
@@ -1432,6 +1510,10 @@ async function applyTurnResult(result, actionText, body) {
   }
   renderScenes();
   refreshRetryButton();
+  // A re-rendered book can hold stored images this visit
+  // has not loaded yet (e.g. a retry rewound to scenes
+  // pictured in an earlier session): fill them in.
+  loadExistingBeatImages();
   if (scene) {
     scrollToLatestScene();
     // The scene's text is complete: pre-generate its audio
@@ -2358,6 +2440,12 @@ async function init() {
     renderScenes();
     refreshRetryButton();
     await restoreSceneBackground();
+    // Stored beat images show on their own (see
+    // loadExistingBeatImages): after the background
+    // restore, so its beat is already in sceneImageSrc
+    // and the loader skips it. Not awaited - the images
+    // fill in as they arrive and never block reading.
+    loadExistingBeatImages();
     // Scene audio (T3): probe the relay once per load. When
     // it answers, pre-generate the newest scene's paragraphs
     // so its speaker buttons are ready; when it is down, the
