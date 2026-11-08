@@ -26,7 +26,12 @@ import {
   getAvatar,
   avatarNode,
 } from "./js/avatars.js";
-import { personaImageSrc } from "./js/personas.js";
+import {
+  applyPersonaImage,
+  personaHasCustomImage,
+  personaImageSrc,
+  personaImageURL,
+} from "./js/personas.js";
 import { getTheme, toggleTheme } from "./js/theme.js";
 import {
   renderTopbar,
@@ -1158,12 +1163,31 @@ function renderPersonaChip() {
   const initial = el("persona-chip-initial");
   const nameEl = el("persona-chip-name");
   if (playthroughPersona) {
-    const src = personaImageSrc(playthroughPersona.image_id);
-    img.hidden = !src;
+    const persona = playthroughPersona;
+    const src = personaImageSrc(persona.image_id);
+    const hasImage = !!src || personaHasCustomImage(persona);
+    img.hidden = !hasImage;
     if (src) img.src = src;
-    initial.hidden = !!src;
+    initial.hidden = hasImage;
     initial.textContent =
-      personaFirstName(playthroughPersona.name).charAt(0) || "P";
+      personaFirstName(persona.name).charAt(0) || "P";
+    if (personaHasCustomImage(persona)) {
+      // The uploaded photo paints over the library portrait
+      // when its fetch lands; if it fails, the portrait (or
+      // the initial, for an unknown library id) stays - and
+      // a persona switched mid-flight never gets painted.
+      personaImageURL(persona).then((url) => {
+        if (playthroughPersona !== persona) return;
+        if (url) {
+          img.src = url;
+          img.hidden = false;
+          initial.hidden = true;
+        } else if (!src) {
+          img.hidden = true;
+          initial.hidden = false;
+        }
+      });
+    }
     nameEl.textContent = personaFirstName(playthroughPersona.name);
     el("persona-chip").title =
       "Playing as " + playthroughPersona.name + " - switch persona";
@@ -1225,10 +1249,11 @@ function personaRow({ persona, isDefault }) {
   thumb.setAttribute("aria-hidden", "true");
   if (!isDefault) {
     const src = personaImageSrc(persona.image_id);
-    if (src) {
+    if (src || personaHasCustomImage(persona)) {
       const image = document.createElement("img");
       image.src = src;
       image.alt = "";
+      applyPersonaImage(image, persona);
       thumb.append(image);
     } else {
       thumb.textContent = personaFirstName(persona.name).charAt(0);

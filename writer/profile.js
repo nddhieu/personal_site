@@ -24,7 +24,7 @@ import {
   getAvatar,
   avatarNode,
 } from "./js/avatars.js";
-import { personaImageSrc } from "./js/personas.js";
+import { applyPersonaImage, personaImageSrc } from "./js/personas.js";
 
 const el = (id) => document.getElementById(id);
 
@@ -152,10 +152,11 @@ async function renderPersonaEntry() {
   thumbEl.innerHTML = "";
   if (active) {
     const src = personaImageSrc(active.image_id);
-    if (src) {
+    if (src || active.has_custom_image) {
       const img = document.createElement("img");
       img.src = src;
       img.alt = "";
+      applyPersonaImage(img, active);
       thumbEl.append(img);
     }
     nameEl.textContent = active.name;

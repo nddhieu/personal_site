@@ -198,6 +198,33 @@
 .page-persona .persona-image-option.is-selected {
   border-color: var(--color-primary, #b45309);
 }
+/* The upload tile: first in the portrait grid. Empty, it is
+   a dashed invitation the full height of a portrait tile;
+   with a photo it carries the photo like any other tile. */
+.page-persona .persona-upload-option {
+  aspect-ratio: 3 / 4;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border-style: dashed;
+  border-color: var(--color-card-border, #cbd5e1);
+}
+.page-persona .persona-upload-option.is-selected {
+  border-style: solid;
+}
+.page-persona .persona-upload-icon {
+  font-size: 1.55rem;
+  line-height: 1.2;
+}
+.page-persona .persona-upload-label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1.25;
+  padding: 0 0.4rem;
+  text-align: center;
+}
 .page-persona .persona-image-label {
   position: absolute;
   left: 0;

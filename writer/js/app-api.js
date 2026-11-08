@@ -43,7 +43,12 @@ export class ApiError extends Error {
 
 export async function apiFetch(path, options = {}) {
   const method = options.method || "GET";
-  const headers = { "Content-Type": "application/json" };
+  /* { formData } sends a multipart body (file uploads): the
+   * browser sets the Content-Type with the boundary itself,
+   * so the JSON header and stringification are skipped. */
+  const headers = options.formData
+    ? {}
+    : { "Content-Type": "application/json" };
   if (options.auth !== false) {
     const token = localStorage.getItem(TOKEN_KEY);
     if (token) headers.Authorization = "Bearer " + token;
@@ -53,7 +58,11 @@ export async function apiFetch(path, options = {}) {
     res = await fetch(API_BASE + path, {
       method,
       headers,
-      body: options.body === undefined ? undefined : JSON.stringify(options.body),
+      body: options.formData
+        ? options.formData
+        : options.body === undefined
+          ? undefined
+          : JSON.stringify(options.body),
     });
   } catch {
     throw new ApiError(
