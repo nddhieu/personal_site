@@ -12,7 +12,11 @@ import { getTheme, toggleTheme } from "./theme.js";
  * name (links home), optional Back link, theme toggle + Log out
  * on the right. The toggle flips the saved light/dark theme (see
  * theme.js) and its label names the theme it switches to.
- * Call with { backHref: "./book.html?id=..." } on book/play. */
+ * Call with { backHref: "./book.html?id=..." } on book/play.
+ * The play page also passes backIconOnly: its Back control is a
+ * left-arrow icon alone at the very start of the bar, no text
+ * label (phone space is tight - Hieu, Nov 7); backLabel is kept
+ * as the control's aria-label. */
 export function renderTopbar(options = {}) {
   const host = document.getElementById("app-topbar");
   if (!host) return;
@@ -27,8 +31,18 @@ export function renderTopbar(options = {}) {
     const back = document.createElement("a");
     back.className = "app-topbar-back";
     back.href = options.backHref;
-    back.textContent = options.backLabel || "Back";
-    host.append(back);
+    if (options.backIconOnly) {
+      back.classList.add("app-topbar-back-icon");
+      back.setAttribute("aria-label", options.backLabel || "Back");
+      back.setAttribute("title", options.backLabel || "Back");
+      back.innerHTML =
+        '<svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg>';
+      // First in the bar, ahead of the brand.
+      host.prepend(back);
+    } else {
+      back.textContent = options.backLabel || "Back";
+      host.append(back);
+    }
   }
   const spacer = document.createElement("span");
   spacer.className = "app-topbar-spacer";

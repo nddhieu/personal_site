@@ -65,6 +65,28 @@ body h2 {
   flex-shrink: 0;
 }
 
+/* Icon-only back control (play page, Hieu Nov 7): a left-arrow
+   glyph with no text label, first in the bar. The glyph is
+   small, so the hit area is padded out to a full tap target. */
+.app-topbar-back-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.5rem;
+  min-height: 2.5rem;
+}
+
+.app-topbar-back-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .app-topbar-spacer {
   flex: 1;
 }
