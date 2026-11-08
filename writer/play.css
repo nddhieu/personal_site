@@ -1080,6 +1080,9 @@
   align-items: center;
   margin-bottom: 0.7rem;
 }
+.page-play .gallery-nav[hidden] {
+  display: none;
+}
 .page-play .gallery-nav-btn {
   display: inline-flex;
   align-items: center;
