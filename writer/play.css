@@ -19,6 +19,65 @@
 .page-play .play-topbar h1 {
   margin: 0;
   font-size: 1.3rem;
+  min-width: 0;
+}
+/* Header menu (Hieu, Nov 7): one button in the title row holds
+   Diary / Reset story / Theme / Log out, reclaiming the row of
+   standalone buttons that used to sit under the header. The
+   panel anchors to the button's right edge and stays inside
+   the viewport on a 360px phone. */
+.page-play .play-menu-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.page-play .play-menu-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.45rem 0.6rem;
+}
+.page-play .play-menu-btn svg {
+  width: 1.25rem;
+  height: 1.25rem;
+  display: block;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.page-play .play-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  min-width: 11rem;
+  max-width: calc(100vw - 2rem);
+  padding: 0.35rem;
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 0.75rem;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+.page-play .play-menu[hidden] {
+  display: none;
+}
+.page-play .play-menu-item {
+  appearance: none;
+  background: none;
+  border: none;
+  border-radius: 0.5rem;
+  color: var(--color-text);
+  font: inherit;
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.page-play .play-menu-item:hover,
+.page-play .play-menu-item:focus-visible {
+  background: var(--color-primary-soft);
 }
 .page-play .play-layout {
   display: flex;

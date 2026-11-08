@@ -16,8 +16,23 @@
 <div class="page-play">
   <header class="play-topbar">
     <h1 id="book-title">Loading your story...</h1>
-    <button id="diary-btn" data-testid="diary-btn" class="btn btn-secondary" type="button">Diary</button>
-    <button id="reset-btn" data-testid="reset-btn" class="btn btn-secondary" type="button" aria-label="Reset the story and start over">Reset</button>
+    <!-- Header menu (Hieu, Nov 7): Diary, Reset story, Theme and
+         Log out used to be four standalone buttons eating a row
+         under this header (Diary + Reset here, Theme + Log out in
+         the shared topbar). They now live behind this one menu
+         button; the items keep the diary/reset ids so play.js's
+         handlers are unchanged, and init() removes the topbar's
+         Theme / Log out buttons on this page only. -->
+    <div id="play-menu-wrap" class="play-menu-wrap">
+      <button id="play-menu-btn" data-testid="play-menu-btn" class="btn btn-secondary play-menu-btn" type="button"
+        aria-haspopup="true" aria-expanded="false" aria-controls="play-menu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
+      <div id="play-menu" data-testid="play-menu" class="play-menu" role="menu" aria-label="Story menu" hidden>
+        <button id="diary-btn" data-testid="diary-btn" class="play-menu-item" type="button" role="menuitem">Diary</button>
+        <button id="reset-btn" data-testid="reset-btn" class="play-menu-item" type="button" role="menuitem" aria-label="Reset the story and start over">Reset story</button>
+        <button id="play-menu-theme" data-testid="play-menu-theme" class="play-menu-item" type="button" role="menuitem" aria-label="Switch color theme">Dark</button>
+        <button id="play-menu-logout" data-testid="play-menu-logout" class="play-menu-item" type="button" role="menuitem">Log out</button>
+      </div>
+    </div>
   </header>
   <div id="play-status" class="loading-row"><span class="spinner" aria-hidden="true"></span><span>Loading the book...</span></div>
 
