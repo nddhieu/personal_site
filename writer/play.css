@@ -813,6 +813,8 @@
 .page-play.bg-adjusting {
   touch-action: none;
   cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
 }
 .page-play.bg-adjusting:active {
   cursor: grabbing;
