@@ -23,7 +23,15 @@
  *
  * Portraits carry NO age label (Hieu, Nov 8): a persona's age
  * is whatever the reader enters in the form; the library must
- * not label or steer it. Tiles show gender only. */
+ * not label or steer it. Tiles show gender only.
+ *
+ * A persona can also carry the reader's OWN uploaded photo
+ * (persona.has_custom_image, set by POST
+ * /api/personas/{id}/image). The photo is served owner-only,
+ * so surfaces resolve it through personaImageURL below -
+ * the single resolver every persona face goes through. */
+
+import { apiFetch } from "./app-api.js";
 
 export const PERSONA_IMAGES = [
   { id: "m1", gender: "male", src: "./personas/m1.jpg" },
@@ -61,4 +69,61 @@ export function personaImageLabel(id) {
   const img = getPersonaImage(id);
   if (!img) return "";
   return img.gender === "male" ? "Male" : "Female";
+}
+
+/* ── Effective persona image ───────────────────────────────
+ * Custom photo first, library portrait as the fallback: when
+ * there is no upload, or its fetch fails, the library src is
+ * what renders - a surface must never show a broken image.
+ * Object URLs are cached per persona id for the page
+ * session; invalidatePersonaImage drops one after a
+ * re-upload or a switch back to the library. */
+const customImageURLs = new Map();
+
+export function personaHasCustomImage(persona) {
+  return !!(persona && persona.has_custom_image);
+}
+
+export async function personaImageURL(persona) {
+  if (personaHasCustomImage(persona)) {
+    if (!customImageURLs.has(persona.id)) {
+      customImageURLs.set(persona.id, (async () => {
+        try {
+          const blob = await apiFetch(
+            "/api/personas/" + encodeURIComponent(persona.id) + "/image",
+            { response: "blob" });
+          return URL.createObjectURL(blob);
+        } catch {
+          return null;
+        }
+      })());
+    }
+    const url = await customImageURLs.get(persona.id);
+    if (url) return url;
+  }
+  return personaImageSrc(persona && persona.image_id);
+}
+
+/* Paint a persona's face into an <img>: the library portrait
+ * paints synchronously (so a render never waits on the
+ * network), then the custom photo swaps in when its fetch
+ * lands. Resolves to the URL finally painted ("" when the
+ * persona has no usable image at all). */
+export async function applyPersonaImage(img, persona) {
+  if (!img || !persona) return "";
+  const library = personaImageSrc(persona.image_id);
+  if (library) img.src = library;
+  const url = await personaImageURL(persona);
+  if (url) img.src = url;
+  return url;
+}
+
+export function invalidatePersonaImage(personaId) {
+  const pending = customImageURLs.get(personaId);
+  if (pending) {
+    pending.then((url) => {
+      if (url) URL.revokeObjectURL(url);
+    });
+    customImageURLs.delete(personaId);
+  }
 }
