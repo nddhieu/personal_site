@@ -2028,6 +2028,7 @@ async function refreshSettingsCollage() {
 
 function openGalleryFull(photo, url) {
   galleryPhoto = photo;
+  el("gallery-nav").hidden = true;
   el("gallery-grid").hidden = true;
   el("gallery-empty").hidden = true;
   const full = el("gallery-full");
@@ -2055,6 +2056,7 @@ el("gallery-bg-btn").addEventListener("click", async () => {
 el("gallery-full-back").addEventListener("click", () => {
   galleryPhoto = null;
   el("gallery-full").hidden = true;
+  el("gallery-nav").hidden = false;
   el("gallery-grid").hidden = false;
 });
 
@@ -2063,6 +2065,7 @@ async function openGallery() {
   galleryPanel.hidden = false;
   el("settings-title").textContent = "Photos";
   el("gallery-full").hidden = true;
+  el("gallery-nav").hidden = false;
   galleryPhoto = null;
   const grid = el("gallery-grid");
   grid.innerHTML = "";
