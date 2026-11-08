@@ -143,13 +143,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Featured keeps its split layout: image left, copy right,
             // with the footer inside the copy column.
             return openTag + image
-                + '<span class="' + bodyClass + '">' + textHtml + footerHtml + '</span></button>';
+                + '<span class="' + bodyClass + '">' + textHtml + cardSourceHtml(article) + footerHtml + '</span></button>';
         }
         // Grid cards follow the Feed template: text first, then the
         // inset rounded image, then a quiet meta/footer row.
         return openTag
             + '<span class="' + bodyClass + '">' + textHtml + '</span>'
             + image
+            + cardSourceHtml(article)
             + footerHtml
             + '</button>';
     }
@@ -180,6 +181,21 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return '<p class="detail-source">Source: <a href="' + escapeHtml(sourceUrl) +
             '" target="_blank" rel="noopener noreferrer">' + sourceName + '</a></p>';
+    }
+
+    // Same source on the card grid, as a quiet one-line span. Older
+    // articles without a source_name get no line at all. The link opens
+    // in a new tab; the card click handlers ignore clicks on it so a
+    // tap on the source does not open the detail view.
+    function cardSourceHtml(article) {
+        if (!article.source_name) return '';
+        const sourceName = escapeHtml(article.source_name);
+        const sourceUrl = safeUrl(article.source_url);
+        const link = sourceUrl
+            ? '<a href="' + escapeHtml(sourceUrl) +
+              '" target="_blank" rel="noopener noreferrer">' + sourceName + '</a>'
+            : sourceName;
+        return '<span class="research-card-source">Source: ' + link + '</span>';
     }
 
     function detailHtml(article) {
@@ -299,11 +315,17 @@ document.addEventListener('DOMContentLoaded', () => {
                 featuredEl.innerHTML = '<span class="research-featured-label">Featured · Latest research</span>' +
                     cardHtml(articles[0], true);
                 featuredEl.querySelectorAll('.research-card').forEach(card =>
-                    card.addEventListener('click', () => openDetail(card.dataset.slug, card)));
+                    card.addEventListener('click', (event) => {
+                        if (event.target.closest('a')) return;
+                        openDetail(card.dataset.slug, card);
+                    }));
             }
             gridEl.innerHTML = articles.map(article => cardHtml(article, false)).join('');
             gridEl.querySelectorAll('.research-card').forEach(card =>
-                card.addEventListener('click', () => openDetail(card.dataset.slug, card)));
+                card.addEventListener('click', (event) => {
+                    if (event.target.closest('a')) return;
+                    openDetail(card.dataset.slug, card);
+                }));
             applyFilter('all');
         })
         .catch(err => {
