@@ -703,6 +703,26 @@ function chooseOrientation(choice) {
     pending.btn, pending.img, choice);
 }
 
+/* Poll GET /image (blob) until the beat image exists, or the wait
+ * runs out. The backend generates async (Hieu Nov 8): POST /image
+ * returns 202 at once and the file lands ~2 min later, so a single
+ * long request from a phone drops. A 404 means "not ready yet";
+ * any other error is thrown. */
+async function waitForBeatImage(base, timeoutMs = 300000, stepMs = 5000) {
+  const started = Date.now();
+  for (;;) {
+    try {
+      return await apiFetch(base + "/image", { response: "blob" });
+    } catch (err) {
+      if (err.status !== 404) throw err;
+      if (Date.now() - started > timeoutMs) {
+        throw new Error("Image generation timed out. Please try again.");
+      }
+      await new Promise((resolve) => setTimeout(resolve, stepMs));
+    }
+  }
+}
+
 async function generateBeatImage(sceneIndex, beatIndex, btn, img,
     orientation) {
   if (busy || !playthroughId) return;
@@ -735,19 +755,32 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
       }
       btn.title = "Generating image…";
       btn.setAttribute("aria-label", "Generating image…");
-      const genRes = await apiFetch(base + "/image", {
-        method: "POST",
-        body: { orientation: orientation || defaultOrientation() },
-      });
-      scene.beat_images = scene.beat_images || {};
-      scene.beat_images[String(beatIndex)] =
-        scene.beat_images[String(beatIndex)] || {};
-      scene.beat_images[String(beatIndex)].image_file =
-        genRes.image_file;
+      try {
+        const genRes = await apiFetch(base + "/image", {
+          method: "POST",
+          body: { orientation: orientation || defaultOrientation() },
+        });
+        if (genRes.image_file) {
+          scene.beat_images = scene.beat_images || {};
+          scene.beat_images[String(beatIndex)] =
+            scene.beat_images[String(beatIndex)] || {};
+          scene.beat_images[String(beatIndex)].image_file =
+            genRes.image_file;
+        }
+        // 202 (generating) carries no file yet; the poll below
+        // waits for it to land.
+      } catch (err) {
+        // The POST dropped (phone network). The server may have
+        // started the job before the connection fell, so fall
+        // through to polling for the finished file instead of
+        // failing at once. A real error (not a network drop)
+        // still throws here.
+        if (err.status !== 0) throw err;
+      }
     }
     btn.title = "Loading image…";
     btn.setAttribute("aria-label", "Loading image…");
-    const blob = await apiFetch(base + "/image", { response: "blob" });
+    const blob = await waitForBeatImage(base);
     const url = URL.createObjectURL(blob);
     const old = sceneImageSrc.get(key);
     if (old) URL.revokeObjectURL(old);
