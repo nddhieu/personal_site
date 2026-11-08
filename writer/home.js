@@ -97,6 +97,10 @@ function playsLabel(count) {
 }
 
 function premiseOf(book) {
+  /* The book's hook line wins when it carries one: a one-line
+   * pitch written to pull the reader in, not a prose excerpt. */
+  const hook = (book.hook_line || "").trim();
+  if (hook) return hook;
   const text = (book.opening_scene || "").trim();
   if (!text) return (book.style && book.style.tone) || "";
   return text.length > 160 ? text.slice(0, 157).trimEnd() + "..." : text;
@@ -294,18 +298,21 @@ function isNewBook(book) {
   return t !== null && Date.now() - t < 7 * 24 * 3600 * 1000;
 }
 
-/* Cover: the real cover_image when the API returns one. Without
- * one (every book today), the grid card gets a designed typographic
- * cover — genre in small caps, the title set in the heading font,
- * a "with <characters>" line — instead of a bare letter tile; the
+/* Cover: the card's face is the main character's portrait
+ * when the book carries one (Emochi cards are character-first:
+ * the character is the hook), else the real cover_image. With
+ * neither, the grid card gets a designed typographic cover —
+ * genre in small caps, the title set in the heading font, a
+ * "with <characters>" line — instead of a bare letter tile; the
  * small thumbs (ranking rows) keep the initial. */
 function coverThumb(book, className, variant) {
   const cover = document.createElement("div");
   cover.className = className;
-  if (book.cover_image) {
+  const face = book.main_character_image || book.cover_image;
+  if (face) {
     const img = document.createElement("img");
     img.className = "explore-cover-img";
-    img.src = book.cover_image;
+    img.src = face;
     img.alt = "";
     cover.append(img);
     return cover;

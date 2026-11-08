@@ -21,6 +21,13 @@
   margin: 0;
   font-size: 1.5rem;
 }
+/* The book's hook line under the title: the same one-liner
+   the Explore card pitches with, in the page's quiet voice. */
+.page-book .book-hook {
+  margin: 0.5rem 0 0;
+  font-style: italic;
+  opacity: 0.75;
+}
 .page-book label {
   display: block;
   margin: 0.75rem 0;
