@@ -20,7 +20,12 @@
  * below only cover the time before the first turn lands. */
 
 import { apiFetch, API_BASE, TOKEN_KEY, ApiError } from "./js/app-api.js";
-import { getToken, clearToken, logout } from "./js/app-auth.js";
+import { getToken, getMe, clearToken, logout } from "./js/app-auth.js";
+import {
+  DEFAULT_AVATAR_ID,
+  getAvatar,
+  avatarNode,
+} from "./js/avatars.js";
 import { getTheme, toggleTheme } from "./js/theme.js";
 import {
   renderTopbar,
@@ -1028,6 +1033,44 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
   }
 }
 
+/* User-input marker face (Hieu, Nov 8): the player's chosen
+ * avatar from the library (js/avatars.js), replacing the pencil
+ * glyph the marker used to show. The pick comes from
+ * GET /api/auth/me, fetched in parallel at init — rendering
+ * never waits on it: markers paint with the default avatar
+ * (wanderer) right away and swap in place when /me resolves.
+ * A failed fetch simply leaves the default. */
+let userAvatarId = DEFAULT_AVATAR_ID;
+
+function paintMarkerAvatar(marker) {
+  const avatar = getAvatar(userAvatarId);
+  const disc = avatarNode(avatar.id);
+  // The button carries the accessible name ("Your input for
+  // this scene: ..."); the disc inside is decorative.
+  disc.removeAttribute("role");
+  disc.removeAttribute("aria-label");
+  disc.setAttribute("aria-hidden", "true");
+  marker.textContent = "";
+  marker.append(disc);
+  marker.title = "Your input · " + avatar.label;
+}
+
+function applyUserAvatarToMarkers() {
+  document
+    .querySelectorAll(".turn-input-marker")
+    .forEach((marker) => paintMarkerAvatar(marker));
+}
+
+async function loadUserAvatar() {
+  try {
+    const me = await getMe();
+    userAvatarId = getAvatar(me && me.avatar_id).id;
+  } catch {
+    /* Keep the default avatar; the markers already show it. */
+  }
+  applyUserAvatarToMarkers();
+}
+
 function renderScenes() {
   const prose = el("prose");
   prose.innerHTML = "";
@@ -1043,7 +1086,7 @@ function renderScenes() {
       marker.setAttribute("aria-expanded", String(expanded));
       marker.setAttribute("aria-label",
         "Your input for this scene: " + action);
-      marker.textContent = "\u270e";
+      paintMarkerAvatar(marker);
       const input = document.createElement("div");
       input.className = "turn-input";
       input.dataset.testid = "input-text-" + key;
@@ -2523,6 +2566,9 @@ async function init() {
     showSignedOut();
     return;
   }
+  // The player's avatar for the input markers: fetched in
+  // parallel, never blocking the book load (see loadUserAvatar).
+  loadUserAvatar();
   try {
     book = await apiFetch("/api/books/" + encodeURIComponent(BOOK_ID));
   } catch (err) {
