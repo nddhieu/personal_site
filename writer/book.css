@@ -61,14 +61,13 @@
   font-weight: 600;
   padding: 0 0.5rem;
 }
-/* Locked-character rows on the book page (Hieu, Nov 8):
-   the main character - and the antagonist, when the bible
-   carries one - presented with their portrait as a round
-   avatar. .char-avatar is deliberately page-agnostic: the
-   reading view's Character rows (Milu) reuse the same
-   class and markup. The crop is face-weighted
-   (object-position toward the top) because the portraits
-   compose the face in the upper third. */
+/* Main-character row on the book page (Hieu, Nov 8):
+   the book's main character presented with their portrait
+   as a round avatar. .char-avatar is deliberately
+   page-agnostic: the reading view's Character rows (Milu)
+   reuse the same class and markup. The crop is
+   face-weighted (object-position toward the top) because
+   the portraits compose the face in the upper third. */
 .char-rows {
   display: flex;
   flex-direction: column;
