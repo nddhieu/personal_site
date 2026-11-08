@@ -629,6 +629,17 @@
   cursor: wait;
   opacity: 0.6;
 }
+/* Hieu, Nov 8: while an image generates (prompt + ComfyUI can
+ * take ~2 min), the icon must visibly run, not just dim - the
+ * old opacity-only state read as dead on the phone. The icon
+ * spins until generateBeatImage clears is-generating. */
+@keyframes scene-image-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.page-play .scene-image-btn.is-generating svg {
+  animation: scene-image-spin 1s linear infinite;
+}
 .page-play .scene-image-btn:disabled {
   cursor: default;
   box-shadow: none;
