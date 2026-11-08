@@ -6,7 +6,7 @@
  * with the edited fields in place, so untouched fields survive
  * by construction. Join navigates to the play screen. */
 
-import { apiFetch, API_BASE } from "./js/app-api.js";
+import { apiFetch } from "./js/app-api.js";
 import { getToken, clearToken } from "./js/app-auth.js";
 import { renderTopbar, friendlyError } from "./js/app-ui.js";
 import { renderShell } from "./js/shell.js";
@@ -25,18 +25,15 @@ function setStatusError(msg) {
   status.hidden = false;
 }
 
-/* Book-image fields resolve in two shapes (same rule as
- * play.js): writer-relative paths for statically hosted art
- * ("characters/<id>.jpg") and API-relative paths for the
- * portraits the backend generates at book-creation time
- * ("api/books/<id>/main-character-image"). */
+/* A book-image field is a writer-relative path to
+ * statically hosted art ("characters/<id>.jpg", the
+ * covers' shape); blank means the book has none. */
 function resolveBookImageUrl(value) {
   const v = String(value || "").trim();
-  if (!v) return null;
-  return v.startsWith("api/") ? API_BASE + "/" + v : v;
+  return v || null;
 }
 
-/* One locked character's presentation row: round avatar
+/* The main character's presentation row: round avatar
  * (the portrait when one is attached, the name's initial
  * until then), name, and a one-line trait from the sheet.
  * The .char-avatar markup + class is the seam the reading
@@ -65,11 +62,6 @@ function fill(book) {
   el("book-heading").textContent = book.title;
   fillCharRow("mc", book.main_character || {},
     book.main_character_image);
-  const antagonist = book.antagonist;
-  el("ant-row").hidden = !antagonist;
-  if (antagonist) {
-    fillCharRow("ant", antagonist, book.antagonist_image);
-  }
   el("char-rows").hidden = false;
   document.title = book.title + " - Story Realm";
   el("f-title").value = book.title || "";

@@ -469,16 +469,12 @@ function applySceneBackground(key, url, remember = true) {
  * portrait behaves exactly as before. */
 const BOOK_DEFAULT_BG_KEY = "book:main-character";
 
-/* Book-image fields resolve in two shapes: writer-relative
- * paths for statically hosted art ("characters/<id>.jpg",
- * the covers' shape) and API-relative paths for portraits
- * the backend generated at book-creation time
- * ("api/books/<id>/main-character-image"), which resolve
- * against the same API base every fetch uses. */
+/* A book-image field is a writer-relative path to
+ * statically hosted art ("characters/<id>.jpg", the
+ * covers' shape); blank means the book has none. */
 function resolveBookImageUrl(value) {
   const v = String(value || "").trim();
-  if (!v) return null;
-  return v.startsWith("api/") ? API_BASE + "/" + v : v;
+  return v || null;
 }
 
 function bookDefaultBackgroundUrl() {
