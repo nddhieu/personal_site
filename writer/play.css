@@ -376,9 +376,22 @@
     left: 0;
     right: 0;
     bottom: 0;
-    padding: 0.5rem 0.75rem 0.6rem;
+    padding: 0.5rem 0.75rem 0;
     background: var(--color-bg-primary);
     border-top: 1px solid var(--color-card-border);
+  }
+  /* Docked input (Hieu, Nov 8): the composer card itself is
+     the screen's bottom edge - no strip of page or photo
+     shows below it. The wrap's bottom padding moves onto
+     the card, extended by the safe-area inset, so the
+     card's own surface (theme card, or photo-mode glass
+     under .has-scene-bg) fills the gesture strip on phones
+     that have one; the bottom corners square off against
+     the edge while the top corners keep the radius. */
+  .page-play .composer {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
   }
 }
 
@@ -888,7 +901,9 @@
   position: fixed;
   left: 50%;
   transform: translateX(-50%);
-  bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  /* Bottom clears the docked mobile composer (wrap is
+     ~5.85rem tall at rest) by ~0.5rem. */
+  bottom: calc(6.35rem + env(safe-area-inset-bottom, 0px));
   z-index: 55;
   display: flex;
   align-items: center;
