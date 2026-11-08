@@ -20,7 +20,8 @@
  * below only cover the time before the first turn lands. */
 
 import { apiFetch, API_BASE, TOKEN_KEY, ApiError } from "./js/app-api.js";
-import { getToken, clearToken } from "./js/app-auth.js";
+import { getToken, clearToken, logout } from "./js/app-auth.js";
+import { getTheme, toggleTheme } from "./js/theme.js";
 import {
   renderTopbar,
   showLoading,
@@ -1476,7 +1477,7 @@ function disarmReset() {
     resetTimer = null;
   }
   const btn = el("reset-btn");
-  btn.textContent = "Reset";
+  btn.textContent = "Reset story";
   btn.setAttribute("aria-label", "Reset the story and start over");
   btn.classList.remove("confirming");
 }
@@ -1563,6 +1564,7 @@ el("reset-btn").addEventListener("click", () => {
   if (busy) return;
   if (!playthroughId) {
     showPlayNote("No story in progress to reset.");
+    closePlayMenu();
     return;
   }
   if (!resetArmed) {
@@ -1575,7 +1577,61 @@ el("reset-btn").addEventListener("click", () => {
     resetTimer = setTimeout(disarmReset, 5000);
     return;
   }
+  closePlayMenu();
   resetPlaythrough();
+});
+
+/* Play header menu (Hieu, Nov 7): the Diary / Reset story /
+ * Theme / Log out items in the dropdown behind #play-menu-btn.
+ * Diary and Reset keep their ids, so the handlers above (diary
+ * toggle, two-step reset confirm, setBusy's reset disable) work
+ * unchanged; Theme and Log out call the same helpers the shared
+ * topbar used (theme.js toggleTheme - its label names the theme
+ * it switches to, exactly like the old topbar button - and
+ * app-auth logout). init() removes the topbar's own Theme /
+ * Log out buttons on this page only; renderTopbar itself is
+ * shared and untouched, so home/book/create keep theirs.
+ * Close rule: choosing an item closes the menu, except Reset's
+ * first (arming) tap, which keeps the menu open so the confirm
+ * text on the item itself stays visible as the second tap's
+ * target - the two-step confirm works exactly as it did when
+ * Reset was a standalone button. The menu also closes on an
+ * outside tap and on Escape. */
+const playMenuEl = el("play-menu");
+const playMenuBtn = el("play-menu-btn");
+const playMenuWrap = el("play-menu-wrap");
+function setPlayMenu(open) {
+  playMenuEl.hidden = !open;
+  playMenuBtn.setAttribute("aria-expanded", open ? "true" : "false");
+}
+function closePlayMenu() {
+  setPlayMenu(false);
+}
+playMenuBtn.addEventListener("click", () => {
+  setPlayMenu(playMenuEl.hidden);
+});
+document.addEventListener("click", (event) => {
+  if (!playMenuEl.hidden && !playMenuWrap.contains(event.target)) {
+    closePlayMenu();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closePlayMenu();
+});
+el("diary-btn").addEventListener("click", closePlayMenu);
+function syncPlayMenuTheme() {
+  el("play-menu-theme").textContent =
+    getTheme() === "dark" ? "Light" : "Dark";
+}
+el("play-menu-theme").addEventListener("click", () => {
+  toggleTheme();
+  syncPlayMenuTheme();
+  closePlayMenu();
+});
+syncPlayMenuTheme();
+el("play-menu-logout").addEventListener("click", () => {
+  closePlayMenu();
+  logout();
 });
 
 async function init() {
@@ -1583,6 +1639,13 @@ async function init() {
     backHref: "./book.html?id=" + encodeURIComponent(BOOK_ID),
     backLabel: "Back to book",
   });
+  // Theme + Log out live in this page's header menu (above), so
+  // the shared topbar's copies come off the play page; the other
+  // pages keep theirs.
+  for (const cls of ["app-topbar-theme", "app-topbar-logout"]) {
+    const btn = document.querySelector("#app-topbar ." + cls);
+    if (btn) btn.remove();
+  }
   if (!getToken()) {
     showSignedOut();
     return;
