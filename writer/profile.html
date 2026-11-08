@@ -34,6 +34,21 @@
       <h2 class="profile-picker-title">Choose your avatar</h2>
       <div id="avatar-grid" class="avatar-grid" role="group" aria-label="Choose your avatar"></div>
       <p id="profile-error" class="form-error" role="alert" hidden></p>
+
+      <!-- Persona entry (persona system): the character you
+           play as. The row shows the In Use persona (portrait
+           + name) or the create prompt; the persona page
+           itself does the creating / selecting. -->
+      <h2 class="profile-picker-title">Your persona</h2>
+      <a id="persona-entry" data-testid="persona-entry" class="persona-entry" href="./persona.html">
+        <span id="persona-entry-thumb" class="persona-entry-thumb" aria-hidden="true"></span>
+        <span class="persona-entry-text">
+          <span id="persona-entry-name" class="persona-entry-name">Persona</span>
+          <span id="persona-entry-sub" class="persona-entry-sub">The character you play as</span>
+        </span>
+        <span id="persona-entry-chip" class="persona-inuse-chip" hidden>In Use</span>
+        <span class="persona-entry-chevron" aria-hidden="true">›</span>
+      </a>
     </div>
 
     <div id="state-out" hidden>

@@ -26,6 +26,7 @@ import {
   getAvatar,
   avatarNode,
 } from "./js/avatars.js";
+import { personaImageSrc } from "./js/personas.js";
 import { getTheme, toggleTheme } from "./js/theme.js";
 import {
   renderTopbar,
@@ -1114,6 +1115,226 @@ async function loadUserAvatar() {
   applyUserAvatarToMarkers();
 }
 
+/* Persona chip + sheet (persona system): who THIS run is
+ * played as. Server truth only - the binding lives on the
+ * playthrough (state.persona_id / state.persona from the
+ * playthrough payload) and the chip renders from it; there
+ * is deliberately no localStorage copy, so two tabs can
+ * never disagree about who a run is played as.
+ *
+ * With no persona bound, the run plays the book's own
+ * default player character: the supporting-cast member the
+ * book format labels its co-lead (Accad in Accad & Kim) -
+ * the same slot bible_state.player_character_index finds
+ * server-side, so the chip names exactly who the pipeline
+ * will substitute a persona for. */
+let playthroughPersonaId = null;
+let playthroughPersona = null;
+let personaSwitching = false;
+
+function bookDefaultPlayer() {
+  const cast = (book && book.supporting_cast) || [];
+  const coLead = cast.find((m) =>
+    String((m && m.role) || "").trim().toLowerCase()
+      .startsWith("co-lead"));
+  const member = coLead || cast[0] || null;
+  return member && member.name
+    ? { name: member.name }
+    : { name: "Book default" };
+}
+
+function personaFirstName(name) {
+  return String(name || "").trim().split(/\s+/)[0] || "";
+}
+
+function setPlaythroughPersona(state) {
+  playthroughPersonaId = (state && state.persona_id) || null;
+  playthroughPersona = (state && state.persona) || null;
+  renderPersonaChip();
+}
+
+function renderPersonaChip() {
+  const img = el("persona-chip-img");
+  const initial = el("persona-chip-initial");
+  const nameEl = el("persona-chip-name");
+  if (playthroughPersona) {
+    const src = personaImageSrc(playthroughPersona.image_id);
+    img.hidden = !src;
+    if (src) img.src = src;
+    initial.hidden = !!src;
+    initial.textContent =
+      personaFirstName(playthroughPersona.name).charAt(0) || "P";
+    nameEl.textContent = personaFirstName(playthroughPersona.name);
+    el("persona-chip").title =
+      "Playing as " + playthroughPersona.name + " - switch persona";
+  } else {
+    const fallback = bookDefaultPlayer();
+    img.hidden = true;
+    initial.hidden = false;
+    initial.textContent = fallback.name.charAt(0) || "B";
+    nameEl.textContent = personaFirstName(fallback.name) ||
+      fallback.name;
+    el("persona-chip").title =
+      "Playing as " + fallback.name +
+      " (this book's default) - switch persona";
+  }
+}
+
+/* ----- persona sheet ----- */
+
+const personaSheet = el("persona-sheet");
+const personaBackdrop = el("persona-backdrop");
+const personaChip = el("persona-chip");
+
+function personaSheetError(message) {
+  const box = el("persona-sheet-error");
+  box.textContent = message || "";
+  box.hidden = !message;
+}
+
+function setPersonaSheet(open) {
+  personaSheet.hidden = !open;
+  personaBackdrop.hidden = !open;
+  personaChip.setAttribute(
+    "aria-expanded", open ? "true" : "false");
+  if (open) {
+    personaSheetError("");
+    loadPersonaSheetList();
+  }
+}
+
+function closePersonaSheet() {
+  setPersonaSheet(false);
+}
+
+function personaRow({ persona, isDefault }) {
+  const row = document.createElement("button");
+  row.type = "button";
+  row.className = "persona-row";
+  const current = isDefault
+    ? !playthroughPersonaId
+    : !!persona && persona.id === playthroughPersonaId;
+  if (current) row.classList.add("is-current");
+  row.setAttribute("aria-pressed", current ? "true" : "false");
+  row.dataset.testid = isDefault
+    ? "persona-row-default"
+    : "persona-row-" + persona.id;
+  if (!isDefault) row.dataset.personaId = persona.id;
+  const thumb = document.createElement("span");
+  thumb.className = "persona-row-thumb";
+  thumb.setAttribute("aria-hidden", "true");
+  if (!isDefault) {
+    const src = personaImageSrc(persona.image_id);
+    if (src) {
+      const image = document.createElement("img");
+      image.src = src;
+      image.alt = "";
+      thumb.append(image);
+    } else {
+      thumb.textContent = personaFirstName(persona.name).charAt(0);
+    }
+  } else {
+    thumb.textContent = bookDefaultPlayer().name.charAt(0) || "B";
+  }
+  const text = document.createElement("span");
+  text.className = "persona-row-text";
+  const name = document.createElement("span");
+  name.className = "persona-row-name";
+  name.textContent = isDefault
+    ? bookDefaultPlayer().name
+    : persona.name;
+  const sub = document.createElement("span");
+  sub.className = "persona-row-sub";
+  sub.textContent = isDefault
+    ? "Book default"
+    : "Age " + persona.age;
+  text.append(name, sub);
+  row.append(thumb, text);
+  if (current) {
+    const check = document.createElement("span");
+    check.className = "persona-row-check";
+    check.setAttribute("aria-hidden", "true");
+    check.textContent = "✓";
+    row.append(check);
+  }
+  row.addEventListener("click", () => {
+    switchPlaythroughPersona(isDefault ? null : persona.id);
+  });
+  return row;
+}
+
+async function loadPersonaSheetList() {
+  const list = el("persona-sheet-list");
+  list.innerHTML = "";
+  list.append(personaRow({ isDefault: true }));
+  el("persona-sheet-empty").hidden = true;
+  let data = null;
+  try {
+    data = await apiFetch("/api/personas");
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      showSignedOut();
+      closePersonaSheet();
+      return;
+    }
+    personaSheetError(friendlyError(err));
+    return;
+  }
+  const personas = (data && data.personas) || [];
+  for (const persona of personas) {
+    list.append(personaRow({ persona, isDefault: false }));
+  }
+  el("persona-sheet-empty").hidden = personas.length > 0;
+  el("persona-sheet-manage").textContent = personas.length
+    ? "Manage personas"
+    : "Create a persona";
+}
+
+async function switchPlaythroughPersona(personaId) {
+  if (personaSwitching) return;
+  if ((personaId || null) === playthroughPersonaId) {
+    closePersonaSheet();
+    return;
+  }
+  personaSwitching = true;
+  personaSheetError("");
+  try {
+    const state = await apiFetch(
+      "/api/playthroughs/" + encodeURIComponent(playthroughId) +
+        "/persona",
+      { method: "PATCH", body: { persona_id: personaId } });
+    setPlaythroughPersona(state);
+    closePersonaSheet();
+    showPlayNote(playthroughPersona
+      ? "Now playing as " + playthroughPersona.name + "."
+      : "Back to " + bookDefaultPlayer().name +
+        ", this book's default.");
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      showSignedOut();
+      closePersonaSheet();
+      return;
+    }
+    // A failed switch changes nothing: the sheet stays open
+    // on the old binding and says why.
+    personaSheetError(friendlyError(err));
+  } finally {
+    personaSwitching = false;
+  }
+}
+
+personaChip.addEventListener("click", () => {
+  setPersonaSheet(personaSheet.hidden);
+});
+el("persona-sheet-close").addEventListener(
+  "click", closePersonaSheet);
+personaBackdrop.addEventListener("click", closePersonaSheet);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closePersonaSheet();
+});
+
 function renderScenes() {
   const prose = el("prose");
   prose.innerHTML = "";
@@ -1366,6 +1587,7 @@ function setBusy(b) {
   el("continue-btn").disabled = b;
   el("action-input").disabled = b;
   el("suggest-toggle").disabled = b;
+  el("persona-chip").disabled = b;
   el("reset-btn").disabled = b;
   el("settings-tile-restart").disabled = b;
   el("send-btn").disabled = b;
@@ -2066,6 +2288,9 @@ async function resetPlaythrough() {
     scenes = state.scenes && state.scenes.length
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
+    // The fresh run binds the reader's In Use persona (or
+    // none) server-side; the chip follows the new state.
+    setPlaythroughPersona(state);
     clearSceneBackground();
     clearSceneImages();
     audioPlayer.reset();
@@ -2680,6 +2905,7 @@ async function init() {
     scenes = state.scenes && state.scenes.length
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
+    setPlaythroughPersona(state);
     renderScenes();
     refreshRetryButton();
     await restoreSceneBackground();

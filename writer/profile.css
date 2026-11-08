@@ -142,3 +142,73 @@
 .page-profile .form-error {
   margin-top: 0.8rem;
 }
+
+/* Persona entry (persona system): one tappable row to the
+ * persona page - portrait thumb, who is In Use, chevron. The
+ * .persona-inuse-chip is the shared "In Use" pill; persona.css
+ * and play.css carry the same pill for their surfaces. */
+.page-profile .persona-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.8rem;
+  border: 1px solid var(--color-card-border);
+  border-radius: 0.9rem;
+  background: var(--color-card-bg, transparent);
+  color: inherit;
+  text-decoration: none;
+}
+.page-profile .persona-entry-thumb {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--color-primary-soft, rgba(127, 127, 127, 0.18));
+  display: inline-grid;
+  place-items: center;
+}
+.page-profile .persona-entry-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 22%;
+  display: block;
+}
+.page-profile .persona-entry-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.page-profile .persona-entry-name {
+  font-weight: 600;
+  font-size: 1.02rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-profile .persona-entry-sub {
+  color: var(--color-text-muted);
+  font-size: 0.86rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.page-profile .persona-entry-chevron {
+  color: var(--color-text-muted);
+  font-size: 1.4rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+.persona-inuse-chip {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary, #b45309);
+  color: #fff;
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Persona - Story Realm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./shell.css">
+<link rel="stylesheet" href="./persona.css">
+</head>
+<body class="light-theme">
+<div id="app-topbar"></div>
+<nav id="app-shell" aria-label="Primary"></nav>
+<main class="page-persona">
+  <section class="persona-feed">
+    <div class="persona-head-row">
+      <h1 class="persona-title">Persona</h1>
+      <button id="persona-add" data-testid="persona-add" class="persona-add-btn" type="button"
+        aria-label="Create a new persona" title="New persona">+</button>
+    </div>
+    <p class="persona-intro">The character you play as. Pick one In Use and new
+      stories are written for them; each book can still be switched from its
+      composer.</p>
+
+    <div id="state-loading" class="loading-row">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading your personas...</span>
+    </div>
+
+    <div id="state-out" hidden>
+      <p>You are not signed in.</p>
+      <p id="out-note" class="persona-note" hidden></p>
+      <a class="btn btn-primary" href="./login.html">Sign in</a>
+    </div>
+
+    <div id="state-main" hidden>
+      <!-- Showcase (Emochi's persona screen): the selected
+           persona large, thumbnails to switch, Select makes
+           it the In Use one. -->
+      <div id="persona-showcase">
+        <div class="persona-hero">
+          <img id="persona-hero-img" data-testid="persona-hero-img" alt="">
+        </div>
+        <div id="persona-thumbs" class="persona-thumbs" role="group" aria-label="Your personas"></div>
+        <p class="persona-name-row">
+          <span id="persona-name" class="persona-name"></span>
+          <span id="persona-gender" class="persona-gender" aria-hidden="true"></span>
+          <span id="persona-inuse" class="persona-inuse-chip" hidden>In Use</span>
+        </p>
+        <p id="persona-age" class="persona-age"></p>
+        <p id="persona-desc" class="persona-desc"></p>
+        <p id="persona-error" class="form-error" role="alert" hidden></p>
+        <div class="persona-actions">
+          <button id="persona-select" data-testid="persona-select" class="btn btn-primary" type="button">Select</button>
+          <button id="persona-edit" data-testid="persona-edit" class="btn" type="button">Edit</button>
+          <button id="persona-delete" data-testid="persona-delete" class="btn persona-delete-btn" type="button">Delete</button>
+        </div>
+      </div>
+
+      <div id="persona-empty" hidden>
+        <p class="persona-empty-text">No personas yet. Create one and the
+          stories you start will be written for that character - their name,
+          their age, their traits.</p>
+        <button id="persona-create-first" data-testid="persona-create-first" class="btn btn-primary" type="button">Create your first persona</button>
+      </div>
+
+      <!-- Create / edit: portrait from the library, then who
+           this person is. Characteristics are free text - the
+           traits the story is written from. -->
+      <form id="persona-form" hidden>
+        <h2 id="persona-form-title" class="persona-form-title">New persona</h2>
+        <p class="persona-form-label">Portrait</p>
+        <div id="persona-image-grid" class="persona-image-grid" role="group" aria-label="Choose a portrait"></div>
+        <div class="form-group">
+          <label for="pf-name">Name</label>
+          <input id="pf-name" data-testid="pf-name" type="text" maxlength="60" autocomplete="off"
+            placeholder="e.g. Mara Voss">
+        </div>
+        <div class="form-group">
+          <span class="persona-form-label" id="pf-gender-label">Gender</span>
+          <div class="persona-gender-row" role="group" aria-labelledby="pf-gender-label">
+            <button type="button" class="persona-gender-btn" data-testid="pf-gender-male" data-gender="male" aria-pressed="false">Male</button>
+            <button type="button" class="persona-gender-btn" data-testid="pf-gender-female" data-gender="female" aria-pressed="false">Female</button>
+            <button type="button" class="persona-gender-btn" data-testid="pf-gender-other" data-gender="other" aria-pressed="false">Other</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="pf-age">Age</label>
+          <input id="pf-age" data-testid="pf-age" type="number" min="18" max="99" inputmode="numeric"
+            placeholder="e.g. 34">
+        </div>
+        <div class="form-group">
+          <label for="pf-desc">Characteristics</label>
+          <textarea id="pf-desc" data-testid="pf-desc" rows="4" maxlength="1000"
+            placeholder="Who is this person? Their traits, their past, their secret..."></textarea>
+        </div>
+        <p id="persona-form-error" class="form-error" role="alert" hidden></p>
+        <div class="persona-form-actions">
+          <button id="persona-form-cancel" class="btn" type="button">Cancel</button>
+          <button id="persona-form-save" data-testid="persona-form-save" class="btn btn-primary" type="submit">Save persona</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</main>
+<script type="module" src="./persona.js"></script>
+</body>
+</html>
