@@ -105,18 +105,31 @@ const AUDIO_BUTTON_TITLES = {
 
 /* One image icon per paragraph (Hieu, Nov 5), replacing the
  * "Generate image" / "Use as background" text buttons. The
- * icon is state-aware, mirroring syncAudioButton: no image
- * yet -> it generates one; an image exists -> it sets that
- * image as the page background; the current background's
- * icon is filled and offers Clear instead. The label always
- * names the action a tap will take. */
+ * icon is state-aware, mirroring syncAudioButton, in the
+ * four states Hieu named (Nov 8):
+ *   1. no image yet - muted outline; a tap opens the shape
+ *      chooser in generate mode.
+ *   2. generating - the icon spins (is-generating) for the
+ *      whole prompt + generation run.
+ *   3. an image exists and is shown - full-strength icon; a
+ *      tap opens the same chooser in regenerate mode, where
+ *      the label asks "Regenerate this image?" and a shape
+ *      chip is the yes.
+ *   4. the regenerate reuses the stored prompt and replaces
+ *      the image in place; a page background pointing at it
+ *      follows the new image.
+ * Setting/clearing the page background no longer lives on
+ * this icon - it moved to the gallery's full view (Nov 8).
+ * The is-background class stays as a passive marker so the
+ * reader can still see which beat's image is behind the
+ * page. The label always names the action a tap will take. */
 const IMAGE_SVG =
   '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="M21 15l-5-5L5 21"/></svg>';
 
 const IMAGE_BUTTON_TITLES = {
   generate: "Generate image",
-  background: "Use as background",
-  clear: "Clear background",
+  regenerate: "Regenerate image",
+  background: "Regenerate image (current background)",
 };
 
 function imageButtonState(scene, beatIndex) {
@@ -124,13 +137,13 @@ function imageButtonState(scene, beatIndex) {
   const key = beatKey(
     scenes.indexOf(scene), beatIndex);
   return sceneBackground && sceneBackground.key === key
-    ? "clear" : "background";
+    ? "background" : "regenerate";
 }
 
 function syncImageButton(btn, scene, beatIndex) {
   const state = imageButtonState(scene, beatIndex);
   btn.classList.toggle("has-image", state !== "generate");
-  btn.classList.toggle("is-background", state === "clear");
+  btn.classList.toggle("is-background", state === "background");
   btn.innerHTML = IMAGE_SVG;
   btn.title = IMAGE_BUTTON_TITLES[state];
   btn.setAttribute("aria-label",
@@ -789,8 +802,8 @@ function clearSceneImages() {
   beatImageLoading.clear();
 }
 
-/* Generation orientation (Hieu, Nov 8): tapping Generate
- * on a paragraph first opens the shape chooser in the
+/* Generation orientation (Hieu, Nov 8): tapping the image
+ * icon on a paragraph first opens the shape chooser in the
  * composer (play.html) - landscape or portrait, so a
  * portrait image can fit a phone screen edge-to-edge as a
  * background. One tap on a shape generates in that shape.
@@ -799,9 +812,15 @@ function clearSceneImages() {
  * viewport preselects portrait, a wide one landscape. The
  * backend maps the value to the bridge's width/height
  * (1216x704 / 704x1216); the stored image's real dimensions
- * govern how it displays. */
+ * govern how it displays. The chooser has two modes: a
+ * beat with no image opens it in generate mode (label
+ * "Image shape"); a beat that already has an image opens
+ * it in regenerate mode, where the label asks the confirm
+ * question "Regenerate this image?" and the shape chips
+ * double as the yes (Cancel = no, nothing changes). */
 const ORIENTATION_KEY = "writer.imageOrientation";
-let pendingGeneration = null; // { sceneIndex, beatIndex, btn, img }
+let pendingGeneration = null;
+// pendingGeneration: { sceneIndex, beatIndex, btn, img, mode }
 
 function defaultOrientation() {
   try {
@@ -816,9 +835,12 @@ function defaultOrientation() {
     ? "portrait" : "landscape";
 }
 
-function openOrientationChooser(sceneIndex, beatIndex, btn, img) {
+function openOrientationChooser(sceneIndex, beatIndex, btn, img,
+    mode) {
   if (busy || !playthroughId) return;
-  pendingGeneration = { sceneIndex, beatIndex, btn, img };
+  pendingGeneration = { sceneIndex, beatIndex, btn, img, mode };
+  el("orientation-label").textContent =
+    mode === "regenerate" ? "Regenerate this image?" : "Image shape";
   syncOrientationChips();
   el("orientation-chooser").hidden = false;
 }
@@ -852,7 +874,8 @@ function chooseOrientation(choice) {
   }
   closeOrientationChooser();
   generateBeatImage(pending.sceneIndex, pending.beatIndex,
-    pending.btn, pending.img, choice);
+    pending.btn, pending.img, choice,
+    pending.mode === "regenerate");
 }
 
 /* Poll GET /image (blob) until the beat image exists, or the wait
@@ -876,7 +899,7 @@ async function waitForBeatImage(base, timeoutMs = 300000, stepMs = 5000) {
 }
 
 async function generateBeatImage(sceneIndex, beatIndex, btn, img,
-    orientation) {
+    orientation, regenerate = false) {
   if (busy || !playthroughId) return;
   const scene = scenes[sceneIndex];
   if (!scene) return;
@@ -890,10 +913,14 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
     "/scenes/" + sceneIndex + "/beats/" + beatIndex;
   try {
     const state = beatImageState(scene, beatIndex);
-    if (!state.file || shown) {
-      // Generation (a shown image re-generates from the same
+    if (!state.file || shown || regenerate) {
+      // Generation (a shown image, or a tap confirmed in the
+      // chooser's regenerate mode, re-generates from the same
       // prompt; a first generate writes the prompt first
       // unless the backend already stored one for the beat).
+      // `regenerate` also covers a stored image the reader
+      // has not scrolled to yet: the confirm means make a
+      // NEW image, not just reveal the stored one.
       if (!state.prompt) {
         btn.title = "Writing image prompt…";
         btn.setAttribute("aria-label", "Writing image prompt…");
@@ -942,8 +969,8 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
     // A regenerate replaces the object URL: a background
     // pointing at the revoked one would go blank, so it
     // follows the new URL. The icon then re-syncs to the
-    // beat's new state (it now offers Use as background, or
-    // Clear if it is the background) - renderScenes is not
+    // beat's state (Regenerate; the filled marker stays if
+    // this beat is the background) - renderScenes is not
     // re-run here.
     if (sceneBackground && sceneBackground.key === key) {
       applySceneBackground(key, url);
@@ -1037,13 +1064,14 @@ function renderScenes() {
       } else {
         img.hidden = true;
       }
-      // One image icon (Hieu, Nov 5), state-aware like the
-      // speaker beside it: no image yet -> tap opens the
-      // shape chooser and generates in the picked shape
-      // (Hieu, Nov 8); image exists -> tap sets it as the
-      // page background (the toggle shows it inline too);
-      // the current background's icon is filled and taps
-      // back to plain.
+      // One image icon (Hieu, Nov 5; four-state model
+      // Nov 8): no image yet -> tap opens the shape chooser
+      // in generate mode; an image exists -> tap opens the
+      // same chooser in regenerate mode, where the label
+      // asks "Regenerate this image?" and a shape chip is
+      // the yes. Background set/clear lives in the gallery
+      // full view, not on this icon; the current
+      // background's icon is filled as a passive marker.
       const imgBtn = document.createElement("button");
       imgBtn.type = "button";
       imgBtn.className = "scene-image-btn";
@@ -1051,11 +1079,9 @@ function renderScenes() {
       syncImageButton(imgBtn, scene, j);
       imgBtn.disabled = busy;
       imgBtn.addEventListener("click", () => {
-        if (!beatImageState(scene, j).file) {
-          openOrientationChooser(i, j, imgBtn, img);
-        } else {
-          toggleSceneBackground(i, j);
-        }
+        openOrientationChooser(i, j, imgBtn, img,
+          beatImageState(scene, j).file
+            ? "regenerate" : "generate");
       });
       // Speaker button (stream-audio v1, T3): one small
       // control per paragraph, inline at its start beside
@@ -2414,8 +2440,9 @@ document.addEventListener("keydown", (event) => {
 
 /* Orientation chooser controls (Hieu, Nov 8): a tap on a
  * shape chip is the whole interaction - it remembers the
- * shape, closes the chooser, and generates. Cancel just
- * closes. */
+ * shape, closes the chooser, and generates (in regenerate
+ * mode the chip doubles as the confirm). Cancel just
+ * closes, changing nothing. */
 el("orientation-landscape").addEventListener("click",
   () => chooseOrientation("landscape"));
 el("orientation-portrait").addEventListener("click",
