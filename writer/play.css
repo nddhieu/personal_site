@@ -586,11 +586,16 @@
 /* One image icon per paragraph (Hieu, Nov 5), replacing the
  * "Generate image" / "Use as background" text buttons: a
  * small round icon beside the speaker icon, in the same
- * idiom. Its action is state-aware (generate when the beat
- * has no image, set/clear background once it has one) and
- * its aria-label/title always names that action. The
- * is-background state is filled so the reader can see which
- * beat's image is behind the page. */
+ * idiom. Its styles are the four states Hieu named (Nov 8):
+ * no image = muted outline (base rule); generating = dimmed
+ * + spinning (is-generating, below); image shown = full
+ * color + a soft primary tint (has-image) so a pictured
+ * paragraph reads at a glance; and is-background stays the
+ * full primary fill, now a passive marker for which beat's
+ * image is behind the page (background set/clear moved to
+ * the gallery full view - a tap on this icon now opens the
+ * regenerate confirm instead). Its aria-label/title always
+ * names the action a tap will take. */
 .page-play .scene-image-btn {
   display: inline-flex;
   align-items: center;
@@ -619,6 +624,14 @@
 }
 .page-play .scene-image-btn.has-image {
   color: var(--color-text);
+  /* Soft primary tint (Hieu, Nov 8): state 3 (image exists
+   * and is shown) must read clearly against state 1's plain
+   * muted outline, without becoming the full primary fill
+   * of the is-background marker below - the tint is the
+   * theme's selected/active wash, an order weaker. Under a
+   * page background the has-scene-bg chip treatment later
+   * in this file still wins, as before. */
+  background: var(--color-primary-soft);
 }
 .page-play .scene-image-btn.is-background {
   background: var(--color-primary);

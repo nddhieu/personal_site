@@ -88,7 +88,7 @@
           </div>
         </div>
         <!-- Generation orientation (Hieu, Nov 8): tapping
-             Generate on a paragraph first opens this shape
+             a paragraph's image icon first opens this shape
              chooser - landscape or portrait, so a portrait
              image can fit the phone screen edge-to-edge as a
              background. One tap on a shape generates in that
@@ -96,9 +96,13 @@
              (writer.imageOrientation); the remembered shape
              is the preselected one next time, and on a fresh
              profile a phone-width viewport preselects
-             portrait, a wide one landscape. -->
+             portrait, a wide one landscape. For a beat that
+             already has an image the same chooser opens in
+             regenerate mode: play.js swaps the label to
+             "Regenerate this image?" and a shape chip is the
+             confirm (Cancel changes nothing). -->
         <div id="orientation-chooser" data-testid="orientation-chooser" class="orientation-chooser" hidden>
-          <span class="orientation-label">Image shape</span>
+          <span id="orientation-label" class="orientation-label">Image shape</span>
           <button id="orientation-landscape" data-testid="orientation-landscape" class="orientation-chip" type="button"
             aria-pressed="false" aria-label="Generate a landscape image" title="Landscape"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="6" width="19" height="12" rx="2"/></svg><span>Landscape</span></button>
           <button id="orientation-portrait" data-testid="orientation-portrait" class="orientation-chip" type="button"
