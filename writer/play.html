@@ -47,10 +47,11 @@
   <div id="play-layout" class="play-layout" hidden>
     <section class="pane-read">
       <article id="prose" class="prose" data-testid="prose"></article>
-      <details class="bible-box">
-        <summary data-testid="bible-toggle">Story bible summary</summary>
-        <div id="bible-summary"></div>
-      </details>
+      <!-- The story bible summary used to sit here as a
+           <details> block under the prose; it moved into the
+           settings sheet's Bible panel (Hieu, Nov 8) so the
+           reading column is prose only. #bible-summary lives
+           in #bible-panel below; renderBible is unchanged. -->
     </section>
 
     <aside class="pane-play">
@@ -172,8 +173,9 @@
        label under it in the reference; here the label sits
        above its visual, matching the reference tiles). V1
        tiles only, every one working: Images (the book's photo
-       gallery), Diary, Theme, Restart. The gallery swaps the
-       tiles for its own panel inside the same sheet. -->
+       gallery), Bible (the story bible summary), Diary, Theme,
+       Restart. The gallery and the bible each swap the tiles
+       for their own panel inside the same sheet. -->
   <div id="settings-backdrop" data-testid="settings-backdrop" class="settings-backdrop" hidden></div>
   <section id="settings-sheet" data-testid="settings-sheet" class="settings-sheet" role="dialog"
     aria-modal="false" aria-label="Story settings" hidden>
@@ -186,6 +188,10 @@
       <button id="settings-tile-images" data-testid="settings-tile-images" class="settings-tile" type="button">
         <span class="settings-tile-label">Images</span>
         <span class="settings-tile-visual settings-collage" id="settings-collage" aria-hidden="true"></span>
+      </button>
+      <button id="settings-tile-bible" data-testid="settings-tile-bible" class="settings-tile" type="button">
+        <span class="settings-tile-label">Bible</span>
+        <span class="settings-tile-visual" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 6c-1.5-1.6-3.6-2-5.5-2H5v14h1.5c1.9 0 4 .4 5.5 2 1.5-1.6 3.6-2 5.5-2H19V4h-1.5c-1.9 0-4 .4-5.5 2z"/><path d="M12 6v14"/></svg></span>
       </button>
       <button id="settings-tile-diary" data-testid="settings-tile-diary" class="settings-tile" type="button">
         <span class="settings-tile-label">Diary</span>
@@ -216,6 +222,18 @@
         <p id="gallery-full-caption" class="gallery-full-caption"></p>
         <button id="gallery-bg-btn" data-testid="gallery-bg-btn" class="gallery-bg-btn" type="button">Use as background</button>
       </div>
+    </div>
+    <!-- Story bible panel (Hieu, Nov 8): the bible summary
+         that used to sit under the prose, now inside the
+         sheet behind the Bible tile, following the gallery
+         panel's swap pattern. #bible-summary keeps its id,
+         so renderBible fills it exactly as before. -->
+    <div id="bible-panel" data-testid="bible-panel" class="bible-panel" hidden>
+      <div class="gallery-nav">
+        <button id="bible-back" data-testid="bible-back" class="gallery-nav-btn" type="button"
+          aria-label="Back to settings"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 5l-7 7 7 7"/></svg><span>Settings</span></button>
+      </div>
+      <div id="bible-summary"></div>
     </div>
   </section>
 
