@@ -507,81 +507,148 @@ async function restoreSceneBackground() {
 }
 
 /* Auto-show stored beat images (Hieu, Nov 8): a beat whose
- * image already exists server-side shows inline as soon as
- * the page loads the playthrough - the reader who generated
- * images, left, and came back sees the book exactly as they
- * left it, no tap needed. The loader walks the scenes in
- * story order and fetches each missing beat's blob (the
- * same owner-only GET the background toggle uses) with at
- * most three fetches in flight, then reveals that beat's
- * <img> in place - no re-render, so the reading position
- * never jumps. Beats already in sceneImageSrc (generated
- * this visit, or the background restore, which runs first
- * at load) are skipped, and the in-flight set keeps
- * overlapping calls from fetching the same beat twice. A
- * failed fetch is silent and leaves the slot hidden - the
- * image icon still loads it on tap; a 401 signs out, like
+ * image already exists server-side shows inline on its own
+ * - the reader who generated images, left, and came back
+ * sees the book exactly as they left it, no tap needed.
+ * The loading is feed-style, like scrolling a social feed:
+ * the reader lands at the LAST scene, so that scene's
+ * pictured beats load first, immediately; every earlier
+ * scene's pictured beats load lazily as the reader scrolls
+ * toward them (either direction), watched by one
+ * IntersectionObserver with a generous margin so the image
+ * is ready before its paragraph arrives. Nothing bulk-
+ * fetches the whole book on load. Each load fetches the
+ * beat's blob (the same owner-only GET the background
+ * toggle uses) and reveals the beat's <img> in place - no
+ * re-render, so the reading position never jumps. Beats
+ * already in sceneImageSrc (generated this visit, or the
+ * background restore, which runs first at load) are
+ * skipped, as are beats in flight or already failed this
+ * session: a failed fetch is silent, leaves the slot
+ * hidden, and is not retried on later scroll passes - the
+ * image icon still loads it on tap. A 401 signs out, like
  * the other loaders here. Called explicitly after the
  * initial load and after a completed turn, never from
- * renderScenes, so re-renders stay free of network work. */
+ * renderScenes, so re-renders stay free of network work;
+ * without IntersectionObserver (very old browser) every
+ * pictured beat loads immediately instead. */
 const beatImageLoading = new Set();
+const beatImageFailed = new Set();
+const beatImageObserved = new Map(); // key -> wrap element
+const beatImageTargets = new Map(); // wrap element -> { key, load }
+let beatImageObserver = null;
 
-async function loadExistingBeatImages() {
+function beatImageObserverInstance() {
+  if (beatImageObserver) return beatImageObserver;
+  beatImageObserver = new IntersectionObserver(onBeatImagesNear, {
+    rootMargin: "700px 0px",
+  });
+  return beatImageObserver;
+}
+
+function onBeatImagesNear(entries) {
+  for (const entry of entries) {
+    if (!entry.isIntersecting) continue;
+    const info = beatImageTargets.get(entry.target);
+    if (!info) continue;
+    beatImageObserverInstance().unobserve(entry.target);
+    beatImageObserved.delete(info.key);
+    beatImageTargets.delete(entry.target);
+    info.load();
+  }
+}
+
+/* Fetch one beat's stored image and reveal it inline.
+ * Fire-and-forget: every outcome is handled inside, so
+ * callers never await it and reading is never blocked. */
+async function loadBeatImage(sceneIndex, beatIndex, key, ptId) {
+  if (beatImageLoading.has(key) || sceneImageSrc.has(key)) return;
+  beatImageLoading.add(key);
+  try {
+    const blob = await apiFetch(
+      beatImagePath(sceneIndex, beatIndex),
+      { response: "blob" },
+    );
+    // A reset swapped the playthrough mid-flight: these
+    // bytes belong to the old run, drop them.
+    if (playthroughId !== ptId) return;
+    const url = URL.createObjectURL(blob);
+    if (sceneImageSrc.has(key)) {
+      // Generated or restored while this fetch was in
+      // flight: that fresher copy wins, drop ours.
+      URL.revokeObjectURL(url);
+      return;
+    }
+    sceneImageSrc.set(key, url);
+    const img = document.querySelector(
+      '[data-testid="scene-image-' + key + '"]',
+    );
+    if (img) {
+      img.src = url;
+      img.hidden = false;
+    }
+  } catch (err) {
+    if (err.status === 401) {
+      clearToken();
+      showSignedOut();
+      return;
+    }
+    // Silent: the slot stays hidden, and the beat is not
+    // retried on later scroll passes this session.
+    beatImageFailed.add(key);
+  } finally {
+    beatImageLoading.delete(key);
+  }
+}
+
+/* Watch one beat's image wrap so its stored image loads
+ * as the reader scrolls near it. Re-renders replace the
+ * wrap element, so a stale one is swapped for the live
+ * one whenever this runs again. */
+function observeBeatImage(sceneIndex, beatIndex, key, ptId) {
+  const wrap = document.querySelector(
+    '[data-testid="scene-image-wrap-' + key + '"]',
+  );
+  if (!wrap) {
+    loadBeatImage(sceneIndex, beatIndex, key, ptId);
+    return;
+  }
+  if (beatImageObserved.get(key) === wrap) return;
+  const observer = beatImageObserverInstance();
+  const prev = beatImageObserved.get(key);
+  if (prev) {
+    observer.unobserve(prev);
+    beatImageTargets.delete(prev);
+  }
+  beatImageObserved.set(key, wrap);
+  beatImageTargets.set(wrap, {
+    key,
+    load: () => loadBeatImage(sceneIndex, beatIndex, key, ptId),
+  });
+  observer.observe(wrap);
+}
+
+function loadExistingBeatImages() {
   if (!playthroughId) return;
   const ptId = playthroughId;
-  const queue = [];
+  const lastIndex = scenes.length - 1;
+  const lazy = typeof IntersectionObserver === "function";
   scenes.forEach((scene, i) => {
     splitBeats(sceneText(scene)).forEach((_, j) => {
       const key = beatKey(i, j);
-      if (sceneImageSrc.has(key) || beatImageLoading.has(key)) return;
-      if (beatImageState(scene, j).file) queue.push([i, j, key]);
+      if (sceneImageSrc.has(key) || beatImageLoading.has(key) ||
+          beatImageFailed.has(key)) return;
+      if (!beatImageState(scene, j).file) return;
+      if (i === lastIndex || !lazy) {
+        // The landing scene loads first and immediately;
+        // with no IntersectionObserver there is no feed,
+        // so everything loads up front as a fallback.
+        loadBeatImage(i, j, key, ptId);
+      } else {
+        observeBeatImage(i, j, key, ptId);
+      }
     });
   });
-  let next = 0;
-  async function worker() {
-    while (next < queue.length) {
-      const [sceneIndex, beatIndex, key] = queue[next++];
-      beatImageLoading.add(key);
-      try {
-        const blob = await apiFetch(
-          beatImagePath(sceneIndex, beatIndex),
-          { response: "blob" },
-        );
-        // A reset swapped the playthrough mid-flight: these
-        // bytes belong to the old run, drop them.
-        if (playthroughId !== ptId) return;
-        const url = URL.createObjectURL(blob);
-        if (sceneImageSrc.has(key)) {
-          // Generated or restored while this fetch was in
-          // flight: that fresher copy wins, drop ours.
-          URL.revokeObjectURL(url);
-          continue;
-        }
-        sceneImageSrc.set(key, url);
-        const img = document.querySelector(
-          '[data-testid="scene-image-' + key + '"]',
-        );
-        if (img) {
-          img.src = url;
-          img.hidden = false;
-        }
-      } catch (err) {
-        if (err.status === 401) {
-          clearToken();
-          showSignedOut();
-          return;
-        }
-        // Silent per image: the slot stays hidden and the
-        // beat's icon still loads it on tap.
-      } finally {
-        beatImageLoading.delete(key);
-      }
-    }
-  }
-  const lanes = Math.min(3, queue.length);
-  const workers = [];
-  for (let k = 0; k < lanes; k++) workers.push(worker());
-  await Promise.all(workers);
 }
 
 /* Background adjust (Hieu, Nov 8): with a scene background
@@ -713,6 +780,13 @@ function clearSceneImages() {
     URL.revokeObjectURL(url);
   }
   sceneImageSrc.clear();
+  // The auto-show loader starts over for the fresh run:
+  // no stale wraps watched, no beat marked failed.
+  if (beatImageObserver) beatImageObserver.disconnect();
+  beatImageObserved.clear();
+  beatImageTargets.clear();
+  beatImageFailed.clear();
+  beatImageLoading.clear();
 }
 
 /* Generation orientation (Hieu, Nov 8): tapping Generate
