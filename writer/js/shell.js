@@ -9,10 +9,11 @@
  * simply never mounts the shell, so nothing here needs a special
  * case — renderShell no-ops when there is no #app-shell mount.
  *
- * Saved / Profile have no pages yet: those tabs render disabled
- * with a "Soon" badge and do not navigate, rather than linking
- * to a wrong destination. Explore -> home.html, My Stories ->
- * stories.html, Create -> create.html (existing pages).
+ * Saved has no page yet: that tab renders disabled with a
+ * "Soon" badge and does not navigate, rather than linking to a
+ * wrong destination. Explore -> home.html, My Stories ->
+ * stories.html, Create -> create.html, Profile -> profile.html
+ * (the avatar picker; M3's page landed Nov 8).
  *
  * Menu -> menu.html carries the Dark theme toggle and Log out,
  * moved off the topbar at Hieu's direction (Nov 7) so Explore
@@ -51,7 +52,7 @@ const TABS = [
   {
     id: "profile",
     label: "Profile",
-    href: null, // M3 builds the page; disabled until then.
+    href: "./profile.html",
     icon: '<circle cx="12" cy="8" r="4"/><path d="M4.5 21c1.5-4 4.5-5.5 7.5-5.5s6 1.5 7.5 5.5"/>',
   },
   {
@@ -108,7 +109,7 @@ function buildTab(tab, activeId) {
  * body's shell class so CSS can reserve room for the bar/rail
  * (content bottom padding on phone, left padding on desktop).
  * Call with { active: "explore" | "my-stories" | "create" |
- * "menu" } from the page module, next to renderTopbar (pages
+ * "profile" | "menu" } from the page module, next to renderTopbar (pages
  * that still carry one). No-ops when the page has no mount. */
 export function renderShell(options = {}) {
   const host = document.getElementById("app-shell");

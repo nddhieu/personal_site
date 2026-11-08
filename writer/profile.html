@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profile - Story Realm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../brand-theme.css">
+<link rel="stylesheet" href="../brand-components.css">
+<link rel="stylesheet" href="./app.css">
+<link rel="stylesheet" href="./shell.css">
+<link rel="stylesheet" href="./profile.css">
+</head>
+<body class="light-theme">
+<div id="app-topbar"></div>
+<nav id="app-shell" aria-label="Primary"></nav>
+<main class="page-profile">
+  <section class="profile-feed">
+    <h1 class="profile-title">Profile</h1>
+
+    <div id="state-loading" class="loading-row">
+      <span class="spinner" aria-hidden="true"></span>
+      <span>Loading your profile...</span>
+    </div>
+
+    <div id="state-in" hidden>
+      <div class="profile-head">
+        <span id="profile-avatar" class="profile-avatar"></span>
+        <p id="profile-name" class="profile-name"></p>
+        <p id="profile-email" class="profile-email"></p>
+      </div>
+
+      <h2 class="profile-picker-title">Choose your avatar</h2>
+      <div id="avatar-grid" class="avatar-grid" role="group" aria-label="Choose your avatar"></div>
+      <p id="profile-error" class="form-error" role="alert" hidden></p>
+    </div>
+
+    <div id="state-out" hidden>
+      <p>You are not signed in.</p>
+      <p id="out-note" class="profile-note" hidden></p>
+      <a class="btn btn-primary" href="./login.html">Sign in</a>
+    </div>
+  </section>
+</main>
+<script type="module" src="./profile.js"></script>
+</body>
+</html>

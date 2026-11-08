@@ -1,0 +1,144 @@
+/* Profile page styles, scoped under .page-profile.
+ * Same brand tokens and page measure as My Stories: the header
+ * (big avatar, name, email) sits on the page background, then the
+ * avatar library as a tappable grid. The .avatar-disc rules live
+ * here for now and are the shared contract for any surface that
+ * renders a library avatar (js/avatars.js): a round span whose
+ * inline svg fills it edge to edge. */
+.page-profile {
+  max-width: 65ch;
+  margin: 0 auto;
+  padding: 1rem 1rem 1.5rem;
+  box-sizing: border-box;
+  width: 100%;
+}
+.page-profile .profile-title {
+  font-family: var(--font-heading);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.15;
+  margin: 0.4rem 0 0.6rem;
+}
+.page-profile .profile-note {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+/* Round avatar disc (js/avatars.js markup): the svg's gradient
+ * rect is the disc; this span just rounds and clips it. */
+.avatar-disc {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  line-height: 0;
+}
+.avatar-disc svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.avatar-sm {
+  width: 24px;
+  height: 24px;
+}
+.avatar-md {
+  width: 48px;
+  height: 48px;
+}
+.avatar-lg {
+  width: 96px;
+  height: 96px;
+}
+
+.page-profile .profile-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0.8rem 0 0.4rem;
+}
+.page-profile .profile-name {
+  font-family: var(--font-heading);
+  font-size: 1.25rem;
+  font-weight: 700;
+  line-height: 1.25;
+  margin: 0.7rem 0 0.15rem;
+}
+.page-profile .profile-email {
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.page-profile .profile-picker-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 600;
+  margin: 1.4rem 0 0.7rem;
+}
+.page-profile .avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+.page-profile .avatar-grid.is-saving {
+  opacity: 0.6;
+  pointer-events: none;
+}
+.page-profile .avatar-option {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.65rem 0.25rem 0.55rem;
+  border: 1px solid var(--color-border, var(--color-card-border));
+  border-radius: var(--radius-md);
+  background: var(--color-card-bg);
+  color: var(--color-text);
+  font: inherit;
+  cursor: pointer;
+}
+.page-profile .avatar-option:active {
+  background: var(--color-bg-secondary);
+}
+@media (hover: hover) {
+  .page-profile .avatar-option:hover {
+    background: var(--color-bg-secondary);
+  }
+}
+.page-profile .avatar-option-label {
+  font-size: 0.78rem;
+  line-height: 1.2;
+  color: var(--color-text-muted);
+}
+.page-profile .avatar-option-check {
+  position: absolute;
+  top: 0.3rem;
+  right: 0.3rem;
+  display: none;
+  width: 1.15rem;
+  height: 1.15rem;
+  border-radius: 50%;
+  background: var(--color-primary);
+  color: #fff;
+  font-size: 0.72rem;
+  line-height: 1.15rem;
+  text-align: center;
+}
+.page-profile .avatar-option.is-selected {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1.5px var(--color-primary);
+}
+.page-profile .avatar-option.is-selected .avatar-option-label {
+  color: var(--color-text);
+  font-weight: 600;
+}
+.page-profile .avatar-option.is-selected .avatar-option-check {
+  display: block;
+}
+.page-profile .form-error {
+  margin-top: 0.8rem;
+}
