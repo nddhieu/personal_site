@@ -361,6 +361,93 @@ function splitBeats(text) {
   return parts.length ? parts : [""];
 }
 
+/* Inner thoughts (reading-view redesign, room seq 580/715):
+ * in stored scene prose, single-asterisk spans *...* are the
+ * viewpoint character's direct inner thoughts - and only
+ * that, never emphasis, never another character's mind (the
+ * planner marks thought beats; QC enforces it). Presentation
+ * renders every *...* span italic with the asterisk markers
+ * stripped, so no raw asterisks are ever shown. An unmatched
+ * asterisk is just a character, and an empty or blank span
+ * (**) stays literal, mirroring splitInstruction below.
+ *
+ * A paragraph that is entirely one thought span is a thought
+ * block - rendered italic as its own block - but ONLY for
+ * scenes written after Nov 4, when the thought contract
+ * started (commit c4e6ff6c). Older scenes may hold plain
+ * *emphasis* or sound effects (*click*, *thud* - room
+ * seq 741 counted 20 such spans, none of them thoughts), so
+ * they get span italics and never a thought block. The gate
+ * is the scene's created_at stamp: scenes created live in
+ * this session are stamped at applyTurnResult, and scenes
+ * loaded from state promote only when the server sent a
+ * post-Nov-4 created_at. No stamp, no promotion. */
+const THOUGHT_CUTOFF_MS = Date.parse("2026-11-04T00:00:00Z");
+
+function parseThoughtSpans(text) {
+  const segments = [];
+  // A span opens only on a * followed by a non-space and
+  // closes only on a * preceded by a non-space, so a stray
+  // asterisk ("A * stray star") stays literal instead of
+  // pairing with the next span's opener - the same reason
+  // an unmatched asterisk is just a character.
+  const re = /\*(\S(?:[^*]*\S)?)\*/g;
+  let last = 0;
+  let m;
+  while ((m = re.exec(String(text || ""))) !== null) {
+    if (m.index > last) {
+      segments.push({ text: String(text).slice(last, m.index), thought: false });
+    }
+    segments.push({ text: m[1], thought: true });
+    last = m.index + m[0].length;
+  }
+  if (last < String(text || "").length) {
+    segments.push({ text: String(text).slice(last), thought: false });
+  }
+  return segments.length ? segments : [{ text: String(text || ""), thought: false }];
+}
+
+function isThoughtBlockEligible(scene) {
+  const stamped = scene && scene.created_at;
+  if (!stamped) return false;
+  const ms = Date.parse(stamped);
+  return Number.isFinite(ms) && ms >= THOUGHT_CUTOFF_MS;
+}
+
+/* Renders one beat paragraph's text: plain runs as text
+ * nodes, *...* spans as <em class="thought-span">. A
+ * whole-paragraph thought span on an eligible scene also
+ * marks the paragraph thought-block. The leading
+ * .beat-icons span (speaker + image buttons) is kept: in
+ * the full render it is prepended after this call, and in
+ * the provisional streaming sync it is already there. */
+function renderBeatText(p, beatText, scene) {
+  const keep = p.firstChild && p.firstChild.classList &&
+    p.firstChild.classList.contains("beat-icons")
+    ? p.firstChild : null;
+  let child;
+  while ((child = p.lastChild)) {
+    if (child === keep) break;
+    p.removeChild(child);
+  }
+  p.classList.remove("thought-block");
+  const segments = parseThoughtSpans(beatText);
+  const wholeThought = segments.length === 1 && segments[0].thought;
+  if (wholeThought && isThoughtBlockEligible(scene)) {
+    p.classList.add("thought-block");
+  }
+  for (const seg of segments) {
+    if (seg.thought) {
+      const em = document.createElement("em");
+      em.className = "thought-span";
+      em.textContent = seg.text;
+      p.append(em);
+    } else if (seg.text) {
+      p.append(document.createTextNode(seg.text));
+    }
+  }
+}
+
 function beatKey(sceneIndex, beatIndex) {
   return sceneIndex + ":" + beatIndex;
 }
@@ -1490,7 +1577,7 @@ function renderScenes() {
           Number.isInteger(scene && scene.turn)) {
         p.id = "scene-" + scene.turn;
       }
-      p.textContent = beatText;
+      renderBeatText(p, beatText, scene);
       prose.append(p);
       // Beat image (see the block above renderScenes):
       // the icon follows the beat's backend state, and the
@@ -1856,7 +1943,7 @@ async function fetchStreamedTurn(body, actionText) {
       return;
     }
     beats.forEach((beat, j) => {
-      provisionalParas[j].textContent = beat;
+      renderBeatText(provisionalParas[j], beat, provisional);
     });
   }
 
@@ -2053,6 +2140,10 @@ async function applyTurnResult(result, actionText, body) {
       turn: result.turn,
       action: actionText || sceneActionText(result),
       text: scene,
+      // Thought-block gate (seq 715): a turn played now is
+      // post-Nov-4 by construction, so stamp it - scenes
+      // loaded from state carry whatever the server sent.
+      created_at: new Date().toISOString(),
     });
   }
   renderScenes();
@@ -3089,5 +3180,18 @@ async function init() {
   el("play-status").hidden = true;
   el("play-layout").hidden = false;
 }
+
+/* Test handle (reading-view redesign harness): the fake-DOM
+ * tests drive the real module through this instead of a
+ * second copy of the render code. Same pattern as audio.js,
+ * which is testable in node without a browser. */
+export const __playTest = {
+  setScenes(list) { scenes = list; },
+  renderScenes,
+  renderBeatText,
+  parseThoughtSpans,
+  isThoughtBlockEligible,
+  splitBeats,
+};
 
 init();

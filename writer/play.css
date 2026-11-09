@@ -110,6 +110,17 @@
   white-space: pre-wrap;
   max-width: 65ch;
 }
+/* Inner thoughts (redesign, seq 580/715): *...* spans render
+   italic with the markers stripped; a paragraph that is one
+   whole thought is its own block. Thought spans take the
+   muted token, one step lighter than narration, italic kept. */
+.page-play .prose em.thought-span {
+  font-style: italic;
+  color: var(--color-text-muted);
+}
+.page-play .prose p.thought-block {
+  font-style: italic;
+}
 .page-play .bible-list {
   display: grid;
   grid-template-columns: auto 1fr;
