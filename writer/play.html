@@ -149,6 +149,20 @@
               <span id="persona-chip-initial" class="persona-chip-initial" aria-hidden="true"></span>
               <span id="persona-chip-name" data-testid="persona-chip-name" class="persona-chip-name">Persona</span>
             </button>
+            <!-- Control credit chip (scope flip): the run's
+                 remaining control credit. Directing the main
+                 character or side characters spends it; the
+                 protagonist's own actions never do. Display
+                 only - the balance is server truth, seeded by
+                 the playthrough payload and refreshed by every
+                 turn response. The book names the credit
+                 (default Charm); the name rides the title /
+                 aria-label, the bar shows icon + count. -->
+            <span id="control-chip" data-testid="control-chip" class="control-chip"
+              role="status" title="Charm: 10 left" aria-label="Charm: 10 left" hidden>
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M13 2 4.5 13.5H11L9.8 22 19 10h-6.5z"/></svg>
+              <span id="control-chip-count" data-testid="control-chip-count" class="control-chip-count">10</span>
+            </span>
             <!-- Story settings (Hieu, Nov 8): ONE circular
                  icon-only button at the end of the composer
                  bar opens the settings sheet below - the book's
