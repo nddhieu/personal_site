@@ -1206,6 +1206,44 @@ function setPlaythroughPersona(state) {
   applyMarkerFaces();
 }
 
+/* Control credit chip (scope flip): the run's remaining
+ * control credit, beside the persona chip. Server truth
+ * only, like the persona binding: the playthrough payload
+ * seeds it (control_credits + control_label) and every turn
+ * response refreshes it. Display only - spends and refusals
+ * live in the prose and the balance, never in a toast or a
+ * system note. Hidden until a payload names a balance, so
+ * an older backend never shows a phantom pool. */
+let controlCredits = null;
+let controlLabel = "Charm";
+
+function setControlCredits(source) {
+  if (!source) return;
+  if (Number.isInteger(source.control_credits)) {
+    controlCredits = source.control_credits;
+  }
+  if (source.control_label) {
+    controlLabel = String(source.control_label);
+  }
+  renderControlChip();
+}
+
+function renderControlChip() {
+  const chip = el("control-chip");
+  const count = el("control-chip-count");
+  if (!chip || !count) return;
+  if (controlCredits === null) {
+    chip.hidden = true;
+    return;
+  }
+  chip.hidden = false;
+  count.textContent = String(controlCredits);
+  const text = controlLabel + ": " + controlCredits + " left";
+  chip.title = text;
+  chip.setAttribute("aria-label", text);
+  chip.classList.toggle("is-empty", controlCredits <= 0);
+}
+
 function renderPersonaChip() {
   const img = el("persona-chip-img");
   const initial = el("persona-chip-initial");
@@ -1378,6 +1416,7 @@ async function switchPlaythroughPersona(personaId) {
         "/persona",
       { method: "PATCH", body: { persona_id: personaId } });
     setPlaythroughPersona(state);
+    setControlCredits(state);
     closePersonaSheet();
     showPlayNote(playthroughPersona
       ? "Now playing as " + playthroughPersona.name + "."
@@ -2044,6 +2083,9 @@ async function applyTurnResult(result, actionText, body) {
     renderSuggestions(currentSuggestions);
     openSuggestPanel();
   }
+  // The turn response carries the credit balance after any
+  // spend (scope flip): the chip follows it immediately.
+  setControlCredits(result);
   const state = await refreshDiary();
   if (state && state.bible) renderBible(state.bible);
 }
@@ -2364,6 +2406,7 @@ async function resetPlaythrough() {
     // The fresh run binds the reader's In Use persona (or
     // none) server-side; the chip follows the new state.
     setPlaythroughPersona(state);
+    setControlCredits(state);
     clearSceneBackground();
     clearSceneImages();
     audioPlayer.reset();
@@ -2979,6 +3022,7 @@ async function init() {
       ? state.scenes
       : [{ turn: 0, text: book.opening_scene || "" }];
     setPlaythroughPersona(state);
+    setControlCredits(state);
     renderScenes();
     refreshRetryButton();
     await restoreSceneBackground();

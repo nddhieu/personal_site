@@ -1515,6 +1515,42 @@ body.light-theme .page-play .settings-sheet {
   text-overflow: ellipsis;
   max-width: 5.2rem;
 }
+
+/* Control credit chip (scope flip): the run's remaining
+ * control credit, a small pill beside the persona chip -
+ * bolt icon + count, dimmed when the pool is spent. The
+ * credit's name (the book's control_label, default Charm)
+ * lives in the title / aria-label, not the bar. */
+.page-play .control-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.3rem 0.55rem;
+  background: var(--color-bg-primary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text);
+  flex-shrink: 0;
+}
+.page-play .control-chip[hidden] {
+  display: none;
+}
+.page-play .control-chip svg {
+  width: 13px;
+  height: 13px;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+.page-play .control-chip.is-empty {
+  opacity: 0.45;
+}
+.page-play.has-scene-bg .control-chip {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.16);
+  color: #f4f5fa;
+}
 .page-play.has-scene-bg .persona-chip {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.16);
