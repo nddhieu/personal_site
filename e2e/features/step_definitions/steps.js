@@ -1,6 +1,8 @@
 const { Given, When, Then } = require('@cucumber/cucumber');
 const { By, until } = require('selenium-webdriver');
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 
 const byTestId = (id) => By.css('[data-testid="' + id + '"]');
 
@@ -219,4 +221,25 @@ Then('my earlier scenes are still there', async function () {
     'expected the opening scene plus the played scene after ' +
       'returning in a fresh tab, found ' + blocks.length
   );
+});
+
+When('I open the book wizard', async function () {
+  await this.driver.get(this.baseUrl + '/create.html');
+  await this.driver.wait(until.elementLocated(By.id('step-1-title')), 20000);
+  await this.driver.sleep(1000);
+});
+
+When('I open the library', async function () {
+  await this.driver.get(this.baseUrl + '/home.html');
+  await this.driver.wait(until.elementLocated(By.css('.explore-card')), 30000);
+});
+
+Then('I capture the {string} screenshot', async function (name) {
+  await this.driver.sleep(800);
+  const png = await this.driver.takeScreenshot();
+  const dir = path.join(__dirname, '..', '..', 'screenshots');
+  fs.mkdirSync(dir, { recursive: true });
+  const file = path.join(dir, name + '.png');
+  fs.writeFileSync(file, png, 'base64');
+  console.log('screenshot saved:', file);
 });

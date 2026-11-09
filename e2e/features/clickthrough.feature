@@ -46,3 +46,16 @@ Feature: Writer GUI click-through
     Then a new scene appears
     When I return in a fresh tab
     Then my earlier scenes are still there
+
+  @screenshots
+  Scenario: Named screenshot set for the frontend proof step
+    Given I open the login page
+    When I continue as guest
+    Then I see the library with the book "Accad and Kim"
+    Then I capture the "explore" screenshot
+    When I open the book wizard
+    Then I capture the "wizard" screenshot
+    When I open the library
+    When I start the book "Accad and Kim"
+    Then the play screen shows the opening scene
+    Then I capture the "play" screenshot

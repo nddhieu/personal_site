@@ -6,7 +6,8 @@
   "scripts": {
     "test": "cucumber-js --tags @smoke",
     "test:full": "cucumber-js --tags @full",
-    "test:all": "cucumber-js"
+    "test:all": "cucumber-js",
+    "test:screenshots": "cucumber-js --tags @screenshots"
   },
   "devDependencies": {
     "@cucumber/cucumber": "^11.2.0",

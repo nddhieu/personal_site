@@ -29,3 +29,18 @@ with h2.card-title and a stretched a.explore-card-link to
 play.html; the composer sends with [data-testid=send-btn]
 (Enter makes a new line since Nov 5). If the GUI renames a control,
 update the step, not the page, and re-run @smoke.
+
+## Screenshot set (B9, #10e)
+
+npm run test:screenshots walks Explore -> wizard -> play as a guest
+and saves a named set under e2e/screenshots/ (committed as the proof
+step for the frontend items):
+
+- explore.png - library with the Accad and Kim card
+- wizard.png - book-creation wizard, step 1
+- play.png - play screen with the opening scene
+
+The committed PNGs are the last verified capture against the live dev
+GUI; re-run the tag to refresh them after a GUI change. Screenshots
+on failure still land in reports/ (git-ignored) via the After hook
+in features/support/hooks.js.
