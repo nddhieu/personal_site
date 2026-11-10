@@ -121,6 +121,14 @@
 .page-play .prose p.thought-block {
   font-style: italic;
 }
+/* Spoken lines (redesign, seq 577 addendum): double-quoted
+   speech renders bold against regular narration - the
+   weight half of the easier-to-read distinction. Over a
+   background image the bold inherits the white prose +
+   text-shadow from .has-scene-bg .prose above. */
+.page-play .prose strong.dialogue-span {
+  font-weight: 700;
+}
 .page-play .bible-list {
   display: grid;
   grid-template-columns: auto 1fr;
