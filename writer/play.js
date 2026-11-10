@@ -414,9 +414,46 @@ function isThoughtBlockEligible(scene) {
   return Number.isFinite(ms) && ms >= THOUGHT_CUTOFF_MS;
 }
 
+/* Spoken lines (reading-view redesign, typography addendum
+ * room seq 577): double-quoted speech renders BOLD against
+ * regular narration - the weight half of the easier-to-read
+ * distinction, on top of the seq 926 baseline (18px/1.7,
+ * 1.45rem beat gap, white prose over the scrim in image
+ * mode), which main already carries. Both straight "..."
+ * and curly “...” quotes pair; a span opens only on a quote
+ * followed by a non-space and closes only on its matching
+ * quote preceded by a non-space, so an unmatched quote is
+ * just a character and an empty or blank span ("") stays
+ * literal - the same guards as parseThoughtSpans. Single
+ * quotes (apostrophes, '...') are never dialogue. Runs
+ * AFTER thought parsing, on non-thought segments only, so
+ * a quoted span inside a *thought* stays italic thought,
+ * and a thought span inside quotes breaks the quote pair
+ * (the dialogue stays literal rather than mis-marked). */
+function parseDialogueSpans(text) {
+  const segments = [];
+  const re = /“(\S(?:[^”]*\S)?)”|"(\S(?:[^"]*\S)?)"/g;
+  let last = 0;
+  let m;
+  const s = String(text || "");
+  while ((m = re.exec(s)) !== null) {
+    if (m.index > last) {
+      segments.push({ text: s.slice(last, m.index), dialogue: false });
+    }
+    segments.push({ text: m[1] !== undefined ? m[1] : m[2], dialogue: true });
+    last = m.index + m[0].length;
+  }
+  if (last < s.length) {
+    segments.push({ text: s.slice(last), dialogue: false });
+  }
+  return segments.length ? segments : [{ text: s, dialogue: false }];
+}
+
 /* Renders one beat paragraph's text: plain runs as text
- * nodes, *...* spans as <em class="thought-span">. A
- * whole-paragraph thought span on an eligible scene also
+ * nodes, *...* spans as <em class="thought-span">,
+ * double-quoted speech as <strong class="dialogue-span">
+ * (seq 577 addendum: dialogue bold against narration).
+ * A whole-paragraph thought span on an eligible scene also
  * marks the paragraph thought-block. The leading
  * .beat-icons span (speaker + image buttons) is kept: in
  * the full render it is prepended after this call, and in
@@ -443,7 +480,16 @@ function renderBeatText(p, beatText, scene) {
       em.textContent = seg.text;
       p.append(em);
     } else if (seg.text) {
-      p.append(document.createTextNode(seg.text));
+      for (const d of parseDialogueSpans(seg.text)) {
+        if (d.dialogue) {
+          const strong = document.createElement("strong");
+          strong.className = "dialogue-span";
+          strong.textContent = d.text;
+          p.append(strong);
+        } else if (d.text) {
+          p.append(document.createTextNode(d.text));
+        }
+      }
     }
   }
 }
@@ -3190,6 +3236,7 @@ export const __playTest = {
   renderScenes,
   renderBeatText,
   parseThoughtSpans,
+  parseDialogueSpans,
   isThoughtBlockEligible,
   splitBeats,
 };
