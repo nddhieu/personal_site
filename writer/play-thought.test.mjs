@@ -4,7 +4,9 @@
  * Covers the thought-span slice of the design (room seq 580 /
  * 715 / 741): *...* spans render italic with markers stripped,
  * a whole-paragraph thought becomes a thought block only for
- * post-Nov-4 scenes. No browser, no network: init() takes the
+ * post-Nov-4 scenes; and the dialogue-bold slice (room seq 577
+ * addendum): double-quoted speech renders bold against regular
+ * narration. No browser, no network: init() takes the
  * signed-out path (no token in the stubbed storage) and the
  * tests drive renderScenes through the __playTest handle.
  *
@@ -315,6 +317,95 @@ check("action marker still renders alongside thought prose", () => {
   assert.equal(marker[0].children.length, 1);
   assert.equal(marker[0].children[0].classList.contains("avatar-disc"), true);
   assert.equal(marker[0].title.startsWith("Your input · "), true);
+});
+
+/* --- parseDialogueSpans: pure parsing (seq 577 addendum) --- */
+check("plain text stays one plain segment", () => {
+  assert.deepEqual(T.parseDialogueSpans("Just narration."),
+    [{ text: "Just narration.", dialogue: false }]);
+});
+
+check("straight-quoted speech splits out, quotes stripped", () => {
+  assert.deepEqual(
+    T.parseDialogueSpans('She turned. "We go now," she said.'),
+    [
+      { text: "She turned. ", dialogue: false },
+      { text: "We go now,", dialogue: true },
+      { text: " she said.", dialogue: false },
+    ]);
+});
+
+check("curly-quoted speech splits out the same way", () => {
+  assert.deepEqual(
+    T.parseDialogueSpans("He nodded. “After you.”"),
+    [
+      { text: "He nodded. ", dialogue: false },
+      { text: "After you.", dialogue: true },
+    ]);
+});
+
+check("a mismatched quote pair stays literal", () => {
+  assert.deepEqual(T.parseDialogueSpans('He said “go now."'),
+    [{ text: "He said “go now.\"", dialogue: false }]);
+});
+
+check("unmatched quote stays literal", () => {
+  assert.deepEqual(T.parseDialogueSpans('She said "go now.'),
+    [{ text: 'She said "go now.', dialogue: false }]);
+});
+
+check("empty quoted span stays literal", () => {
+  assert.deepEqual(T.parseDialogueSpans('a "" b'),
+    [{ text: 'a "" b', dialogue: false }]);
+});
+
+check("single quotes are never dialogue (apostrophes safe)", () => {
+  assert.deepEqual(T.parseDialogueSpans("It's 'her' call, he said."),
+    [{ text: "It's 'her' call, he said.", dialogue: false }]);
+});
+
+/* --- renderScenes: dialogue bold alongside thought italics --- */
+check("rendered dialogue becomes <strong>, quotes stripped", () => {
+  T.setScenes([{
+    turn: 4,
+    text: 'The room was quiet.\n\n"We go now," she said.',
+  }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(ps.length, 2);
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "STRONG").length, 0);
+  const strong = ps[1].childNodes.filter((n) => n.tagName === "STRONG");
+  assert.equal(strong.length, 1);
+  assert.equal(strong[0].textContent, "We go now,");
+  assert.equal(strong[0].classList.contains("dialogue-span"), true);
+  assert.equal(ps[1].textContent, "We go now, she said.");
+  assert.equal(ps[1].textContent.includes('"'), false);
+});
+
+check("thought and dialogue coexist in one paragraph", () => {
+  T.setScenes([{
+    turn: 5,
+    text: '*Not now.* "We go," she said.',
+  }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(ps.length, 1);
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "EM").length, 1);
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "STRONG").length, 1);
+  assert.equal(ps[0].textContent, "Not now. We go, she said.");
+});
+
+check("a quoted span inside a thought stays italic thought, never bold", () => {
+  T.setScenes([{
+    turn: 6,
+    text: '*She said "go" and meant it.*',
+  }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "STRONG").length, 0);
+  const em = ps[0].childNodes.filter((n) => n.tagName === "EM");
+  assert.equal(em.length, 1);
+  assert.equal(em[0].textContent, 'She said "go" and meant it.');
 });
 
 console.log(`\n${passed} checks passed`);
