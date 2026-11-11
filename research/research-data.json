@@ -2,6 +2,225 @@
   "generated_at": "2026-11-11T08:22:00-06:00",
   "articles": [
     {
+      "apply": "Try it on our own work before believing any of it. Install it on the VM, run one real long session through bili gemini — the same kind of session that normally blows context — and compare token spend against the same work run uncompressed. Check cache health with /acp afterwards, and try decompress on one folded range to confirm exact detail comes back. If the saving is real, it becomes the default way long sessions run here; if compression folds away something we needed, we will have learned that on a trial, not on a build.",
+      "benefit": "The win is cost, directly. Prompt tokens are nearly all of what our runs cost, and this attacks that line instead of adding another memory store on top: the same session, the same agent, about five times fewer tokens by the project's claim, with the history still searchable and restorable. It also removes the context ceiling as a planning constraint — a long build or a long storytelling session stops being a race against the window. If the project's numbers hold even halfway on our work, the saving pays for the one-session trial many times over.",
+      "category": "Tools",
+      "caveats": "Every performance number here is the project's own — the benchmarks and the longitudinal study are published in its repo, and we have not independently verified them. The 5× token claim is a project claim, not a measured result on our work. The license is MIT plus an attribution term, and parts of the docs are Chinese-first. Our trial is the verification.",
+      "checklist": [
+        "Install it on the VM with npm install -g billion-context --prefix=~/.local — no sudo, no npm config changes.",
+        "Run one real long session through bili gemini, the same kind of session that normally blows context.",
+        "Compare token spend for that session against the same work run uncompressed, and note where the window would have filled.",
+        "Check cache health with /acp after the session: a healthy run keeps a 95–97% prefix-cache hit rate.",
+        "Try decompress on one folded range to confirm exact detail comes back before trusting it on a build session."
+      ],
+      "date": "2026-11-11",
+      "details": [
+        {
+          "body": "billion-context sits between any coding agent and its model API, rewriting Anthropic and OpenAI streams as they pass through. It injects four context-management tools into the conversation, and the model calls them itself as context grows: compress folds a message range into a detailed summary, decompress restores a folded range when exact detail is needed again, search_context searches compressed summaries and visible messages by keyword, and acp_status shows context usage plus which ranges are still compressible. The proxy executes compress server-side, so folded ranges stay summarized in history until restored. Compression is incremental and reversible, written in small ranges so the cache prefix stays intact — a healthy session keeps a 95–97% prefix-cache hit rate, and the project says compression itself costs 2% or less.",
+          "heading": "How the proxy works"
+        },
+        {
+          "body": "The headline numbers come from a 1,500-item evaluation published in the repo, pitting billion-context (version 0.1.202) against full context and three RAG arms. It claims first place on ContextBench at 0.3097 Utilized F1 with 58.3% lower cost than full context, 16.6% over the best RAG arm on LongMemEval-S (79.20% against 62.60%, with 71.1% lower independent-session cost), and 100% survival on a 1.48M-token MemoryAgentBench run with 30× steady-state compression, where full context failed 199 of 199 attempts. These are the project's own numbers from an evaluation it hosts. They are a reason to trial it, not a verdict — no independent replication has been seen.",
+          "heading": "The benchmark numbers, read honestly"
+        },
+        {
+          "body": "The repo also carries its own paper, Model-Driven Incremental Hierarchical Compression, reporting a production-scale study: 4.5 months, three hosts, 174,327 model calls, 18.76 billion cumulative input tokens (about 24.7 billion across all hosts), zero window violations on 204,800-token models, and marathon sessions of 8,584 to 12,049 calls. It is still the project's own study, published in its own repo, and the paper is a living document anyone may edit.",
+          "heading": "The longitudinal study"
+        },
+        {
+          "body": "The proxy ships as a native plugin or a launcher for Gemini CLI, Claude, Codex, Pi, OpenCode, Qwen Code, Kimi, and more than 20 clients. Gemini CLI is launcher-only — it has no in-loop tool seam — and some closed binaries work through certificate interception instead. One warning from the README matters: the host-native plugins and the standalone extensions are mutually exclusive, and running both means double compression. The installer replaces legacy entries and snapshots the original config, but a project-local install is not touched and has to be removed by hand.",
+          "heading": "Works with nearly every coding agent"
+        },
+        {
+          "body": "Installation is one command on Linux or macOS: npm install -g billion-context --prefix=~/.local, which puts the bili command in ~/.local/bin with no sudo and no npm config changes. Then bili gemini starts a Gemini CLI session through the proxy, or bili plugin install pi wires it in natively. Cache health is visible with /acp or /acp-cache. Our research first step is one real long session through bili gemini, comparing token spend against the same session uncompressed.",
+          "heading": "Install and first run"
+        },
+        {
+          "body": "This attacks our cost directly instead of adding another memory store: prompt tokens are nearly all of our run cost, and the sessions that hurt are the long ones. The risks are concrete. A proxy in the middle of the API path is a new failure point — a bug or an outage breaks the session, not just a feature. Model-driven compression can fold away a detail you later need, though decompress exists for exactly that. The license is MIT plus an attribution term, and parts of the docs are Chinese-first. The 5× claim is a project claim until our trial measures it — a reason the trial comes first, not a reason to skip it.",
+          "heading": "Where it fits — and what could go wrong"
+        }
+      ],
+      "hook": "Long sessions die when context fills. This proxy folds the past instead of dropping it.",
+      "image": "img/billion-context.jpg",
+      "kicker": "Compression the model runs itself",
+      "problem": "Long coding sessions die on context. A coding agent's conversation grows with every tool call and file read, and once it passes the model's context window the session degrades or dies — and the provider charges per token along the way, so the bill grows with the history. The usual answers are all compromises: the host's built-in summarizer truncates on its own schedule, dumping whole notes into the prompt burns the token budget that dominates every run's cost, and starting a fresh session throws away the decisions and context the last one built. Our own work is the case in point: prompt tokens are nearly all of our run cost, and our long sessions are exactly the ones that blow context.",
+      "slug": "billion-context",
+      "solution": "billion-context is a proxy that sits between any coding agent and its model API and compresses finished conversation into layered summaries instead of cutting it. It rewrites the Anthropic and OpenAI streams as they pass through, and it injects four context-management tools the model calls itself as the session grows: compress folds a message range into a detailed summary, decompress restores a folded range when exact detail is needed again, search_context searches compressed summaries and visible messages by keyword, and acp_status shows context usage and what is still compressible. Compression is incremental and reversible, written in small ranges so the cache prefix stays intact. The model decides when and what to compress, not a hard truncation limit, so a session can run for days — the project claims month-long single sessions carrying billions of tokens through one 100K window.",
+      "source_name": "billion-context on GitHub",
+      "source_url": "https://github.com/ranxianglei/billion-context",
+      "stats": [
+        {
+          "label": "GitHub stars as of today — the project was created August 6, 2026",
+          "value": "6,750"
+        },
+        {
+          "label": "Fewer tokens claimed by the project — a 100K context window is enough, per its own description",
+          "value": "5×"
+        },
+        {
+          "label": "Survival on a 1.48M-token MemoryAgentBench run in the project's own 1,500-item evaluation, where full context failed 199 of 199 attempts",
+          "value": "100%"
+        },
+        {
+          "label": "Cumulative input tokens across 174,327 model calls in the project's own 4.5-month longitudinal study",
+          "value": "18.76B"
+        }
+      ],
+      "summary": "billion-context is a proxy that sits between a coding agent and its model API and lets the model itself compress finished conversation into layered summaries, instead of truncating when the window fills. The project claims month-long single sessions, a 100K window being enough, and about five times fewer tokens — and its own 1,500-item evaluation puts it first on ContextBench and 16.6% ahead of the best RAG arm on LongMemEval-S. Those are the project's own numbers, not independent ones; the honest next step is one real long session on our own work, measuring token spend.",
+      "takeaways": [
+        "billion-context is a proxy between any coding agent and its model API: the model decides when and what to compress into layered summaries, with tools to decompress and search the compressed ranges when exact detail is needed again.",
+        "The project's own 1,500-item evaluation claims first place on ContextBench, 16.6% over the best RAG arm on LongMemEval-S, and 100% survival on a 1.48M-token MemoryAgentBench run where full context failed every attempt — project-hosted numbers, not independent verification.",
+        "It fits our cost problem directly: prompt tokens are nearly all of our run cost, and our long storytelling and build sessions are the ones that blow context. The trial costs one install and one measured session."
+      ],
+      "title": "billion-context: Month-Long Coding Sessions on a 100K Window — With About 5× Fewer Tokens"
+    },
+    {
+      "apply": "Adopt Raw-RAG as the baseline, starting with the trial already on the table. If we trial agentmemory, score it against our own RAG on the same real questions — retrieval quality, answer quality, and time — not against its README numbers alone. Keep raw history retrievable in our RAG and resist any extraction step that discards the source passage. And read the paper's tables before citing the headline: the win is six of seven settings, and structured memory still leads on knowledge-update and temporal-reasoning slices, which may matter more for our use cases than for the benchmarks.",
+      "benefit": "Raw-RAG ranked first in six of seven benchmark-model settings, beating the strongest compared agentic system by 0.13 to 5.53 points. The margin is not huge, but the direction is: the simplest system won, and the expensive additions made it worse. The practical payoff is a stopping rule for our own work. Before we invest in fact extraction, graph building, or a memory server, the burden of proof is on the addition to beat plain retrieval over raw history — on our questions, with our data. That is a cheaper research program than building the machinery first and discovering later it cost accuracy.",
+      "category": "Models",
+      "caveats": "The evidence is offline conversation on public benchmarks; the authors say it does not establish performance for interactive, multimodal, or broader operational settings, and raw-history approaches raise storage and privacy concerns. The benchmarks are the paper's own runs, not an independent replication. Our local RAG is architecturally the same shape, but we have not run these benchmarks on it.",
+      "checklist": [
+        "Adopt Raw-RAG as the baseline for any future memory comparison on the team — no new memory proposal gets judged against nothing.",
+        "If we trial agentmemory, score it against our own RAG on the same real questions, not on its README numbers alone.",
+        "Keep raw history retrievable in our RAG — no fact-extraction step that discards the source passage.",
+        "Read the paper's Table 3 before citing the headline: the win is six of seven settings, not all of them.",
+        "Watch the knowledge-update and temporal-reasoning slices — that is where structured memory still leads, and where our use cases may differ."
+      ],
+      "date": "2026-11-11",
+      "details": [
+        {
+          "body": "Raw-RAG is deliberately boring. Each conversation is serialized with message timestamps, split into 256-token windows with 32-token overlap, and embedded in a flat index. There is no LLM-based extraction, no summarization, no graph construction, and no mutation at ingest — the raw history is the store. At query time the question is embedded, cosine similarity retrieves the 128 closest windows, and a cross-encoder jointly scores each question-window pair for relevance and selects the top 15. The selected evidence goes to the reader with the question, and the reader resolves temporal order and state changes when it answers. The full pipeline is specified in the paper's appendix.",
+          "heading": "What Raw-RAG actually is"
+        },
+        {
+          "body": "The paper compares Raw-RAG against 12 agentic memory systems — Mem0, A-MEM, MemOS, EverMemOS, Memora, MemMachine, MemU, RecMem, SimpleMem, EMem, MemoryOS, and Nemori — on four benchmarks: LoCoMo, LongMemEval, MEME, and MemoryAgentBench. Raw-RAG ranked first in six of seven benchmark-model settings, beating the strongest compared agentic system by 0.13 to 5.53 points. On LoCoMo it scored 89.07 overall with GPT-4o-mini and 93.70 with GPT-4.1-mini, ahead of MemMachine's 88.12 and 91.69; on LongMemEval it scored 87.53, ahead of Memora's 87.40 and EverMemOS's 83.00. The tables show where structured memory still leads.",
+          "heading": "The head-to-head"
+        },
+        {
+          "body": "The paper's diagnosis is that the bottleneck is evidence access, not answer quality. Raw-RAG had the highest evidence coverage on both benchmarks where it was measured — 45.29% on MemoryAgentBench and 76.35% on MEME — while utilization, accuracy given sufficient evidence, varied much less across systems. Useful evidence is not just answer values; it includes the relations and dependency paths needed to derive them. On MEME tracking and cascade questions, Raw-RAG had the highest conditional path coverage at 62.34%, against 56.70% for MemMachine and 9.62% for MemU. Systems that retrieve the answer can still fail to retrieve the reasoning that makes it usable.",
+          "heading": "Why raw wins: coverage, not cleverness"
+        },
+        {
+          "body": "Three memory-management additions were tested on the same baseline, and none helped. Adding atomic-fact extraction cut the MemoryAgentBench total by 19.62 points, dropping test-time learning from 47.68% to 15.37%; adding raw summaries cost 5.81 points; adding graph-based retrieval expansion cost 5.78. The additions were also expensive: 21.6 to 109.3 million LLM tokens and 2.9 to 8.8 hours for ingestion plus search, against 12 minutes for Raw-RAG. Removing the reranker cost 3.92 points, which is the one piece of machinery that earns its keep.",
+          "heading": "The ablation: additions that hurt"
+        },
+        {
+          "body": "Ingestion is where the gap is starkest. Streaming the same 1,710-message conversation approaching one million tokens into each system, cumulative ingestion time ranged from 0.33 hours for Raw-RAG to 26.95 hours for Memora; the next-fastest completed run, MemOS, took 3.25 hours. On a smaller 10-episode, 110-question slice, Raw-RAG finished ingestion plus search in 305.91 seconds — 5.1 times faster than the next system and 30.4 times faster than EverMemOS. A memory system that takes a day to ingest a million tokens is not just slower; it changes what you can afford to remember at all.",
+          "heading": "The speed gap"
+        },
+        {
+          "body": "The authors are explicit about scope: the evidence is offline conversation on public benchmarks, and it does not establish performance for interactive, multimodal, or broader operational settings. Raw history also raises storage and privacy concerns that a summarized store avoids. And the win is not total: on LongMemEval's knowledge-update questions Memora scored 97.40 against Raw-RAG's 91.03, and on temporal reasoning 89.50 against 81.45. Mutation is rare in these benchmarks — updates and deletes were 4.39% of write decisions on LoCoMo and 2.46% on LongMemEval — and replacing updates with append-only adds raised LoCoMo accuracy from 67.36% to 69.42% in the tested configuration. Where state changes constantly, the answer may differ.",
+          "heading": "Where it doesn't win"
+        }
+      ],
+      "hook": "Twelve memory systems, four benchmarks — plain retrieval over raw history finished first.",
+      "image": "img/naive-rag-beats-agentic-memory.jpg",
+      "kicker": "The simplest baseline won",
+      "problem": "Long-term conversation is the hardest memory problem in agents, and the field's answer has been to add machinery: extract facts from history, mutate them as the world changes, organize them into graphs and summaries, learn retrieval strategies. Each layer is plausible, each costs compute and engineering, and each quietly discards or distorts the original evidence — a fact is not the passage it came from, and a summary is not the conversation it compresses. The result is a stack of memory systems that are expensive to build, slow to ingest, and hard to debug, with no agreement on whether any of the complexity is actually needed. Our own setup has the same open question: we run a local RAG over raw notes, and agentmemory arrived yesterday promising a purpose-built memory server.",
+      "slug": "naive-rag-beats-agentic-memory",
+      "solution": "The paper's answer is a deliberately naive baseline called Raw-RAG: dense retrieval plus a cross-encoder reranker over raw conversation history, and nothing else. History is serialized with timestamps, split into 256-token windows with 32-token overlap, and embedded in a flat index — no LLM extraction, no summarization, no graph, no mutation. At query time the question retrieves the 128 closest windows by cosine similarity, a cross-encoder scores each question-window pair, and the top 15 go to the reader, which resolves temporal order and state changes from the evidence itself. That is the whole system. It was tested against 12 agentic memory systems — Mem0, A-MEM, MemOS, EverMemOS, Memora, and seven more — on four benchmarks: LoCoMo, LongMemEval, MEME, and MemoryAgentBench.",
+      "source_name": "arXiv:2610.30755 — Bao et al.",
+      "source_url": "https://arxiv.org/abs/2610.30755",
+      "stats": [
+        {
+          "label": "Benchmark-model settings where Raw-RAG ranked first among the compared memory systems",
+          "value": "6 of 7"
+        },
+        {
+          "label": "Cumulative ingestion time for a ~1M-token history — the next-fastest system took 3.25 hours, the slowest 26.95",
+          "value": "0.33h"
+        },
+        {
+          "label": "Faster than the next system on the same 10-episode, 110-question slice — 305.91 seconds total, 30.4× faster than the slowest",
+          "value": "5.1×"
+        },
+        {
+          "label": "What adding atomic-fact extraction cost Raw-RAG on MemoryAgentBench — summaries cost 5.81, graph expansion 5.78",
+          "value": "−19.62 pts"
+        }
+      ],
+      "summary": "A new paper asks whether agentic memory systems — fact extraction, mutation, graphs, summaries — are always worth their complexity, and answers with a deliberately naive baseline: dense retrieval plus a cross-encoder reranker over raw conversation history. Raw-RAG ranked first in six of seven benchmark-model settings across LoCoMo, LongMemEval, MEME, and MemoryAgentBench, beating the strongest agentic system by 0.13 to 5.53 points. Adding facts, summaries, or graph expansion to the same baseline cost 5.78 to 19.62 points. The scope is offline conversation benchmarks, not live agents — but it makes naive RAG the baseline every memory proposal now has to beat.",
+      "takeaways": [
+        "Raw-RAG — dense retrieval plus cross-encoder reranking over raw history, no extraction, no mutation, no graph — ranked first in six of seven benchmark-model settings against 12 agentic memory systems.",
+        "The extra machinery hurt: adding atomic-fact extraction cost 19.62 points, summaries 5.81, and graph expansion 5.78 on MemoryAgentBench, while costing 21.6 to 109.3 million LLM tokens and up to 8.8 hours against 12 minutes for Raw-RAG.",
+        "Our own local RAG — fastembed plus FTS5 plus a MiniLM reranker over raw notes — already is this winning architecture. The paper says: keep raw history retrievable, and score any memory trial against it, not against nothing."
+      ],
+      "title": "Naive RAG Beats 12 Agentic Memory Systems — and the Extra Machinery Made It Worse"
+    },
+    {
+      "apply": "Validate the pain before building anything. Talk to five indie authors mid-launch and ask what they track in spreadsheets today; map what genre and trope matching would actually need as signals; prototype the pacing logic first, because 150–300 ARCs over six to ten weeks with review-count pacing is the core and delivery is the commodity. Price-test the model — $79–$149 per launch against $19 a month — and check what authors already pay across the four tools. Scope the Co-Author tie-in last: the manuscript, canon, and email list already exist there, so the launch copilot should start from them rather than from a blank form.",
+      "benefit": "The market is large, reachable, and already paying. Authors pay $450–$575 for one six-month NetGalley listing, $200 a year for BookFunnel's ARC delivery, $10 a month for StoryOrigin's reviewer tools, and $9–$59 a month for Booksprout — four subscriptions for four jobs, none of which runs the campaign. A copilot that replaces the spreadsheet and the pacing guesswork with one price per launch competes against the sum of those bills, not against any single tool. And the customer is identifiable: an author with a finished manuscript and a launch date is a buyer with a deadline.",
+      "category": "Opportunities",
+      "caveats": "The survey figures are self-reported and skew toward engaged genre-fiction indies; the Medium author stresses correlation, not causation. Dawson's conversion and timing figures are practitioner estimates from his ~55,000-author community, not a controlled study. Tool prices were verified against vendor pages in October–November 2026 roundups and can change — confirm before spending. The $79–$149 / $19 pricing is our proposal, untested.",
+      "checklist": [
+        "Talk to five indie authors mid-launch and ask what they track in spreadsheets today — validate the pain before building.",
+        "Map the genre/trope matching: what signals pick the right ARC readers for a given manuscript?",
+        "Prototype the pacing logic first — 150–300 ARCs over 6–10 weeks with review-count pacing is the core, not the delivery.",
+        "Price-test the model: $79–$149 per launch against $19 a month, and check what authors already pay across the four tools.",
+        "Scope the Co-Author tie-in: the manuscript, canon, and email list already exist there — the launch copilot should start from them."
+      ],
+      "date": "2026-11-11",
+      "details": [
+        {
+          "body": "Written Word Media's 2025 survey of 1,346 indie authors puts the shape of the market in one table: 44% earn $100 a month or less, 56% earn more, 20% sit in the $500-to-$5,000 band, 13% earn over $5,000, and 8% earn over $10,000. The catalogue staircase is the sharpest cut: about 80% of authors with one to three books earn under $100 a month, authors with five to nine books report a median around $50, and authors with 25 or more books report a median near $3,000, with over 40% of that group earning $5,000 or more. The more selective ALLi sample reports a median of about $13,500 a year — a different room, same direction.",
+          "heading": "The income ladder"
+        },
+        {
+          "body": "The second lever is the email list, and the gap is the widest single number in the survey: a median of about $300 a month for authors with a list, against about $15 a month without one — a 20-fold gap on the medians. Average list size climbs with income, from about 900 names in the under-$100 group to about 18,327 above $10,000 — but the gap that shows up first is having a list at all. Marketing spend rises with income too, averaging about $636 a month. The Medium author stresses the honest catch: these are correlations, not a recipe — higher earners also have more years, stronger covers, and tighter series.",
+          "heading": "The email-list gap"
+        },
+        {
+          "body": "Mark Dawson, whose Self Publishing Formula community counts roughly 55,000 authors, describes two opposite failure modes. Under-seeding: send 30 ARCs and expect 25 launch-day reviews, but industry conversion runs 12–18%, so 30 ARCs yields about four or five reviews — not enough social proof to move Amazon's algorithm. Over-seeding too early: push 600 ARCs twelve weeks before launch and the flood of early reviews can get suppressed or flagged as potentially incentivized, since Amazon has grown aggressive about temporal clustering of reviews. His recommended sweet spot is 150 to 300 ARCs seeded across BookFunnel and StoryOrigin, with the bulk delivered 6 to 10 weeks before launch, so reviews trickle in across weeks two through six of the launch window. Genre targets run 200–350 for romance and cozy mystery, 150–250 for thriller and fantasy, and 80–150 for literary fiction and memoir.",
+          "heading": "The ARC math"
+        },
+        {
+          "body": "Authors already pay for the pieces, and the prices check out against vendor pages. NetGalley — the listing for librarians and booksellers — costs $450 to $575 for a six-month listing. BookFunnel delivers files to readers you bring: $30 a year for first-time authors, with Secure ARC Delivery from the $200-a-year Mid-List plan. StoryOrigin runs swaps and reviewer management on a free Basic plan, with reviewer vetting and automated follow-up on Standard at $10 a month. Booksprout manages reviewer campaigns at $9, $19, $29, or $59 a month. Four tools, four bills, four logins — and the campaign itself, the timing and the nudging and the pacing, still lives in a spreadsheet.",
+          "heading": "The tool sprawl, priced"
+        },
+        {
+          "body": "Each tool does one job well. None of them runs the campaign end to end: genre- and trope-matched reader targeting, delivery timed across the window, nudging readers who have not reviewed, and pacing review counts so Amazon does not flag them. Dawson's other launch numbers show why the surrounding pieces matter too: fewer than 800 confirmed preorders across a 90-day window for a genre thriller almost certainly misses the top 1,000 in category on day one. The launch is a system, and today the author is the system.",
+          "heading": "The gap: nobody runs the campaign"
+        },
+        {
+          "body": "The copilot takes the manuscript and runs the campaign: build the ARC list from genre and trope match, schedule delivery across the window, auto-nudge non-reviewers, and track conversion from ARCs sent to reviews live. It is a natural extension of our Co-Author — write the book, then launch the book — built on RAG over the manuscript and canon, and email for delivery and nudges. Proposed pricing is $79–$149 per launch, or $19 a month, which competes against the sum of the four tool bills rather than any single one. The first validation is not code: five conversations with authors mid-launch, asking what they track in spreadsheets today.",
+          "heading": "The product: an AI launch copilot"
+        }
+      ],
+      "hook": "The launch fails before the writing does: 44% of indie authors earn under $100 a month.",
+      "image": "img/indie-authors-arc-pipeline.jpg",
+      "kicker": "The launch is the product",
+      "problem": "Most indie authors do not earn a living from their books. Written Word Media's 2025 survey of 1,346 authors finds 44% earning $100 a month or less, and about 80% of authors with one to three books in the same band. The writing is rarely the binding constraint — the launch is. A book launch is a pipeline: advance reader copies go out, readers review, reviews compound into visibility, and the whole thing has to land in a tight window around publication. Authors run that pipeline with four separate paid tools and a spreadsheet, and the failure modes are documented: too few ARCs and launch day has no social proof; too many too early and Amazon suppresses the reviews.",
+      "slug": "indie-authors-arc-pipeline",
+      "solution": "The product is an AI launch copilot that runs the ARC campaign end to end. It takes the manuscript, builds the ARC list from genre and trope match, schedules delivery across the 6-to-10-week window Mark Dawson recommends, nudges readers who have not reviewed, and tracks conversion so the author can see the pipeline instead of guessing at it. The pacing is the core feature: 150 to 300 ARCs is the sweet spot, 30 yields about four or five reviews at 12–18% conversion, and 600 seeded twelve weeks out can flood Amazon with early reviews that get flagged. The copilot paces review counts so they trickle in across weeks two through six of the launch window instead of clustering. It is a natural extension of our Co-Author: write the book, then launch the book, with the manuscript, canon, and email list already in hand. Proposed pricing is $79–$149 per launch, or $19 a month.",
+      "source_name": "Written Word Media 2025 Indie Author Survey (via Medium); Mark Dawson via BookLaunch News",
+      "source_url": "https://medium.com/@iyb7/44-of-indie-authors-earn-under-100-a-month-heres-what-the-rest-do-b25e4f8e5ac2",
+      "stats": [
+        {
+          "label": "Of 1,346 surveyed indie authors earn $100 a month or less from their books",
+          "value": "44%"
+        },
+        {
+          "label": "Median monthly income gap with an email list — about $300 a month vs about $15 without one",
+          "value": "20×"
+        },
+        {
+          "label": "ARC-to-review conversion, per Mark Dawson — 30 seeded ARCs yield about four or five reviews",
+          "value": "12–18%"
+        },
+        {
+          "label": "Cost of one six-month NetGalley listing — the priciest single piece of a fragmented ARC toolkit",
+          "value": "$450–$575"
+        }
+      ],
+      "summary": "Written Word Media's 2025 survey of 1,346 indie authors finds 44% earning $100 a month or less, and about 80% of authors with one to three books in the same band — while authors with 25 or more books report a median near $3,000. The levers are catalogue, email list, and launch execution, and the launch is where the tooling falls apart: delivery, swaps, reviewer management, and listings are four separate paid tools, and the campaign still runs in spreadsheets. Mark Dawson puts ARC-to-review conversion at 12–18% and the sweet spot at 150–300 ARCs timed 6–10 weeks before launch. Nobody runs that campaign end to end. That is the product: an AI launch copilot that takes the manuscript and runs the ARC pipeline.",
+      "takeaways": [
+        "The income ladder is steep and survey-backed: 44% of 1,346 surveyed indie authors earn $100 a month or less, while authors with 25+ books report a median near $3,000 — and the median author with an email list earns about $300 a month against about $15 without one.",
+        "The ARC math is unforgiving: at 12–18% conversion, seeding 30 ARCs yields about four or five reviews, while seeding 600 too early can get reviews suppressed by Amazon. The recommended window is 150–300 ARCs, 6–10 weeks before launch.",
+        "Authors already pay for the pieces — NetGalley $450–$575 per six-month listing, BookFunnel from $30 a year, StoryOrigin free to $10 a month, Booksprout $9–$59 a month — but no tool runs targeting, delivery timing, nudging, and review pacing as one campaign."
+      ],
+      "title": "Opportunity: Indie Authors Don't Fail on the Writing — They Fail on the ARC Pipeline"
+    },
+    {
       "slug": "claude-code-dont-ask-again-secrets",
       "date": "2026-11-11",
       "category": "Tools",
