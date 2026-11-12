@@ -2,6 +2,152 @@
   "generated_at": "2026-11-12T08:22:00-06:00",
   "articles": [
     {
+      "slug": "openmausbot",
+      "date": "2026-11-12",
+      "category": "Tools",
+      "kicker": "Your team of agents, in a chat app",
+      "title": "OpenMausBot: A Whole Team of AI Agents That Lives in a Chat App — and Installs From One File",
+      "summary": "OpenMausBot is the open-source answer to Grok Bot, Meta Muse, and OpenAI dots: a local-first chat app where every contact is a real Claude, Codex, or Grok CLI agent with its own model, computer, and connected apps — and a whole team of them installs from a single Markdown file. It is free, Apache 2.0, and already shipping for macOS, Windows, and Ubuntu. The part worth stealing for our own HieuPC team is not the app but the portable team-file format — and Milo already trialed it on November 10 with a watch verdict, so the next step is reading the format docs, not re-running the trial.",
+      "hook": "Every bot is a real agent with its own computer, and a whole team installs from one file.",
+      "takeaways": [
+        "OpenMausBot is a local-first Electron chat app where each contact is a real Claude, Codex, or Grok CLI agent with its own model, cloud computer, and connected apps; it is free and Apache 2.0.",
+        "A complete team installs from one Markdown file with a review screen first — connections stay off until approved, routines arrive paused, and packages never carry credentials.",
+        "Milo already trialed it on November 10 and the verdict is watch: the local-LLM brain was too weak for interactive work. The stealable part is the portable team-file format and the approval-card pattern, not a switch."
+      ],
+      "image": "img/openmausbot.jpg",
+      "problem": "Running a team of AI agents means wiring each one up by hand: its model, its tools, its permissions, its memory — and onboarding a new agent means doing it all again. Our own HieuPC team is that shape built bespoke — bridge, board, group chat, todo list — and onboarding Milu in October was a manual job. The closed alternatives solve the wiring but keep the team definition inside their cloud, on their terms: Grok Bot, Meta Muse, OpenAI dots, and Cue by Manus are services you join, not files you own.",
+      "solution": "OpenMausBot puts the team inside a chat app you run yourself. Each bot is a real agent — Claude or Codex running locally under the hood, or the Grok CLI — with its own personality, model, cloud computer, and connected apps, and you talk to them like contacts. A whole team — bots, a Chief of Staff, channels, playbooks, routines — installs from one Markdown file, reviewed on screen before anything is created. Risky actions stop at an approval card first: the project's own line is talk to them like contacts, watch them work, approve what matters.",
+      "benefit": "The win is reproducibility. A team you can define in one portable file is a team you can hand to someone else, version in git, and rebuild after a reinstall — the exact property our bespoke HieuPC setup lacks. The approval-card pattern is the second win: nothing risky happens without a human saying yes, which is the same guarantee our bridge's approval flow is built to give. And because it is local-first and bring-your-own-agent, the team runs on the CLIs and subscriptions we already pay for instead of another platform bill.",
+      "apply": "Do not re-run the trial — Milo already did that on November 10, and the verdict is watch. The useful next step is a reading exercise: open the team's sharing docs and the portable-format doc, import one sample team from the BotMRR directory on a non-critical machine, and read the review screen carefully — which bots, which channels, which routines arrive paused, which connections stay off. Then compare its approval-card flow against our bridge's approval flow side by side, and write the portable team-file format up as the candidate spec for making our own team definition reproducible. No switch, no migration — the format and the pattern are the takeaway.",
+      "stats": [
+        {
+          "value": "21,594",
+          "label": "GitHub stars as of today — the project was created August 11, 2026"
+        },
+        {
+          "value": "3",
+          "label": "Agent CLIs under the hood: Claude, Codex, and Grok"
+        },
+        {
+          "value": "1",
+          "label": "Markdown file to install a complete team — bots, channels, playbooks, and paused routines"
+        },
+        {
+          "value": "0",
+          "label": "Credentials, conversations, or computer access carried inside a shared team package"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "OpenMausBot is an Electron desktop app — TypeScript, React 19 — that looks like a messaging app, because that is the interface: every bot in the sidebar is a contact. Under the hood each one is a real agent running through the Claude, Codex, or Grok CLI already installed on your machine, with its own personality, its own model, its own cloud computer, and its own connected apps. Downloads ship for macOS on Apple silicon and Intel as signed and notarized disk images, for Windows as an installer, and for Ubuntu 24.04 as a .deb or AppImage beta. Data stays local in a folder on your own machine, and there is a headless CLI too, so a team can be applied from a file and a bot can run one job and exit with a scriptable exit code."
+        },
+        {
+          "heading": "The portable team file — the part worth stealing",
+          "body": "Browse outcome-driven teams on the BotMRR directory, choose Add to OpenMausBot, and the app opens a review screen before creating anything: the bots, the Chief of Staff, the channels, the playbooks, a connector checklist, and the suggested routines. You can also import the same Markdown file from disk or paste its public GitHub URL into Teams, then Import. The format stays portable by design: OpenMausBot reads the structured YAML frontmatter for a reliable one-click install, while Grok, Claude, ChatGPT, and people can follow the ordinary Markdown playbook. Connections remain off until you approve them, routines arrive paused, and packages never carry credentials, conversations, permissions, memory, or computer access. Sharing works in reverse too: right-click a department and save the whole thing — bots with instructions, pictures and skills, group chats, routines, shared instructions, Chief of Staff, connection slots, starter notes — as one file, with chat history, keys, passwords, model choices, and computers left out and anything that looks like a secret stripped from the text."
+        },
+        {
+          "heading": "Approval cards before risky actions",
+          "body": "The safety model is a conversation, not a config file. A bot proposes, you approve: risky actions stop at a card before they happen, connections stay off until you switch them on, and routines arrive paused so nothing runs on a schedule you never agreed to. That is the same shape as our bridge's approval flow — a human in the loop at the exact moment something irreversible is about to happen — which is why the comparison is worth doing properly. The difference is packaging: OpenMausBot ships the pattern as part of a consumer app, while ours is bespoke plumbing between agents. Either way, the card is the contract."
+        },
+        {
+          "heading": "Compared honestly: the closed alternatives and our own team",
+          "body": "Grok Bot, Meta Muse, OpenAI dots, and Cue by Manus are the reference points the project names itself — hosted teams of agents inside someone else's chat app, on their infrastructure, under their terms. OpenMausBot is the self-hosted mirror: free, Apache 2.0, bring your own model keys and CLI subscriptions, data on your own disk. Our HieuPC team is the same shape again, built bespoke: bridge plus board plus group chat plus a shared todo file, with agents that have their own tools and memory. A full switch to OpenMausBot would be a big lift — the value is not the Electron app, it is the portable team-file format and the approval-card pattern, both of which are directly stealable for making our team definition reproducible."
+        },
+        {
+          "heading": "What it costs and what you bring",
+          "body": "The app is free to use and open source under Apache 2.0, and it has no token of its own: you bring your own model API keys and the CLI subscriptions you already have, and the agents run on those. The project lists an inference provider sponsor and a cloud-computer sponsor, and its connected-apps layer runs through Composio. There is no platform bill for the team itself — the cost is the models you were already paying for, plus a machine to run the app on."
+        },
+        {
+          "heading": "Where it fits — and what could go wrong",
+          "body": "The honest status is watch, not adopt. Milo trialed it on November 10: the local-LLM brain test came back too weak for interactive work, and the test of a larger model on the GPU is still open. The Windows installer was not code-signed as of an October 30 review, so SmartScreen shows an unknown-publisher warning. We have not installed or run it ourselves — everything here comes from the repo, its docs, and the trial note in the team room. The star count moves daily, and the framing as the open answer to Grok Bot, Muse, and dots is the project's own positioning, not an independent comparison."
+        }
+      ],
+      "checklist": [
+        "Read docs/team-sharing.md and the portable-format doc in the repo before touching anything.",
+        "Download the macOS, Windows, or Ubuntu build from the latest release and install it on a non-critical machine first.",
+        "Import one sample team from the BotMRR directory via Teams, then Import, and read the review screen: bots, Chief of Staff, channels, routines paused, connections off.",
+        "Compare its approval-card flow against our bridge's approval flow side by side, and note where each one stops a risky action.",
+        "Write up the portable team-file format as the candidate spec for making our HieuPC team definition reproducible — no switch, no migration, just the format."
+      ],
+      "caveats": "Milo's trial verdict (watch, November 10) is the team's own test, not an independent benchmark. The Windows code-signing note comes from an October 30 review, not the project's own docs, and may already be fixed. Star counts move daily — 21,594 is the count at writing time. We have not installed or run OpenMausBot ourselves; everything here comes from the repo, its docs, and the trial note in the team room.",
+      "source_name": "OpenMausBot on GitHub",
+      "source_url": "https://github.com/milind-soni/OpenMausBot"
+    },
+    {
+      "slug": "dm-campaign-copilot",
+      "date": "2026-11-12",
+      "category": "Opportunities",
+      "kicker": "The campaign bible writes itself — or it should",
+      "title": "Opportunity: Dungeon Masters Spend Hours Prepping Every Session — and Campaign Tools Are Still Just Wikis",
+      "summary": "Dungeon masters spend one to three hours prepping every session — more than half spend two or more — and they already pay for the tools: World Anvil counts over 3.5 million worldbuilders, Kanka over 400,000 users. But every incumbent is an encyclopedia you fill in by hand. None of them maintains the campaign bible from what actually happened at the table, writes the session recap, or flags the NPC who died in session six and just reappeared in session nine. That gap is the opening for an AI campaign copilot at $8–$12 a month per campaign — validation first, with real DMs, before any build.",
+      "hook": "DMs already pay for campaign tools, but every one is a wiki they fill in by hand.",
+      "takeaways": [
+        "Sly Flourish's poll of 3,663 DMs found 29% spend three or more hours prepping a roughly four-hour game and 28% about two hours — over half spend two or more hours per session.",
+        "DMs already pay: World Anvil claims 3.5 million-plus worldbuilders at $54–$300 a year, Kanka counts 400,000-plus users, and LegendKeeper Pro is $9 a month.",
+        "The gap is maintenance, not storage: no incumbent updates the campaign bible from session notes, writes the recap, or flags contradictions — and that is exactly the Story Realm bible machinery pointed at a table."
+      ],
+      "image": "img/dm-campaign-copilot.jpg",
+      "problem": "A dungeon master running a long campaign pays for prep twice: once in hours, once in subscriptions. Sly Flourish's April 2020 poll of 3,663 DMs found 29% spend three or more hours preparing a roughly four-hour game, 28% about two hours, and 33% about an hour — over half spend two or more hours per session. Professional-DM guides still budget three to five hours of prep per session. And past about session twenty the bottleneck stops being prep and becomes recall: which NPC the party met in session four, whether the innkeeper was already named, whether the villain's plan still matches what the players know.",
+      "solution": "An AI campaign copilot that maintains the bible instead of asking the DM to. Paste the session notes after the game and it updates the living record — NPCs, locations, threads, secrets — flags contradictions like the NPC who died in session six reappearing in session nine, writes the session recap, and drafts next session's one-page prep sheet: the scenes, the NPCs, the hooks, the loose threads. The DM still runs the table; the copilot does the bookkeeping between sessions.",
+      "benefit": "The win is hours back every week for a group that already pays for tools and already feels the pain in language they use themselves — prep time. It is also the rare product idea where the hard part is already built: our Story Realm bible and continuity machinery does this job for a novel, tracking characters, facts, and threads across chapters and flagging when the story contradicts itself. Pointing that machinery at a table instead of a book is a new market for existing muscle, at a price — $8–$12 a month per campaign — that sits below what a DM group already spends across its current tools.",
+      "apply": "Validation first — Milo logged this as a problem-solution candidate with the same rule as the others: talk to real DMs before any build, nothing started. The first step is five conversations with working DMs about what their prep actually looks like and which parts are pure bookkeeping. Then open the free tiers of World Anvil, Kanka, and LegendKeeper and list exactly what each one makes you type by hand. Then draft the one-page prep sheet from a real session's notes. Only if DMs confirm the bookkeeping is the painful part does this become a build.",
+      "stats": [
+        {
+          "value": "3,663",
+          "label": "DMs polled by Sly Flourish in April 2020 on prep time for a roughly four-hour game"
+        },
+        {
+          "value": "57%",
+          "label": "Of those DMs spend two or more hours prepping per session — 29% three or more, 28% about two"
+        },
+        {
+          "value": "3.5M+",
+          "label": "Worldbuilders in World Anvil's community, per its own pricing page"
+        },
+        {
+          "value": "400,000+",
+          "label": "Game masters and worldbuilders who call Kanka home, per Kanka's own site"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How much prep actually costs",
+          "body": "The numbers have barely moved in years, which is the point. Sly Flourish's April 2020 poll asked DMs how long they prepared for a roughly four-hour game: 29% said three hours or more, 28% about two hours, 33% about an hour, and 10% about thirty minutes or less. A professional-DM guide written in 2026 still budgets three to five hours of prep, covering scenes, maps, and resources, and its timeboxing section plans a typical three-to-four-hour session as three to five major scenes at 45–60 minutes each. Sly Flourish himself ran the diminishing-returns experiment: a full day of prep for one campaign produced a few high-impact items — reading the adventure, tracing character connections — and a lot of low-impact ones like playlists and poster maps."
+        },
+        {
+          "heading": "What DMs already pay for",
+          "body": "The willingness to pay is documented, not assumed. World Anvil's pricing page speaks to a community of over 3.5 million worldbuilders and charges $54 a year for Master, $99 for Grandmaster, and $300 for Sage, with lifetime licenses at $650 and $1,350 for the top two tiers. Kanka's own site says 400,000-plus game masters and worldbuilders call it home, and its nine-year blog post counts 426,066 accounts created in 2026. LegendKeeper's Pro tier is $9 a month, or $7.50 billed annually. The rest of the stack costs money too: vvd from $5.75 a month, Foundry VTT as a $50 one-time licence, Roll20 Plus from $5.99 a month — all of it checked against vendor pages by roundups in September and October 2026."
+        },
+        {
+          "heading": "The gap: encyclopedias, not copilots",
+          "body": "Every incumbent does one of two jobs, and neither is the missing one. A virtual tabletop — Foundry, Roll20 — runs the session: maps, tokens, initiative, dice. A campaign wiki — World Anvil, Kanka, LegendKeeper, vvd — holds the world between sessions: entries, relationships, timelines, player-facing pages. Both assume the DM does the recording. The habit the tools assume is capture at the table, then promote afterwards: one line per name the players invent, then a real entry for anything mentioned twice. Nobody automates either step, and nobody checks the record against itself — which is why the failure mode is always the same: the NPC who died in session six walks back in during session nine, and nobody notices until a player does."
+        },
+        {
+          "heading": "The copilot, concretely",
+          "body": "Paste the session notes and the copilot does four things. It updates the bible: new NPCs, locations, threads, and secrets get entries, and old entries gain what the session changed. It flags contradictions: a dead NPC reappearing, a location described two different ways, a secret the players already learned being treated as hidden. It writes the session recap the DM currently writes by hand or skips. And it drafts next session's one-page prep sheet: the scenes, the NPCs who need to show up, the hooks, the loose threads. What it does not do matters as much: it does not run the session, it does not decide what happens next, and it does not replace the DM's judgment about what the players will enjoy."
+        },
+        {
+          "heading": "Why this is our machinery",
+          "body": "The Story Realm bible does this job for a novel already: it tracks characters, facts, and threads across chapters, keeps the canon consistent, and flags when a new turn contradicts what was established. A campaign bible is the same data structure with different nouns — NPCs instead of characters, sessions instead of chapters, secrets instead of plot threads. The continuity checks, the recap generation, and the one-page prep sheet are the same operations with a different skin. That is why the price can sit at $8–$12 a month per campaign: the expensive part, the machinery, already exists, and the product is the packaging of it for a table."
+        },
+        {
+          "heading": "What validation has to prove first",
+          "body": "Three things have to be true before this is a build, and none of them is proven yet. First, that the bookkeeping is the painful part: many DMs enjoy prep, and the poll measures time spent, not time resented — a DM who happily spends three hours worldbuilding is not a customer. Second, that DMs will paste session notes into a tool at all, rather than keeping them in the notebook they already trust. Third, that $8–$12 a month per campaign is a price a group will pay on top of the tools it already has, rather than a feature it expects World Anvil or Kanka to add. Five conversations with working DMs settle the first two; the third needs a real offer, not a survey."
+        }
+      ],
+      "checklist": [
+        "Talk to five real DMs about their prep workflow before writing any code — validation first, nothing started.",
+        "Read the Sly Flourish poll and the GM Craft Tavern prep guide end to end, and note which prep steps are pure bookkeeping.",
+        "Open the free tiers of World Anvil, Kanka, and LegendKeeper and list exactly what each one makes you type by hand.",
+        "Draft the one-page prep sheet format from a real session's notes — NPCs, threads, secrets, next-scene hooks.",
+        "Price-check $8–$12 a month per campaign against what one DM group already pays across its current tools."
+      ],
+      "caveats": "The prep-time poll is from April 2020 — the most-cited figure in the space, and the 2026 prep guides still budget the same hours, but it is six years old and self-selected from Sly Flourish's audience. The 3.5 million and 400,000-plus user counts are the vendors' own claims. Prices come from vendor pages and roundups checked in September–October 2026 and change without notice. The $8–$12 monthly price is the team's proposal, not a tested price, and the premise that DMs resent the bookkeeping is untested — the poll measures time spent, not time resented.",
+      "source_name": "Sly Flourish",
+      "source_url": "https://slyflourish.com/how_long_to_prep.html"
+    },
+    {
       "slug": "ai-tools-under-attack-recorded-future",
       "date": "2026-11-12",
       "category": "Tools",
