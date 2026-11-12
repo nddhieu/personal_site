@@ -235,13 +235,24 @@ export function createAudioPlayer(deps = {}) {
   }
 
   function pregenerate(beats, voice) {
+    // Sequential on purpose: one synthesis in flight at a
+    // time. A parallel burst (one request per paragraph,
+    // each seconds long) saturates the browser's per-origin
+    // connection pool, and reader actions queue behind it
+    // for tens of seconds - Reset's delete included. The
+    // pre-warm is opportunistic (the queue player
+    // synthesizes on demand anyway), so it must never
+    // crowd out a tap.
+    let chain = Promise.resolve();
     for (const beat of beats || []) {
       if (!beat || !String(beat.text || "").trim()) continue;
-      ensureAudio(beat.text, voice).catch(() => {
-        // Background work never surfaces: the button for
-        // that beat quietly shows "Audio unavailable".
-      });
+      chain = chain.then(() =>
+        ensureAudio(beat.text, voice).catch(() => {
+          // Background work never surfaces: the button for
+          // that beat quietly shows "Audio unavailable".
+        }));
     }
+    return chain;
   }
 
   function attachAudio(url) {
