@@ -1833,8 +1833,15 @@ function setBusy(b) {
   el("action-input").disabled = b;
   el("suggest-toggle").disabled = b;
   el("persona-chip").disabled = b;
-  el("reset-btn").disabled = b;
-  el("settings-tile-restart").disabled = b;
+  // The two Reset entry points are NOT busy-disabled: a
+  // reset tap during a turn's tail used to be discarded
+  // whole (disabled buttons fire no tap, and the handler
+  // returned on busy), which desynced the two-tap confirm
+  // and read as "Reset does not work". Reset carries its
+  // own confirm and busy handling (see onResetTap), so it
+  // stays tappable; the wipe itself still never races a
+  // turn - a confirmed reset waits for idle (see
+  // waitForResetSlot).
   el("send-btn").disabled = b;
   refreshRetryButton();
   document
@@ -2480,12 +2487,18 @@ el("diary-btn").addEventListener("click", async () => {
  * from the book's opening scene and rendered in place. */
 let resetArmed = false;
 let resetTimer = null;
+let resetWait = null;
+let resetInFlight = false;
 
 function disarmReset() {
   resetArmed = false;
   if (resetTimer) {
     clearTimeout(resetTimer);
     resetTimer = null;
+  }
+  if (resetWait) {
+    clearInterval(resetWait);
+    resetWait = null;
   }
   const btn = el("reset-btn");
   btn.textContent = "Reset story";
@@ -2502,6 +2515,7 @@ function disarmReset() {
 
 async function resetPlaythrough() {
   if (busy || !playthroughId) return;
+  resetInFlight = true;
   const oldId = playthroughId;
   setBusy(true);
   showLoading(el("play-note"), "Starting over...");
@@ -2577,6 +2591,7 @@ async function resetPlaythrough() {
     renderScenes();
     showPlayError(friendlyError(err));
   } finally {
+    resetInFlight = false;
     setBusy(false);
     disarmReset();
   }
@@ -2592,8 +2607,51 @@ async function resetPlaythrough() {
  * leaves the reader): the arming tap keeps its surface
  * open so the confirm stays visible as the second tap's
  * target, exactly as the menu item always behaved. */
+/* A confirmed reset while the page is still busy (a turn
+ * landing, its diary refresh and audio tail settling): the
+ * wipe must not race the turn - the turn's save could
+ * resurrect the run being deleted - but the confirmation
+ * must not be discarded either. Readers land in exactly
+ * this window right after a scene arrives, and the old
+ * behaviour (busy-disabled buttons, taps returning
+ * silently, a 5-second arm expiring mid-confusion) read as
+ * "Reset does not work". So: the disarm timer is cancelled
+ * (the reader HAS confirmed), "Starting over..." shows at
+ * once, and the wipe runs the moment the page goes idle.
+ * If idle never comes (a hung stream), the wait gives up
+ * after two minutes and says so, run untouched. */
+function waitForResetSlot() {
+  if (resetTimer) {
+    clearTimeout(resetTimer);
+    resetTimer = null;
+  }
+  showLoading(el("play-note"), "Starting over...");
+  if (resetWait) return;
+  const started = Date.now();
+  resetWait = setInterval(() => {
+    if (!resetArmed) {
+      // Disarmed meanwhile (the wipe ran, or state was
+      // reset elsewhere): the wait has nothing to serve.
+      clearInterval(resetWait);
+      resetWait = null;
+      return;
+    }
+    if (!busy) {
+      clearInterval(resetWait);
+      resetWait = null;
+      resetPlaythrough();
+    } else if (Date.now() - started > 120000) {
+      clearInterval(resetWait);
+      resetWait = null;
+      disarmReset();
+      showPlayNote(
+        "The story is still busy - tap Reset again in a moment.");
+    }
+  }, 300);
+}
+
 function onResetTap(origin) {
-  if (busy) return;
+  if (resetInFlight) return;
   if (!playthroughId) {
     showPlayNote("No story in progress to reset.");
     if (origin === "sheet") closeSettingsSheet();
@@ -2617,6 +2675,10 @@ function onResetTap(origin) {
   }
   if (origin === "sheet") closeSettingsSheet();
   else closePlayMenu();
+  if (busy) {
+    waitForResetSlot();
+    return;
+  }
   resetPlaythrough();
 }
 
@@ -2625,8 +2687,10 @@ el("reset-btn").addEventListener("click", () => onResetTap("menu"));
 /* Play header menu (Hieu, Nov 7): the Diary / Reset story /
  * Theme / Log out items in the dropdown behind #play-menu-btn.
  * Diary and Reset keep their ids, so the handlers above (diary
- * toggle, two-step reset confirm, setBusy's reset disable) work
- * unchanged; Theme and Log out call the same helpers the shared
+ * toggle, two-step reset confirm) work unchanged; Reset's two
+ * entry points stay enabled while the page is busy (their own
+ * confirm flow handles busy - see onResetTap), unlike the other
+ * controls setBusy disables. Theme and Log out call the same helpers the shared
  * topbar used (theme.js toggleTheme - its label names the theme
  * it switches to, exactly like the old topbar button - and
  * app-auth logout). init() removes the topbar's own Theme /
