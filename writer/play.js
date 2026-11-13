@@ -628,6 +628,70 @@ function applyBookDefaultBackground() {
   applySceneBackground(BOOK_DEFAULT_BG_KEY, url, false);
 }
 
+/* Stage background auto-follow (reading-view redesign,
+ * slice 3; design: Layout + Current image rule): the
+ * backdrop follows the latest rendered scene's first
+ * beat image (beat 0, with the legacy per-scene fallback
+ * that beatImageState already carries). A scene with no
+ * image yet leaves the previous scene's image in place;
+ * with no pictured scene at all, nothing changes (the
+ * book portrait or the plain page stands). Precedence is
+ * the shipped one: a reader-set photo wins and is never
+ * overridden - clearing it is the way back to the
+ * automatic backdrop - and the book portrait yields to
+ * the follow, since it is only the opening fallback. The
+ * marker for "reader-set" is the stored choice itself:
+ * a photo the reader sets (or that restores) is written
+ * to localStorage under its beat key, while the portrait
+ * and every auto-follow apply with remember = false and
+ * never land there - so a backdrop the follow itself set
+ * stays followable, and a new latest scene (or a rewind
+ * dropping the tail) moves the backdrop on. A reader-set
+ * photo for a scene that is later rewound away keeps its
+ * backdrop until the reader clears it.
+ * Only cached URLs are applied: a beat image that has
+ * not loaded yet is followed when its loader lands it
+ * (loadBeatImage / generateBeatImage call this), so the
+ * follow never fires a second fetch for bytes already
+ * in flight, and a failed load leaves the backdrop
+ * untouched. Auto-follow never writes the reader's
+ * stored choice (remember = false). */
+function pickStageBackground(list) {
+  for (let i = (list || []).length - 1; i >= 0; i--) {
+    const scene = list[i];
+    if (scene && beatImageState(scene, 0).file) {
+      return { sceneIndex: i, beatIndex: 0, key: beatKey(i, 0) };
+    }
+  }
+  return null;
+}
+
+/* Whether the current backdrop is the reader's own choice:
+ * only a reader-set photo is stored (setting one, or
+ * restoring one, writes its beat key); the book portrait
+ * and every auto-follow apply with remember = false and
+ * never land in storage. An unreadable store (private
+ * mode) carries no marker, so the backdrop follows. */
+function sceneBackgroundIsReaderSet() {
+  if (!sceneBackground) return false;
+  try {
+    return localStorage.getItem(sceneBackgroundKey()) ===
+      sceneBackground.key;
+  } catch {
+    return false;
+  }
+}
+
+function followStageBackground() {
+  if (sceneBackgroundIsReaderSet()) return;
+  const pick = pickStageBackground(scenes);
+  if (!pick) return;
+  if (sceneBackground && sceneBackground.key === pick.key) return;
+  const url = sceneImageSrc.get(pick.key);
+  if (!url) return;
+  applySceneBackground(pick.key, url, false);
+}
+
 /* Beat image URL path for one beat: the beat GET route,
  * which also serves a scene's legacy image for beat 0. */
 function beatImagePath(sceneIndex, beatIndex) {
@@ -793,6 +857,10 @@ async function loadBeatImage(sceneIndex, beatIndex, key, ptId) {
       img.src = url;
       img.hidden = false;
     }
+    // Stage-background follow (redesign slice 3): a
+    // stored image that just landed may be the latest
+    // scene's beat 0 - the backdrop follows it now.
+    followStageBackground();
   } catch (err) {
     if (err.status === 401) {
       clearToken();
@@ -1187,8 +1255,18 @@ async function generateBeatImage(sceneIndex, beatIndex, btn, img,
     // this beat is the background) - renderScenes is not
     // re-run here.
     if (sceneBackground && sceneBackground.key === key) {
-      applySceneBackground(key, url);
+      // Regenerate re-applies the same key with the new
+      // URL: never (re)store it - an automatic backdrop
+      // must stay automatic, and a reader-set one is
+      // already stored under this key, so the follow below
+      // still reads it as the reader's.
+      applySceneBackground(key, url, false);
     }
+    // Stage-background follow (redesign slice 3): a fresh
+    // beat-0 image for the latest scene becomes the
+    // backdrop at once (a no-op when the reader set a
+    // photo, or this beat is not the latest pictured one).
+    followStageBackground();
     syncImageButton(btn, scene, beatIndex);
   } catch (err) {
     if (err.status === 401) {
@@ -2205,6 +2283,10 @@ async function applyTurnResult(result, actionText, body) {
   // has not loaded yet (e.g. a retry rewound to scenes
   // pictured in an earlier session): fill them in.
   loadExistingBeatImages();
+  // Stage-background follow (redesign slice 3): a retry
+  // rewind drops the tail, so the backdrop follows the
+  // latest pictured scene that is still in the book.
+  followStageBackground();
   if (scene) {
     scrollToLatestScene();
     // The scene's text is complete: pre-generate its audio
@@ -3303,6 +3385,16 @@ export const __playTest = {
   parseDialogueSpans,
   isThoughtBlockEligible,
   splitBeats,
+  pickStageBackground,
+  followStageBackground,
+  sceneBackgroundKey,
+  setSceneImageSrc(key, url) { sceneImageSrc.set(key, url); },
+  setSceneBackground(value) { sceneBackground = value; },
+  getSceneBackground() { return sceneBackground; },
+  resetStageBackgroundState() {
+    sceneImageSrc.clear();
+    sceneBackground = null;
+  },
 };
 
 init();

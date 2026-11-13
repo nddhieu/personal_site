@@ -57,6 +57,7 @@ class FakeNode {
     this.alt = "";
     this.title = "";
     this.type = "";
+    this.style = {};
     this._rawHtml = "";
   }
   get className() { return [...this._classes].join(" "); }
@@ -137,6 +138,12 @@ globalThis.sessionStorage = makeStorage();
 globalThis.location = { search: "?id=test-book", hostname: "localhost" };
 globalThis.window = globalThis;
 globalThis.fetch = () => Promise.reject(new Error("no network in harness"));
+// The play page itself: applySceneBackground / applyBgAdjust
+// paint the backdrop onto .page-play, so the fake document
+// answers that one selector with a persistent node (every
+// other selector still returns null, as before).
+const pagePlayEl = new FakeNode("div");
+pagePlayEl.classList.add("page-play");
 globalThis.document = {
   body: new FakeNode("body"),
   title: "",
@@ -150,7 +157,9 @@ globalThis.document = {
   },
   createElement(tag) { return new FakeNode(tag); },
   createTextNode(text) { return new FakeText(text); },
-  querySelector() { return null; },
+  querySelector(sel) {
+    return sel === ".page-play" ? pagePlayEl : null;
+  },
   querySelectorAll() { return []; },
   addEventListener() {},
 };
@@ -406,6 +415,134 @@ check("a quoted span inside a thought stays italic thought, never bold", () => {
   const em = ps[0].childNodes.filter((n) => n.tagName === "EM");
   assert.equal(em.length, 1);
   assert.equal(em[0].textContent, 'She said "go" and meant it.');
+});
+
+/* --- slice 3: stage background auto-follow --- */
+function stageSetup() {
+  T.resetStageBackgroundState();
+  localStorage.removeItem(T.sceneBackgroundKey());
+  T.setScenes([]);
+}
+const pictured = (n) => ({ text: `Scene ${n}.`, image_file: `s${n}.jpg` });
+
+check("pickStageBackground takes the latest pictured scene's beat 0", () => {
+  assert.deepEqual(
+    T.pickStageBackground([pictured(0), pictured(1), { text: "C." }]),
+    { sceneIndex: 1, beatIndex: 0, key: "1:0" });
+});
+
+check("a later unpictured scene leaves the earlier picture in place", () => {
+  assert.deepEqual(
+    T.pickStageBackground([pictured(0), { text: "B." }]),
+    { sceneIndex: 0, beatIndex: 0, key: "0:0" });
+});
+
+check("a beat-1-only image does not count; beat 0 does", () => {
+  assert.deepEqual(
+    T.pickStageBackground([
+      { text: "A.", beat_images: { 1: { image_file: "a1.jpg" } } },
+      { text: "B.", beat_images: { 0: { image_file: "b0.jpg" } } },
+    ]),
+    { sceneIndex: 1, beatIndex: 0, key: "1:0" });
+});
+
+check("no pictured scene picks nothing", () => {
+  assert.equal(T.pickStageBackground([{ text: "A." }]), null);
+  assert.equal(T.pickStageBackground([]), null);
+  assert.equal(T.pickStageBackground(null), null);
+});
+
+check("follow applies the latest pictured scene's cached URL", () => {
+  stageSetup();
+  T.setScenes([pictured(0), pictured(1)]);
+  T.setSceneImageSrc("0:0", "blob:a");
+  T.setSceneImageSrc("1:0", "blob:b");
+  T.followStageBackground();
+  assert.deepEqual(T.getSceneBackground(), { key: "1:0", url: "blob:b" });
+  assert.equal(
+    document.querySelector(".page-play").style.backgroundImage
+      .includes("blob:b"), true);
+  // Auto-follow never writes the reader's stored choice.
+  assert.equal(localStorage.getItem(T.sceneBackgroundKey()), null);
+});
+
+check("follow leaves the backdrop alone with no pictured scene", () => {
+  stageSetup();
+  T.setScenes([{ text: "A." }]);
+  T.followStageBackground();
+  assert.equal(T.getSceneBackground(), null);
+});
+
+check("follow waits for the image bytes: uncached pick changes nothing", () => {
+  stageSetup();
+  T.setScenes([pictured(0)]);
+  T.followStageBackground();
+  assert.equal(T.getSceneBackground(), null);
+});
+
+check("a reader-set photo wins over the follow", () => {
+  stageSetup();
+  T.setScenes([pictured(0), pictured(1)]);
+  T.setSceneImageSrc("1:0", "blob:b");
+  const readerBg = { key: "0:0", url: "blob:reader" };
+  localStorage.setItem(T.sceneBackgroundKey(), "0:0");
+  T.setSceneBackground(readerBg);
+  T.followStageBackground();
+  assert.equal(T.getSceneBackground(), readerBg);
+});
+
+check("the book portrait yields to the follow", () => {
+  stageSetup();
+  T.setScenes([pictured(0), pictured(1)]);
+  T.setSceneImageSrc("1:0", "blob:b");
+  T.setSceneBackground({ key: "book:main-character", url: "blob:portrait" });
+  T.followStageBackground();
+  assert.deepEqual(T.getSceneBackground(), { key: "1:0", url: "blob:b" });
+});
+
+check("an auto-followed backdrop advances to the newest pictured scene", () => {
+  stageSetup();
+  T.setScenes([pictured(0), pictured(1)]);
+  T.setSceneImageSrc("0:0", "blob:a");
+  T.setSceneImageSrc("1:0", "blob:b");
+  // No stored choice: this backdrop is the follow's own.
+  T.setSceneBackground({ key: "0:0", url: "blob:a" });
+  T.followStageBackground();
+  assert.deepEqual(T.getSceneBackground(), { key: "1:0", url: "blob:b" });
+});
+
+check("a rewind moves the backdrop back to the latest pictured scene left", () => {
+  stageSetup();
+  T.setScenes([pictured(0), pictured(1)]);
+  T.setSceneImageSrc("0:0", "blob:a");
+  T.setSceneImageSrc("1:0", "blob:b");
+  T.followStageBackground();
+  assert.deepEqual(T.getSceneBackground(), { key: "1:0", url: "blob:b" });
+  // Retry rewound the tail: scene 1 is gone.
+  T.setScenes([pictured(0)]);
+  T.followStageBackground();
+  assert.deepEqual(T.getSceneBackground(), { key: "0:0", url: "blob:a" });
+});
+
+check("an already-current backdrop is not re-applied", () => {
+  stageSetup();
+  T.setScenes([pictured(0), pictured(1)]);
+  T.setSceneImageSrc("1:0", "blob:b");
+  const current = { key: "1:0", url: "blob:b" };
+  T.setSceneBackground(current);
+  T.followStageBackground();
+  assert.equal(T.getSceneBackground(), current);
+});
+
+check("resetStageBackgroundState clears backdrop and cached URLs", () => {
+  stageSetup();
+  T.setSceneImageSrc("0:0", "blob:a");
+  T.setSceneBackground({ key: "0:0", url: "blob:a" });
+  T.resetStageBackgroundState();
+  assert.equal(T.getSceneBackground(), null);
+  T.setScenes([pictured(0)]);
+  T.followStageBackground();
+  assert.equal(T.getSceneBackground(), null);
 });
 
 console.log(`\n${passed} checks passed`);
