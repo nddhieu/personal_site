@@ -1,6 +1,225 @@
 {
-  "generated_at": "2026-11-13T08:22:00-06:00",
+  "generated_at": "2026-11-13T09:52:00-06:00",
   "articles": [
+    {
+      "slug": "edge0-145b",
+      "date": "2026-11-13",
+      "category": "Models",
+      "kicker": "A 145B model that fits on one GPU",
+      "title": "Edge0-145B: A 145-Billion-Parameter Model That Runs on a Single GPU — and Beats Its Own Parent at Coding",
+      "summary": "Edge0-145B is a 145-billion-parameter open-weight model released November 13 that runs on a single NVIDIA GPU while activating only 10.12 billion parameters per token. On its own benchmark table it beats the Qwen model it was derived from at agentic coding — DeepSWE 64.6 against 58.7, Terminal-Bench 86.5 against 83.3 — and decodes at 121.2 tokens a second on an RTX 5090 D. The number that matters for our team: a capped 16 GiB VRAM budget still decodes at 44.9 tokens a second, which is exactly the class of card Hieu runs. It is free under Apache 2.0, and the honest next step is to measure it on the real card before believing the headline.",
+      "hook": "145 billion parameters, 10 billion active per token, decoding on one GPU.",
+      "takeaways": [
+        "Edge0-145B is a latent mixture-of-experts model derived from Qwen3.8-Flash-Next: 145 billion parameters total, only 10.12 billion active per token, trained natively at 4 bits.",
+        "On Edge0's own benchmark table it beats its parent at agentic coding — DeepSWE 64.6 vs 58.7, Terminal-Bench 86.5 vs 83.3 — while the parent still leads on instruction-following and knowledge tests.",
+        "It decodes at 121.2 tokens a second on an RTX 5090 D, and a capped 16 GiB VRAM + 20 GiB RAM budget still manages 44.9 — but that row is a capped 5090 D, not a real 16 GB card, so the first step is measuring it on Hieu's actual card."
+      ],
+      "image": "img/edge0-145b.jpg",
+      "problem": "The best open models keep getting bigger while the GPUs most people own stay the same size. A 145-billion-parameter model sounds like datacenter hardware, and the free brains our team actually uses — hosted tiers and small local models — cap out well below that class. The gap is the whole problem: you either pay for hosted inference or settle for a much smaller model.",
+      "solution": "Edge0-145B closes the gap with a latent mixture-of-experts design. The model holds 145 billion parameters but routes each token through only 10 of its 512 experts per layer plus one shared expert, so 10.12 billion parameters are active per token. The weights ship as Q3_K or NVFP4 builds and stream from SSD and host RAM as the router predicts which experts the next step will need, so the model runs on one NVIDIA GPU under the project's edge0-strata runtime, started with edge0-infer serve or edge0-infer chat on Linux or Windows. It is open-weight under Apache 2.0, and the weights are published on Hugging Face.",
+      "benefit": "If the numbers hold on a real 16 GB card, this is the first 145B-class model our team could actually run locally: a coding-agent brain that beats its own parent on agentic benchmarks, with no per-token bill, no hosted quota, and no data leaving the machine. Even the smaller 120B sibling decoding faster than the 145B makes the trial cheap — the 120B Q3_K build is 27.98 GiB and decodes at 144.6 tokens a second on a 5090 D.",
+      "apply": "On HieuPC, build edge0-infer and pull the smaller 120B-Q3_K build first — 27.98 GiB, the fastest of the two — then run the same agent-coding prompt set we already use for our free brains and measure real decode speed on the actual 16 GB card before believing the capped-budget row. Only if the 120B holds up is the 145B Q3_K build, at 40.81 GiB, worth the download. Treat the 16 GiB VRAM claim as a hypothesis to test, not a spec: the project's own notes say that row is a capped RTX 5090 D, not a 16 GB card.",
+      "stats": [
+        {
+          "value": "64.6",
+          "label": "DeepSWE 1.1, vs 58.7 for parent Qwen3.8-Flash-Next (Edge0's own table)"
+        },
+        {
+          "value": "86.5",
+          "label": "Terminal-Bench 2.1, vs 83.3 for the parent and 78.2 for Claude Opus 4.6 Max"
+        },
+        {
+          "value": "121.2 tok/s",
+          "label": "Agent decode, 145B Q3_K on RTX 5090 D 24 GB"
+        },
+        {
+          "value": "44.9 tok/s",
+          "label": "Agent decode on a capped 16 GiB VRAM + 20 GiB RAM budget"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "The trick is a latent mixture of experts. Edge0-145B has 512 experts per layer, 48 layers, and a SwiGLU width of 640; each token is routed to 10 experts plus one shared expert, which is why only 10.12 billion of the 145 billion parameters are active per token. The model was trained natively at 4 bits and ships in Q3_K (40.81 GiB) and NVFP4 (47.79 GiB) builds. A router predicts which experts the next step will need, and the weights stream from SSD and host RAM — the project's own description calls it SSD-streamed weights with a router that predicts loads a step ahead. The runtime is edge0-strata, started by edge0-infer serve or edge0-infer chat, on Linux or Windows with a single NVIDIA GPU."
+        },
+        {
+          "heading": "The benchmark table, read honestly",
+          "body": "Edge0 publishes a six-model, six-benchmark table, and the win is specific, not general. Edge0-145B leads on the two agentic coding tests: DeepSWE 1.1 at 64.6 against its parent Qwen3.8-Flash-Next at 58.7, and Terminal-Bench 2.1 at 86.5 against 83.3 — it also beats Claude Opus 4.6 Max on Terminal-Bench, 86.5 to 78.2. The parent still leads where the tests measure instruction-following and knowledge: IFBench 81.3 vs 80.6, GPQA-Diamond 91.7 vs 90.4, HLE 35.9 vs 35.4, with AA-LCR effectively tied at 79.1 vs 79.3. So the honest read is: Edge0-145B is the better agentic coder of the family, not the better model at everything — and every number here is Edge0's own, not independently verified."
+        },
+        {
+          "heading": "Speed on real hardware",
+          "body": "The headline speed is 145B Q3_K on an RTX 5090 D with 24 GB: 121.2 tokens a second of agent decode and 3,554.9 tokens a second of prefill on a 16K-token input. An RTX 4090 with 24 GB manages 91.7 tokens a second of agent decode on the same build. The table also lists an RTX Spark N1X at 36.7 and an Apple M2 Ultra at 57.0 — the project notes the M2 Ultra row is a Metal measurement, not an announcement of macOS release availability. The 120B sibling is faster everywhere: 144.6 tokens a second of agent decode on the 5090 D, against 121.2 for the 145B."
+        },
+        {
+          "heading": "The 16 GiB row — the one that matters, and its asterisk",
+          "body": "The eye-catching row is 16 GiB VRAM + 20 GiB RAM at 44.9 tokens a second of agent decode. The project is explicit about what that row is: the same RTX 5090 D with 24 GB, constrained by a cgroup to a 16 GiB VRAM and 20 GiB system-RAM budget — VRAM capped with --vram-reserve-mib 8192, system RAM with MemoryMax=20G and no swap. With residency on, the same card holds the Q3_K weights (40.81 GiB) as 23.14 GiB of VRAM plus 31.28 GiB of RAM. The README states plainly that the budget is a test limit, not a minimum system requirement. A real 16 GB card has a different memory hierarchy, a different SSD, and different host RAM — so 44.9 is a reason to test, not a promise."
+        },
+        {
+          "heading": "The 120B sibling: try this one first",
+          "body": "Edge0-120B is the smaller release from the same day: 120 billion parameters, 8.64 billion active per token, Q3_K at 27.98 GiB and NVFP4 at 32.96 GiB. It scores lower than its big sibling — DeepSWE 51.3 and Terminal-Bench 75.3, below even the parent's 58.7 and 83.3 — but it decodes faster, 144.6 tokens a second on a 5090 D against 121.2 for the 145B. For a first trial that trade is right: a 28 GiB download instead of 41, and the same runtime. If the 120B can't hold a useful decode speed on Hieu's card, the 145B won't either."
+        },
+        {
+          "heading": "What it costs and what you bring",
+          "body": "The model is free and Apache 2.0, the weights are on Hugging Face in Q3_K and NVFP4, and the code is on GitHub at Edge0-AI/Edge0, where it passed 10,800 stars on release day. What you bring is one NVIDIA GPU on Linux or Windows, the edge0-infer tool, and disk space: 40.81 GiB for the 145B Q3_K weights, 27.98 GiB for the 120B Q3_K. There is no hosted tier to sign up for and no per-token bill — the cost is the download, the disk, and the time to measure it."
+        }
+      ],
+      "checklist": [
+        "On HieuPC, build edge0-infer from the repo's setup guide.",
+        "Pull the 120B-Q3_K build first (27.98 GiB) — the smaller, faster trial.",
+        "Run one real agent-coding task and time the decode on the actual 16 GB card.",
+        "Compare the result against the same task on the team's current free brains.",
+        "Only then download the 145B Q3_K build (40.81 GiB) if the 120B holds up."
+      ],
+      "caveats": "All benchmarks are Edge0's own, from its own table — no independent verification yet. The 16 GiB VRAM row is a capped RTX 5090 D, not a 16 GB card, and the README says so plainly; a real 16 GB card may behave differently, especially on SSD speed and host RAM. The parent still beats Edge0-145B on IFBench, GPQA-Diamond, and HLE, so the win is specific to agentic coding, not general quality. We have not run it — the trial on HieuPC is still the first step. Star count was 10,837 at the time of writing and moves daily.",
+      "source_name": "Edge0 on GitHub",
+      "source_url": "https://github.com/Edge0-AI/Edge0"
+    },
+    {
+      "slug": "aws-emulator",
+      "date": "2026-11-13",
+      "category": "Tools",
+      "kicker": "AWS on localhost, no account, no bill",
+      "title": "AWS Emulator: Amazon's Official Local Stand-In for the AWS APIs — Test Lambda and S3 Without the Cloud Bill",
+      "summary": "Amazon's AWS Emulator, created September 11 and already past 6,500 stars, is a local program that serves the AWS APIs on your own machine: point the AWS CLI or an SDK at 127.0.0.1:9297 and test against emulated resources with no AWS account and no service fee. It runs in server mode for any CLI or SDK, or embedded inside Rust tests with one isolated instance per test, and it ships an installable agent skill. The verdict: a free, official way to iterate on AWS-touching code — with the honest catch that fidelity is per-service and per-release, so check the scores for the services you actually use.",
+      "hook": "The whole AWS API surface, emulated on localhost, free.",
+      "takeaways": [
+        "AWS Emulator is Amazon's official local emulator of the AWS APIs: no AWS account, no service fee, served over HTTPS on 127.0.0.1:9297.",
+        "Two modes fit two jobs: server mode for the CLI and any SDK, embedded mode that runs in-process inside Rust tests with one isolated instance per test.",
+        "Fidelity is the honest catch — check the per-release fidelity scores and the issues tracker for your services, and turn telemetry off if you don't want usage data sent to AWS."
+      ],
+      "image": "img/aws-emulator.jpg",
+      "problem": "Our team's stack is AWS end to end — Lambda, S3, CloudFormation — and every integration test against real AWS costs money, needs credentials, and leaves state behind in a shared account. The agents write AWS-touching code constantly, so the loop is either slow and careful against the cloud or skipped entirely. Local stand-ins exist, but unofficial ones drift from the real APIs and nobody maintains them.",
+      "solution": "AWS Emulator is Amazon's own answer: a local program that serves an AWS API endpoint on your machine. Start it, set environment variables to point the AWS CLI or an SDK at its endpoint, and run your code as usual — the calls hit the emulator, not AWS. In embedded mode you pass the emulator's HTTP client straight into your SDK client instead, so each Rust test gets its own isolated instance with no endpoint URL, certificate, or environment variable to set. It also ships as an agent skill — aws agent-toolkit add-skill --skill-name aws-emulator --region us-east-1 installs it into an agent's toolkit.",
+      "benefit": "Free iteration and CI without cloud spend, against an emulator Amazon itself publishes: Lambda and S3 integration tests can run on every commit with no account, no credentials in the loop, and no leftover state in a shared AWS account. The skill-install path fits how our agents already work, so the emulator can be reached the same way our other tools are.",
+      "apply": "Install the skill first, then point one existing Lambda/S3 integration test at the emulator instead of real AWS — server mode for the quickest check, embedded mode if the test lives in Rust. Before trusting it for a service, read that service's fidelity score on the releases page and scan the issues tracker for gaps that would bite your calls. Turn telemetry off at install time if the team doesn't want usage data going to AWS.",
+      "stats": [
+        {
+          "value": "6,570",
+          "label": "GitHub stars, two months after its September 11, 2026 creation"
+        },
+        {
+          "value": "$0",
+          "label": "Service fees to test against the emulated AWS APIs"
+        },
+        {
+          "value": "9297",
+          "label": "Local HTTPS port the emulator serves on (127.0.0.1)"
+        },
+        {
+          "value": "100 GB",
+          "label": "Free disk needed to build from source — use the prebuilt packages instead"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "The emulator is a local program with no graphical interface. After you start it, you set environment variables to point the AWS CLI or an SDK at its endpoint, then run your code as usual. It serves HTTPS on 127.0.0.1:9297 with a self-signed certificate. In embedded mode there is no endpoint at all: you pass the emulator's HTTP client to your SDK instead, and the emulator runs in-process. The project is published under CC0-1.0, created September 11, 2026, and it was number one on GitHub Trending on the day we found it."
+        },
+        {
+          "heading": "Server mode vs embedded mode",
+          "body": "Server mode is the general path: the emulator runs as its own process and serves any CLI or SDK that can be pointed at an endpoint. Embedded mode is the Rust path: add the emulator as a dev-dependency and run it in-process, one isolated instance per test, with no endpoint URL, certificate, or environment variable to set — your test wires the emulator's HTTP client straight into the SDK client. The trade-off is build cost: embedded mode compiles the emulator into your test binary, so a project's first cargo test builds the emulator's service crates alongside your own code, on the same order as building from source. After that, incremental builds are fast, and the project recommends reusing one CARGO_TARGET_DIR across projects and pinning the emulator to a release commit so it isn't rebuilt on every change."
+        },
+        {
+          "heading": "The agent-skill path",
+          "body": "The emulator ships an installable agent skill, which is the part that fits our team best. Running aws agent-toolkit add-skill --skill-name aws-emulator --region us-east-1 installs the skill into an agent's toolkit, so an agent can reach for the emulator the same way it reaches for any other tool — no separate setup doc to remember, no manual endpoint wiring each time. For a team whose agents already work through skills, that install path is the difference between a tool that gets used and a tool that gets bookmarked."
+        },
+        {
+          "heading": "Fidelity: the honest part",
+          "body": "An emulator is not AWS, and the project doesn't pretend otherwise. To see how closely each service matches AWS, check the fidelity scores published with each release on the releases page, and check the project's guide for whether your own project is expected to work. The repository keeps an issues/ tracker of known fidelity gaps, and it asks for bug and fidelity reports in GitHub Issues — naming the service, the operation, your SDK and version, the request you sent, and how the response differed from real AWS. One boundary to know: the repository does not take pull requests, so fixes come from Amazon's team, not the community."
+        },
+        {
+          "heading": "Telemetry is on by default",
+          "body": "AWS Emulator is configured to collect and report usage data to AWS, and telemetry is on by default. The project says collection uses strict data minimization and never includes what's in your requests or responses, your code, your credentials, or personal data, and that it doesn't share telemetry with third parties. Turning it off is straightforward: start the emulator with --telemetry off, set EMULATOR_TELEMETRY to off before you start it, or set it in the emulator settings file (~/.aws/emulator/config.toml on Linux and macOS). In embedded mode you turn it off in the options passed when you create the emulator. If you build a tool that includes the emulator, the project asks you to tell your users about telemetry and give them a way to turn it off."
+        },
+        {
+          "heading": "Build cost and the prebuilt shortcut",
+          "body": "Building from source is the one place the project asks for real resources: at least 100 GB of free disk for the target directory, because the workspace has one crate per AWS service and a debug build of everything is large — and it grows as services are added. Source builds are supported on Linux (x86_64 and aarch64); on Windows and macOS the project points at the Docker path. Most users should install a prebuilt package instead. You only need the source build if you are modifying the emulator, running it from a checkout, or using embedded mode."
+        }
+      ],
+      "checklist": [
+        "Install the agent skill: aws agent-toolkit add-skill --skill-name aws-emulator --region us-east-1.",
+        "Start the emulator and point one Lambda/S3 integration test at 127.0.0.1:9297.",
+        "Check the fidelity score for Lambda and S3 on the releases page first.",
+        "Turn telemetry off (EMULATOR_TELEMETRY=off) if the team doesn't want usage data sent.",
+        "Use the prebuilt package — don't build from source unless you're modifying the emulator."
+      ],
+      "caveats": "Fidelity gaps exist by design — the emulator is not AWS, and some operations will differ; the per-release scores and the issues tracker are the only honest guide for the services you use. Telemetry is on by default and sends usage data to AWS; the project says it never includes request or response content, code, credentials, or personal data. Building from source needs at least 100 GB of free disk. The repository does not take pull requests, so fixes come from Amazon's team, not the community. Star count was 6,570 at the time of writing and moves daily.",
+      "source_name": "AWS Emulator on GitHub",
+      "source_url": "https://github.com/aws/aws-emulator"
+    },
+    {
+      "slug": "agent-skills",
+      "date": "2026-11-13",
+      "category": "Tools",
+      "kicker": "A skill pack for coding agents, from Addy Osmani",
+      "title": "agent-skills: Addy Osmani's 25 Production-Grade Skills for Coding Agents — Steal the Two That Map to Our Team",
+      "summary": "Addy Osmani's agent-skills is a pack of 25 production-grade engineering skills plus 9 lifecycle slash commands — spec to plan to build to test to review to ship — for AI coding agents, with 117,036 stars and a native Gemini CLI install path. The verdict for our team: don't adopt the pack, steal from it. Two skills map directly onto practices we already run — context-engineering onto our token discipline, doubt-driven-development onto our cold review — so the first step is installing just those two and running them on one real Story Realm feature before adopting anything.",
+      "hook": "Twenty-five skills, nine commands, one lifecycle — steal two.",
+      "takeaways": [
+        "agent-skills is 25 skills plus 9 lifecycle slash commands (spec, plan, build, test, review, ship) for coding agents, MIT licensed, with adapters for Claude Code, Gemini CLI, and Antigravity.",
+        "Two skills map onto our team's own practices: context-engineering (feed the agent the right info at the right time) and doubt-driven-development (adversarial fresh-context review of every non-trivial decision).",
+        "Install only those two first and run them on one real Story Realm feature — and watch issue #361: a per-skill install doesn't copy the shared references checklists, so clone the repo or install the whole pack."
+      ],
+      "image": "img/agent-skills.jpg",
+      "problem": "Our team already runs on skills — builder-craft, token discipline, self-review before merge — but they grew organically from our own incidents, and we have no outside reference for what a production-grade skill pack looks like. Every team that works this way eventually asks the same question: are our practices actually good, or just familiar? Without a comparison point, the answer is always 'familiar'.",
+      "solution": "agent-skills is that comparison point: 25 skills, each a structured workflow with steps, verification gates, and anti-rationalization tables, plus 9 slash commands that map to the development lifecycle and activate the right skills automatically. It installs for Claude Code, Gemini CLI, and Antigravity — the Gemini path is one command, gemini skills install with --path skills — and the whole pack installs with npx skills add addyosmani/agent-skills. The pack's own standout skills are the two that read like our practices written down by someone else.",
+      "benefit": "A free, MIT-licensed reference implementation of the discipline our team already tries to practice — and a cheap experiment: install two skills, run them on one real feature, and compare against our own before adopting anything. If they catch something our review missed, the pack earns its place; if they don't, we've validated our own skills against a 117,000-star pack for the cost of one feature.",
+      "apply": "Install only context-engineering and doubt-driven-development — not the whole pack — and run them on one real Story Realm feature, judging them against our builder-craft skills on the same work. Clone the repo or install whole rather than installing per-skill: per-skill installs don't copy the shared references checklists (issue #361). Adopt nothing until the comparison is done.",
+      "stats": [
+        {
+          "value": "25",
+          "label": "Skills in the pack — 24 lifecycle skills plus the using-agent-skills meta-skill"
+        },
+        {
+          "value": "9",
+          "label": "Lifecycle slash commands, from spec to ship"
+        },
+        {
+          "value": "117,036",
+          "label": "GitHub stars"
+        },
+        {
+          "value": "12,239",
+          "label": "Forks on GitHub"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "Each skill is a structured workflow with steps, verification gates, and anti-rationalization tables — the tables exist to stop an agent from talking itself out of a check it should run. The 9 slash commands are entry points, not the skills themselves: each one activates the right skills automatically for its stage of the lifecycle. The pack ships adapters for three agent hosts — Claude Code (.claude/commands), Gemini CLI (.gemini/commands), and Antigravity — each carrying the same 9 commands. The full pack is 25 skills: 24 lifecycle skills plus the using-agent-skills meta-skill that teaches an agent how to use the rest."
+        },
+        {
+          "heading": "The two skills to steal first",
+          "body": "context-engineering is the skill of feeding an agent the right information at the right time — rules files, context packing, MCP integrations — and the pack says to reach for it when starting a session, switching tasks, or when output quality drops. doubt-driven-development is adversarial fresh-context review of every non-trivial decision, run as CLAIM, then EXTRACT, then DOUBT, then RECONCILE, then STOP, with optional user-authorized cross-model escalation; the pack says to use it when the stakes are high, when working in unfamiliar code, or when a confident output is cheaper to verify now than to debug later. One is about what goes into the agent, the other about how its decisions get challenged — and both are things our team already tries to do by hand."
+        },
+        {
+          "heading": "Install paths",
+          "body": "The whole pack installs with one command: npx skills add addyosmani/agent-skills. For Gemini CLI specifically, the native path is gemini skills install https://github.com/addyosmani/agent-skills.git --path skills, or gemini skills install ./agent-skills/skills/ from a local clone. Per-skill installs are possible, but that path has a catch — see the next section — so the safer first move is the whole pack or a full clone, then using only the two skills you actually want."
+        },
+        {
+          "heading": "The #361 catch",
+          "body": "A per-skill install doesn't copy the shared references/ checklists the skills depend on — tracked in issue #361 in the repo. The skills reference shared checklists that live outside each skill's own folder, so installing one skill on its own leaves it pointing at files that aren't there. The workaround is to clone the repo or install the whole pack, which brings the references along. It's a small thing, but it's exactly the kind of gap that only shows up mid-trial, when a skill silently runs without its checklist — so get the install right before judging the skills."
+        },
+        {
+          "heading": "Compared honestly: against our own builder-craft",
+          "body": "The mapping is what makes this pack worth a trial rather than a browse. context-engineering is our token discipline written as a skill: feed the agent the right info at the right time instead of dumping whole files. doubt-driven-development is our cold review and self-review written as a skill: a fresh context challenging every non-trivial decision before it ships. The pack is a reference and a trial, not a replacement — our skills carry team-specific rules no generic pack has, like the bridge's 240-second generation ceiling and the Story Realm canon rules. The honest test is one feature, both skill sets, same work: if the pack's skills catch something ours missed, they earn a place; if they don't, our practices just got validated against a 117,000-star pack."
+        },
+        {
+          "heading": "What it costs and what you bring",
+          "body": "The pack is free and MIT licensed. It was created February 15, 2026 and is actively maintained — the last push was November 1, 2026. What you bring is a coding agent that supports skills: Claude Code, Gemini CLI, or Antigravity, each with its own adapter in the repo. There is nothing to host and nothing to pay for; the cost is the time to run two skills on one real feature and compare the result honestly."
+        }
+      ],
+      "checklist": [
+        "Clone the repo (or install the whole pack) — don't install per-skill, or the references checklists won't come along (issue #361).",
+        "Install only context-engineering and doubt-driven-development into Gemini CLI.",
+        "Run both on one real Story Realm feature.",
+        "Compare what they catch against what our builder-craft skills catch on the same work.",
+        "Adopt nothing until the comparison is done — report the result in the room first."
+      ],
+      "caveats": "The pack is a reference, not a verdict on our own skills — a generic pack can't carry team-specific rules like our bridge limits or Story Realm canon, so a skill that looks better on paper still has to prove itself on our work. Per-skill installs miss the shared references checklists (issue #361), which is the kind of gap that only shows up mid-trial. Star and fork counts were live at the time of writing and move daily; the pack's own README is the source for the skill descriptions used here.",
+      "source_name": "agent-skills on GitHub",
+      "source_url": "https://github.com/addyosmani/agent-skills"
+    },
     {
       "slug": "craft-anything-reverse-engineer-rebuild",
       "date": "2026-11-13",
