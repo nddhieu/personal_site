@@ -449,11 +449,15 @@ function parseDialogueSpans(text) {
   return segments.length ? segments : [{ text: s, dialogue: false }];
 }
 
-/* Renders one beat paragraph's text: plain runs as text
- * nodes, *...* spans as <em class="thought-span">,
- * double-quoted speech as <strong class="dialogue-span">
- * (seq 577 addendum: dialogue bold against narration).
- * A whole-paragraph thought span on an eligible scene also
+/* Renders one beat paragraph's text: narration runs as
+ * <span class="narration-span">, *...* spans as
+ * <em class="thought-span">, double-quoted speech as
+ * <strong class="dialogue-span"> (seq 577 addendum:
+ * dialogue bold against narration; slice 4a: narration
+ * muted against dialogue-bright, the colour half of the
+ * easier-to-read distinction - bare text nodes cannot be
+ * coloured, so narration needs the span). A
+ * whole-paragraph thought span on an eligible scene also
  * marks the paragraph thought-block. The leading
  * .beat-icons span (speaker + image buttons) is kept: in
  * the full render it is prepended after this call, and in
@@ -487,7 +491,10 @@ function renderBeatText(p, beatText, scene) {
           strong.textContent = d.text;
           p.append(strong);
         } else if (d.text) {
-          p.append(document.createTextNode(d.text));
+          const span = document.createElement("span");
+          span.className = "narration-span";
+          span.textContent = d.text;
+          p.append(span);
         }
       }
     }

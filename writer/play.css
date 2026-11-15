@@ -113,7 +113,8 @@
 /* Inner thoughts (redesign, seq 580/715): *...* spans render
    italic with the markers stripped; a paragraph that is one
    whole thought is its own block. Thought spans take the
-   muted token, one step lighter than narration, italic kept. */
+   muted token, italic kept; narration is muted too now
+   (slice 4a below), so thoughts read distinct by italic. */
 .page-play .prose em.thought-span {
   font-style: italic;
   color: var(--color-text-muted);
@@ -121,13 +122,23 @@
 .page-play .prose p.thought-block {
   font-style: italic;
 }
+/* Narration colour (redesign, slice 4a): the colour half of
+   the easier-to-read distinction - narration renders muted
+   against full-bright dialogue. Over a background image the
+   muted step is a softer white (see the .has-scene-bg rules
+   at the end of this file); dialogue takes full white there. */
+.page-play .prose span.narration-span {
+  color: var(--color-text-muted);
+}
 /* Spoken lines (redesign, seq 577 addendum): double-quoted
    speech renders bold against regular narration - the
-   weight half of the easier-to-read distinction. Over a
-   background image the bold inherits the white prose +
-   text-shadow from .has-scene-bg .prose above. */
+   weight half of the easier-to-read distinction. The colour
+   is explicit so dialogue stays full-bright beside muted
+   narration (slice 4a); over a background image the
+   .has-scene-bg rule below takes it to full white. */
 .page-play .prose strong.dialogue-span {
   font-weight: 700;
+  color: var(--color-text);
 }
 .page-play .bible-list {
   display: grid;
@@ -343,9 +354,9 @@
   margin: 0 0 1.45rem;
 }
 /* Thought spans: beat markup carries the viewpoint's inner
-   thoughts as <em> (the *...* contract); they sit one
-   palette step lighter than the narration in each theme,
-   italic preserved. */
+   thoughts as <em> (the *...* contract); they take the
+   muted token, italic preserved - narration is muted too
+   now (slice 4a), so thoughts read distinct by italic. */
 .page-play .prose em {
   color: var(--color-text-muted);
 }
@@ -739,7 +750,9 @@
  * with a beat's image as the page background, the reading
  * column goes white over the dark scrim play.js lays down,
  * with a soft shadow so the type holds over bright parts of
- * the photo; thoughts step down to a lighter white; the
+ * the photo; narration steps down to a softer white,
+ * dialogue stays full white, thoughts step down to a
+ * lighter white; the
  * per-beat speaker/image chips become the reference app's
  * dark translucent circles with light glyphs. The header
  * title sits over the same photo, so it takes the same
@@ -751,6 +764,12 @@
   color: #fff;
   text-shadow: 0 1px 12px rgba(0, 0, 0, 0.45),
     0 0 2px rgba(0, 0, 0, 0.35);
+}
+.page-play.has-scene-bg .prose span.narration-span {
+  color: rgba(255, 255, 255, 0.88);
+}
+.page-play.has-scene-bg .prose strong.dialogue-span {
+  color: #fff;
 }
 .page-play.has-scene-bg .prose em {
   color: rgba(255, 255, 255, 0.78);
