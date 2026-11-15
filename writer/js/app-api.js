@@ -4,10 +4,11 @@
  * endpoints). Import this, never the legacy module, from the new
  * pages.
  *
- * API base rule (same as the old pages): ?api= override wins;
- * localhost pages use http://localhost:8001; any other host uses
- * the Tailscale Serve address. The API container is localhost-only
- * by design, so off-PC traffic must go through Serve. */
+ * API base rule: ?api= override wins; localhost pages use
+ * http://localhost:8001; the serverPC dev GUI uses same-origin
+ * /api (proxied to the dev API); every other host, including the
+ * public site, uses the production API at
+ * https://api.hieu-nguyen.com. */
 
 export const TOKEN_KEY = "st_session_token";
 
@@ -26,7 +27,8 @@ export function resolveApiBase() {
   ) {
     return "";
   }
-  return "https://hieupc.tailf1523e.ts.net";
+  // Public site (and any other host): production API.
+  return "https://api.hieu-nguyen.com";
 }
 
 export const API_BASE = resolveApiBase();
