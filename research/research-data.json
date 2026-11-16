@@ -2,6 +2,225 @@
   "generated_at": "2026-11-16T08:22:00-06:00",
   "articles": [
     {
+      "slug": "harnessmm-token-efficiency",
+      "date": "2026-11-16",
+      "category": "Tools",
+      "kicker": "Agent harnesses",
+      "title": "HarnessMM: Stop Paying Your Agent to Re-Think Every Step — Cut Harness Tokens by Up to 88%",
+      "summary": "HarnessMM is a research harness from a November 2026 paper (arXiv:2610.32813) that attacks the tax every multi-agent loop pays: the reasoning model gets re-invoked after every tool result, even when an earlier call already decided what happens next. Instead, one slow model call writes exact future tool actions into an Executable Decision Graph, and guarded reuse replays settled decisions while certified substitution runs them through the native tool interface. On HumanEval it cut DeepSeek Harness tokens per task from 96.28k to 11.62k — an 87.9% saving — while success rose from 71.4% to 85.7%. Codex kept its 90.8% success on 29.5% fewer tokens. The verdict: a real, measured attack on the re-reasoning tax — but research code with integrations only for Codex and DeepSeek harnesses, so porting it to a LangGraph pipeline is real work, not a drop-in.",
+      "hook": "Your agent re-thinks every step. HarnessMM writes the plan once and replays it, cutting tokens up to 88%.",
+      "takeaways": [
+        "One slow model call writes exact future tool actions into an Executable Decision Graph; guarded reuse replays settled decisions instead of re-invoking the reasoning model.",
+        "DeepSeek Harness on HumanEval: 96.28k → 11.62k tokens per task (−87.9%) while success rose 71.4% → 85.7%.",
+        "Research code, not a drop-in: integrations exist only for Codex and DeepSeek harnesses, so porting to a LangGraph pipeline is real work."
+      ],
+      "image": "img/harnessmm-token-efficiency.jpg",
+      "problem": "Every coding-agent harness in common use has the same expensive habit: after each tool result, it calls the reasoning model again to decide what to do next — even when an earlier call already determined the next several actions. The model re-reads the whole conversation, re-reasons about a settled plan, and charges full price for the privilege. In a multi-agent loop that runs dozens of steps, that re-reasoning is most of the bill: prompt tokens are the overwhelming share of run cost, and the harness pays them again at every step. The paper behind HarnessMM puts it plainly — agent harnesses often invoke reasoning after each tool result, even when earlier calls have already determined subsequent actions. Our own loops pay exactly this tax: every turn re-reads context and re-reasons from scratch.",
+      "solution": "HarnessMM (Harness Minus Minus) flips the order of work: one slow model call — the 'author' — writes exact future tool actions, with arguments, dependencies and guards, into an Executable Decision Graph (EDG). From then on, Guarded Decision Reuse checks each tool result against the graph: if the observed receipt supports a stored action, that action is replayed without calling the reasoning model at all. Certified Callback Substitution runs the replayed action through the native tool interface and records the reasoning callback it replaced. The original actor only resumes when new reasoning is actually needed or a reuse condition fails. A second loop, recursive self-improvement, refines the authoring prompts, context settings and adapter rules from training feedback, with validation picking the deployment configuration.",
+      "benefit": "The saving is large and, unusually for this kind of paper, measured with success held or improved rather than traded away. On HumanEval, DeepSeek Harness went from 96.28k to 11.62k tokens per task — an 87.9% cut — while success rose from 71.4% to 85.7%. Codex kept its 90.8% success on 29.5% fewer tokens (66.72k to 47.02k). On MBPP, DeepSeek Harness tokens fell 80.4% (53.98k to 10.61k) while success ticked up from 90.3% to 91.8%. For a team whose prompt tokens are 99%+ of run cost, that is the difference between a loop affordable all day and one that is rationed.",
+      "apply": "Treat this as a trial, not an install. Clone the repo, run the no-model-call synthetic checks — `node examples/guarded_reuse.mjs` and `python reproduction/run_all.py` — and confirm the mechanism works as documented. Then map one repeated step from our own Story Realm turn pipeline onto an Executable Decision Graph and measure tokens before and after on identical tasks. Only if that trial shows a real saving is a wider port worth scoping — the shipped integrations are for Codex and DeepSeek harnesses, so our LangGraph pipeline needs its own adapter.",
+      "stats": [
+        {
+          "value": "−87.9%",
+          "label": "DeepSeek Harness tokens per task on HumanEval (96.28k → 11.62k)"
+        },
+        {
+          "value": "71.4% → 85.7%",
+          "label": "DeepSeek Harness success on HumanEval while tokens fell"
+        },
+        {
+          "value": "−29.5%",
+          "label": "Codex tokens per task on HumanEval (66.72k → 47.02k), success held at 90.8%"
+        },
+        {
+          "value": "−80.4%",
+          "label": "DeepSeek Harness tokens per task on MBPP (53.98k → 10.61k)"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "Three pieces carry the design. The author is a slow model call that writes the graph — exact actions, arguments, dependencies, and the guards that say when each action is safe to run. Guarded Decision Reuse is the runtime check: after each tool result, it activates a stored decision only if the tool's receipt supports it. Certified Callback Substitution is the execution step: the action goes through the native tool interface, and the system records which reasoning callback it replaced, so the substitution is auditable. When the graph is exhausted or a guard fails, control returns to the original actor, which reasons fresh. Nothing in the loop changes the model weights."
+        },
+        {
+          "heading": "The numbers, benchmark by benchmark",
+          "body": "All headline results are on coding benchmarks with the same tasks, backbone, tools and scorer on both sides. HumanEval (98 tasks): Codex 90.82% success held, tokens 66.72k → 47.02k (−29.54%); DeepSeek Harness 71.43% → 85.71% success, tokens 96.28k → 11.62k (−87.93%). MBPP-sanitized (257 tasks): DeepSeek Harness with a Qwen actor, 90.27% → 91.83% success, tokens 53.98k → 10.61k (−80.35%). An MBPP ablation isolates the two mechanisms: the full system hits 93.77% success at 13.17k tokens per task, versus 18.03k without guarded reuse and 16.37k without callback substitution — 26.91% and 19.52% fewer tokens respectively, with 407 certified substitutions recorded. The visual extension, HarnessMM-V, is a separate study: 62.50% success at 5.07k tokens per task on 96 MiniWoB++ tasks, beating four baselines on both."
+        },
+        {
+          "heading": "What recursive self-improvement actually does",
+          "body": "The 'recursive self-improvement' in the name is not the model rewriting itself. It is an outer loop over the harness configuration: training feedback refines the authoring prompts, the context settings and the adapter rules, and a validation step selects among frozen, training-derived candidates before testing. The selected configuration is frozen before the test run, and the actor's weights never change. That matters for trust: production runs a validated configuration, not a model that kept learning mid-run. It also bounds the claim — the improvement is in how the harness is driven, not the model's capability."
+        },
+        {
+          "heading": "How it compares with the obvious alternatives",
+          "body": "The naive fix for re-reasoning is caching: keep the last plan and re-send it. HarnessMM's answer to why that is not enough is the guard. A cached plan replays blindly; a guarded decision replays only when the tool receipt supports it, and falls back to the actor when it does not. The other obvious alternative is a cheaper, faster model for the routine steps — which saves money per call but still pays a call per step. HarnessMM removes the call entirely for settled decisions, which is why the DeepSeek saving (87.9%) is far larger than a model swap would give. The cost is complexity: someone has to author graphs, define guards, and validate configurations — and the README is candid that several runners are 'not ready-to-launch jobs'."
+        },
+        {
+          "heading": "Where it fits our work — and where it doesn't",
+          "body": "The fit to our problem is direct: our multi-agent loops re-reason at every step, and prompt tokens dominate our cost. A Story Realm turn is a repeated, structured sequence — the same shape the Executable Decision Graph is built for — so one turn step is the natural trial. The misfit is equally direct: the shipped integrations cover Codex and DeepSeek harnesses only, and our pipeline is LangGraph. There is no adapter for us to install; porting means writing the boundary between our harness and the graph controller, plus the receipt guards for our tools. Reproduction is uneven: only the MBPP aggregate is replayable from released data, and the HumanEval rows need external evaluation. Treat the headline numbers as the authors' measurements, not a promise for ours."
+        },
+        {
+          "heading": "What to try first",
+          "body": "The repo is set up for a cheap first look: Python 3.10–3.14 and Node.js 22 or later, no third-party runtime dependencies for the core package, and both worked examples run locally on synthetic inputs with no model calls and no provider credentials. `node examples/guarded_reuse.mjs` executes three receipt-supported actions and prints their substitution certificates; `python reproduction/run_all.py` checks the four frozen JSON cases and runs the desktop controller tests. If those pass, run the one-step trial above — a single Story Realm turn step on a graph, measured against the same step today. That number decides whether the port is worth scoping."
+        }
+      ],
+      "checklist": [
+        "Clone YuhuaJiang2002/HarnessMM and read the README's result map before running anything.",
+        "Run the no-model-call checks: `node examples/guarded_reuse.mjs`, then `python reproduction/run_all.py`.",
+        "Pick one repeated Story Realm turn step and write its actions, arguments and guards as a small Executable Decision Graph.",
+        "Run the step both ways on identical tasks and compare tokens per task, not just totals.",
+        "Scope a LangGraph adapter only if the trial shows a real saving — the shipped integrations cover Codex and DeepSeek only."
+      ],
+      "caveats": "Research code, not a product: 187 stars, 20 commits, created October 26, 2026, and the README warns several runners are not ready-to-launch jobs. All benchmark figures are the authors' own measurements (paper arXiv:2610.32813, v2 November 6, 2026); only the MBPP aggregate is replayable from released data, and the HumanEval rows require external evaluation. The visual HarnessMM-V results are a separate study from the coding experiments. We have not run the trial yet, so the saving on our pipeline is unproven.",
+      "source_name": "HarnessMM on GitHub (paper arXiv:2610.32813)",
+      "source_url": "https://github.com/YuhuaJiang2002/HarnessMM"
+    },
+    {
+      "slug": "codenib-threads",
+      "date": "2026-11-16",
+      "category": "Tools",
+      "kicker": "Coding-agent context",
+      "title": "CodeNib Threads: Prepare the GitHub Thread Once, Stop Paying to Re-Read It",
+      "summary": "`codenib threads`, a preview in CodeNib 0.2.6, prepares a GitHub pull request or issue thread once — by code, before the agent starts — instead of letting the agent re-read it with one tool call per piece. It keeps the agent's own thread whole, folds repeated failed-log lines into a count, resolves mentions of code to file and line locations, and stores events instead of documents, so a return visit fetches only what's new. The vendor's own measurements, on 76 pull request takeovers, cut input tokens 21% with Codex and 45% with Claude Code, with the files found essentially unchanged. Over an issue's life, a first context plus updates took a median 2,897 tokens against 21,103 for re-reading the thread each time. The verdict: the same re-reading tax we pay on PROGRESS.md and long threads, attacked with four mechanical techniques and real numbers — but the numbers are the vendor's own, and the tool is built for Codex and Claude Code, so our Gemini/Groq stack needs a trial to prove the fit.",
+      "hook": "Every return visit re-reads the whole thread. CodeNib prepares it once, a revisit costs 2,897 tokens, not 21,103.",
+      "takeaways": [
+        "Four code-only techniques: the agent's own thread stays whole, failed logs fold to a count, mentions resolve to code locations, events are stored — not documents.",
+        "76 pull request takeovers: input tokens fell 21% with Codex and 45% with Claude Code; the files found were essentially unchanged.",
+        "Over an issue's life, first context plus updates took a median 2,897 tokens against 21,103 for re-reading the thread each time."
+      ],
+      "image": "img/codenib-threads.jpg",
+      "problem": "A coding agent asked to take over a pull request starts by reading the thread — description, comments, reviews, checks, a failed log. With `gh` that is one tool call per piece, and every call sends the whole conversation so far back to the model. The longer the thread, the more each call costs — and the agent pays it again on every return visit. We pay the same tax in our own workflow: agents re-read long threads, PROGRESS.md and whole files on every turn, and the re-reading is most of the prompt. Fetching ahead is the easy part; the hard part is deciding what goes into the document, because fetching without choosing costs more than it saves.",
+      "solution": "`codenib threads` reads the thread once, by code, before the agent starts, and hands it a prepared document. Four techniques carry most of it. The agent's own thread is never cut: shortening it backfires, because an agent that sees an omission mark re-reads the pull request and pays for both. A failed log is mostly one line repeated — a linter that finds one problem in 300 files prints 300 lines — so the context keeps the lines around an error, shows a repeated line twice, and counts the rest. Mentions of code become places in the code: stack frames, review comments, paths and names are resolved against one commit of the clone, down to the innermost function or type. And the store keeps events, not documents: every comment, review, commit and check run is saved as its own record, in arrival order — so a return visit is a position in a list, and `--since <cursor>` returns only what changed.",
+      "benefit": "The saving is measured, not asserted, and the answers hold while the cost falls. On 76 pull request takeovers, input tokens fell 21% with Codex and 45% with Claude Code; the files found were 0.75 vs 0.75 with `gh` for Codex and 0.80 vs 0.83 for Claude Code — essentially unchanged. On the 22 pull requests whose threads ran over 20,000 tokens, the saving grew to 34% with Codex and 63% with Claude Code. And the return-visit economics are the striking part: over an issue's life, first context plus updates took a median of 2,897 tokens against 21,103 for re-reading each time, measured on 151 issues. For a team whose agents revisit the same threads and notes all day, that is the difference between context that compounds and context that is re-bought every turn.",
+      "apply": "The trial is cheap and directly comparable to our current habit. Install CodeNib 0.2.6 (`pip install -U codenib`) on a story-realm checkout, index the repo, and run one symbol-lookup task via `explore_context` against the same task done as a full-file read, comparing tokens. Then run `codenib threads` on a real long pull request thread and compare the prepared context with a `gh` read on the same takeover question. CodeNib is also a local symbol and code-graph index (SCIP/LSP), complementing the CodeGraph we already run — but the preview's locations come only from what the thread says and do not use the code graph yet.",
+      "stats": [
+        {
+          "value": "−45%",
+          "label": "Claude Code input tokens on 76 PR takeovers (prepared context vs reading with gh)"
+        },
+        {
+          "value": "−21%",
+          "label": "Codex input tokens on the same 76 PR takeovers"
+        },
+        {
+          "value": "2,897 vs 21,103",
+          "label": "Median tokens over an issue's life: first context + updates vs re-reading each time (151 issues)"
+        },
+        {
+          "value": "$8.37 vs $11.34",
+          "label": "Claude Code cost for 76 PR tasks: prepared context vs gh ($17.49 pasted)"
+        }
+      ],
+      "details": [
+        {
+          "heading": "How it works",
+          "body": "It needs CodeNib 0.2.6, Git, and either a GitHub token in `GH_TOKEN` or a signed-in `gh`, run inside a clone of the repository. The command reads the thread once and builds the document from the stored events; nothing is chosen by a model, so the same thread always gives the same document, and every line traces to its event. The document ends with a cursor — the address of the newest record it used — and a later read with `--since <cursor>` returns only what arrived after it. Many agents can share one store: a ticket remembers its position in each list it follows, and a poll asks GitHub once which threads changed."
+        },
+        {
+          "heading": "Technique 1 — never cut the agent's own thread",
+          "body": "The budget is not applied evenly: the prepared context keeps every post of the agent's own thread whole, leaves out only the oldest posts of linked threads, and says so in its second line. Own posts are shortened only past three times the budget. The reason is behavioral: an agent that sees an omission mark in the pull request it was asked to fix reads it again with `gh`, and has then paid for both."
+        },
+        {
+          "heading": "Technique 2 — a failed log is mostly one line, repeated",
+          "body": "Keeping the last 200 lines of each failed log fills the prompt with one message repeated 300 times. The context instead keeps the lines around an error, compares them with paths and numbers blanked, shows a repeated line twice and counts the rest — '298 more lines like the two above.' Jobs fold the same way, by what failed and never by name — a matrix runs several jobs under one name, and merging by name could hide the one that failed. In the Caddy example the two failing checks are shown with their real errors — a lint error in reverseproxy.go and a Windows job that stopped while downloading a module — and neither is about the change."
+        },
+        {
+          "heading": "Technique 3 — turn mentions of code into places in the code",
+          "body": "A stack trace, a review comment on a line, a path or a name in backticks — an agent reading those has to find each one in the repository first, with a search and a file read for each. The context does that lookup ahead of time with regular expressions — no model — resolving each mention against one commit of the clone, so the same thread gives the same locations whatever is edited in the working tree. A line is mapped to the innermost function or type that contains it. Mentions are ranked by evidence, strongest first — stack frames down to bare names, which are dropped if defined in more than three places."
+        },
+        {
+          "heading": "Technique 4 — store what happened, build the document on demand",
+          "body": "Instead of storing the document handed to the agent, CodeNib stores the list of things that happened on GitHub. Records are only ever added — an edited comment is added again under the same address. The document is built from the list each time someone asks. The payoff is the second visit: with a list, 'what changed?' is a position — everything after the last record the agent saw. Measured on 151 issues with a median of six returns each: first context plus updates took a median of 2,897 tokens over an issue's life, against 21,103 for re-reading each time."
+        },
+        {
+          "heading": "Same answers, fewer tokens — and the honest limits",
+          "body": "Each task showed an agent a thread and the repo at a cut-off and asked which files have to change; the answer was compared with what the merged pull request changed. Codex on pull requests: files found 0.74 / 0.75 / 0.75 (gh / pasted / prepared); tokens −21% vs gh. Claude Code: 0.83 / 0.78 / 0.80; tokens −45% vs gh. On issues, pasting everything cost the same as prepared context within 2%, and both took about a quarter fewer input tokens than `gh`. The small Claude Code gap (0.80 vs 0.83) is too small to tell from chance on 76 tasks, and the post says so. The limits: these are the vendor's own measurements; the tooling is Claude Code and Codex oriented, so fit to our Gemini/Groq stack needs the trial to prove; and the preview's locations do not use the code graph, so the context does not know what calls a function."
+        }
+      ],
+      "checklist": [
+        "Install it: `pip install -U codenib` on a story-realm checkout, with `GH_TOKEN` set or `gh` signed in.",
+        "Index the repo and run one symbol-lookup task via `explore_context`, against the same task as a full-file read — compare tokens.",
+        "Run `codenib threads` on a real long pull request thread and compare the prepared context with a `gh` read on the same takeover question.",
+        "Revisit the same thread a day later with `--since` and measure what the return visit actually costs.",
+        "Decide on the numbers: adopt only if the trial beats our current re-reading on our stack, not on the vendor's."
+      ],
+      "caveats": "All measurements are the vendor's own, from the CodeNib blog (November 14, 2026); the method and reproduction script are in the linked thread-context guide. Stars and license were unverified in this pass. The tool is built around Claude Code and Codex; fit to our Gemini/Groq stack is unproven until the trial runs. The preview's code locations come only from what the thread says and do not use CodeNib's code graph.",
+      "source_name": "CodeNib blog — Preparing a GitHub Thread for a Coding Agent",
+      "source_url": "https://codenib.ai/blogs/thread-context-for-coding-agents/"
+    },
+    {
+      "slug": "landlord-maintenance-triage-opportunity",
+      "date": "2026-11-16",
+      "category": "Opportunities",
+      "kicker": "Product opportunity",
+      "title": "The $150 Blind Maintenance Run: An AI Triage Layer for the 3–20-Unit Landlord",
+      "summary": "Self-managing landlords with a handful of units lose maintenance requests in texts and bleed money on blind vendor call-outs. In a BiggerPockets thread, landlords describe the break point plainly: past three or four units, managing maintenance without a system 'will eat you alive'; relying on judgment calls based on a tenant's text is 'exactly how you bleed margins on $150 blind maintenance runs. It works for two units; it breaks at ten.' The pro tools assume a property-management company — Buildium starts at $62 a month, AppFolio needs 50 units and a reported $280–298 monthly minimum — while free tools for small landlords cover rent and screening, not triage. The gap is a thin layer for the 1–20-unit landlord who can't force tenants onto a portal: one intake number that auto-logs every text and photo, auto-acknowledges with a ticket number, and triages urgency plus likely cause and parts from the photo before dispatch. The verdict: a real, landlord-described pain with a buildable MVP and a price — our proposed $19–29 a month flat for up to 10 units — that undercuts every pro tool by a wide margin. It is an opportunity, not a product: no one has built it yet, and the price is ours to test.",
+      "hook": "Texts get buried, tenants misdescribe the problem, and each blind call-out costs $150.",
+      "takeaways": [
+        "Past 3–4 units, managing maintenance without a system 'will eat you alive' — texts get buried with no audit trail.",
+        "Photos before dispatch: a 'small drip' can be a busted pipe and a 'major emergency' a running toilet — diagnose from the photo first.",
+        "Pro tools start at $62 a month (Buildium) and AppFolio needs 50 units; nothing offers AI triage for the 1–20-unit landlord at a small-landlord price."
+      ],
+      "image": "img/landlord-maintenance-triage-opportunity.jpg",
+      "problem": "It starts with a landlord asking how to tell what needs immediate attention when a tenant texts about a leak or a broken appliance — and whether anything falls through the cracks. Texts get buried, you cannot track them, and there is no audit trail when a tenant says they reported something two months ago. Tenants misdescribe problems: 'a small drip that turns out to be a busted pipe… a major emergency that is actually a running toilet.' And every misread costs a truck roll — 'Relying on judgment calls based on a tenant's text is exactly how you bleed margins on $150 blind maintenance runs. It works for two units; it breaks at ten.' A property manager adds the scale line: 'Once you get past three or four units, self managing maintenance without a system will eat you alive.'",
+      "solution": "The landlords already describe the system that works — they just each run it by hand. A three-tier triage, defined before the request arrives: emergency gets a same-day response (leaks, no heat in winter, no AC over 90°, gas smell, anything threatening safety or causing damage); urgent gets 24–48 hours (appliance failures, non-leaking plumbing, electrical problems); routine gets scheduled within the week. Photos with every request, so the vendor dispatched is the right one the first time instead of someone sent just to diagnose. And an asset ledger: one landlord built a digital ledger of every appliance model, parts list and manual, so a photo of a broken AC or fridge arrives with the exact model and parts ready for the contractor. The product version is a thin layer in front of that system: one intake number that auto-logs every text and photo, auto-acknowledges with a ticket number, and triages urgency plus likely cause and parts from the photo — then drafts the tenant acknowledgement and the vendor handoff, and keeps a timestamped audit trail per unit.",
+      "benefit": "The money case is unusually concrete for an opportunity. One avoided $150 blind run covers roughly five to eight months of the proposed $19–29 monthly price — and the thread's landlords describe blind runs as routine, not rare. The time case is the audit trail: a timestamped record ends the 'you never told us' dispute, and the instant acknowledgement ('got it, logged, here's your ticket #') stops tenants escalating because they feel ignored — which the thread says is why tenants escalate. And the price gap is wide: Buildium's Essential starts at $62 a month for 1–20 units, and AppFolio needs a 50-unit minimum with a reported $280–298 monthly minimum. A $19–29 flat price for up to 10 units undercuts Buildium by more than half.",
+      "apply": "The MVP is deliberately thin, and buildable with our stack: LLM plus vision on photos, SMS/email intake, and a simple queue UI. Tenant texts or emails a photo and description to one number; the system triages Emergency/Urgent/Routine, drafts the tenant acknowledgement and the vendor handoff (likely cause plus parts, from the photo and an appliance ledger), and keeps a timestamped audit trail per unit. Charge $19–29 a month flat for up to 10 units, or $2–3 per unit a month — both our proposed prices, untested. First step before building: talk to five self-managing landlords with 3–20 units and confirm the $150 figure and the 'breaks at ten' threshold outside one thread. This is a distinct angle from our earlier landlord piece on the SMS inbox and compliance tracking — that one was about meeting tenants where they text; this one is about what happens after the text arrives.",
+      "stats": [
+        {
+          "value": "$150",
+          "label": "Cost of one blind maintenance run, as landlords in the thread describe it"
+        },
+        {
+          "value": "$62/mo",
+          "label": "Buildium Essential starting price (1–20 units), the cheapest pro plan"
+        },
+        {
+          "value": "$280–298/mo",
+          "label": "AppFolio reported monthly minimum, with a 50-unit minimum to sign up"
+        },
+        {
+          "value": "3–4 units",
+          "label": "Portfolio size where landlords say managing maintenance without a system 'will eat you alive'"
+        }
+      ],
+      "details": [
+        {
+          "heading": "The problem, in landlords' own words",
+          "body": "The opening question comes from a landlord with 'more than a couple units' who has already felt requests get buried in texts. A Kansas City landlord with 18 years running Navy personnel operations says the biggest mistake is keeping maintenance communication in personal texts and email — 'It works until it doesn't, and when a tenant dispute comes up you have no clean paper trail.'"
+        },
+        {
+          "heading": "The system that works at scale",
+          "body": "A Nashville broker who runs a property-management company lays out the system. Get off text messages: Buildium's tenant portal takes the request with photos, it goes into a queue, and nothing gets lost. Triage in three tiers, defined before the request comes in and written into the lease addendum so tenants know the system on day one. And require photos with every request: 'Tenants will describe a small drip that turns out to be a busted pipe, or describe a major emergency that is actually a running toilet. Photos cut through the noise and help you dispatch the right vendor the first time.'"
+        },
+        {
+          "heading": "Where it breaks for the small landlord",
+          "body": "The thread's most useful insight is that the breakage happens earlier than triage: the tiers-and-photos advice only works once the request is sitting in one place to be triaged — and for self-managers who can't force tenants onto a portal, 'a text here, an email there, a call you meant to write down' means it is lost before triage starts. And the handoff is where margin bleeds: a ticket that says 'tenant says fridge is making a noise' sends the vendor out to diagnose blind, leave for parts, and come back — and 'you've lost control of the invoice.'"
+        },
+        {
+          "heading": "The gap: what nobody sells",
+          "body": "The market splits cleanly and leaves the middle empty. Pro tools assume a property-management company: Buildium's Essential starts at $62 a month (1–20 units) and is built for firms managing client property; AppFolio's Core is $1.49 per unit a month with a 50-unit minimum and a reported $280–298 monthly minimum, and landlords under 50 units can't use it at all. Free tools for small landlords — TurboTenant's free plan is $0 for listings, screening and rent collection — cover rent and screening, not AI triage. Nobody offers a thin layer for the 1–20-unit landlord who can't force tenants onto a portal: one intake number that logs every text and photo, acknowledges with a ticket number, and triages urgency plus likely cause and parts from the photo before dispatch."
+        },
+        {
+          "heading": "The MVP, end to end",
+          "body": "Keep it thin. Intake: one number for text and email, so every channel funnels into one logged queue automatically. Logging: each request gets a timestamp and an instant auto-acknowledgement with a ticket number, so nobody feels ignored. Triage: the photo plus description is classified Emergency/Urgent/Routine, and the likely cause is read from the photo — a $10 flapper versus a cracked tank — before anyone drives out. Handoff: the vendor gets the appliance model number from the asset ledger, the likely root cause, and the parts manifest — not 'the tenant says the sink is leaking.' Audit trail: a timestamped record per unit. The stack is ours already: LLM plus vision on photos, SMS/email intake, a simple queue UI."
+        },
+        {
+          "heading": "Pricing and the math",
+          "body": "The proposed price is ours and untested. $19–29 a month flat for up to 10 units, or $2–3 per unit a month. Against Buildium's $62 starting price it undercuts by more than half; against AppFolio's reported $280–298 monthly minimum it is an order of magnitude cheaper. The pitch is one number: a single avoided $150 blind run covers roughly five to eight months at the proposed price. The risk is that the $150 figure comes from one thread, not a survey — which is why the first step is five landlord conversations, not a build."
+        }
+      ],
+      "checklist": [
+        "Talk to five self-managing landlords with 3–20 units: confirm the $150 blind run and the 'breaks at ten' threshold outside one thread.",
+        "Ask each what they pay a vendor just to diagnose — that is the cost the photo triage has to beat.",
+        "Prototype the intake: one number, photo + description in, ticket number and acknowledgement out.",
+        "Test photo triage accuracy on real landlord photos: urgency tier, likely cause, and parts — measure how often it matches the vendor's actual diagnosis.",
+        "Price-test $19–29 a month flat against $2–3 per unit: which one landlords will actually pay before you build the ledger."
+      ],
+      "caveats": "An opportunity, not a product: nothing described here exists yet, and the $19–29 price and $2–3 per-unit price are our proposed prices, untested. The landlord quotes come from one BiggerPockets forum thread — real landlords' own words, not a survey — and the $150 blind-run figure is a landlord-reported cost, not a measured average. AppFolio's $280–298 monthly minimum is a reported figure from third-party pricing analyses; AppFolio's own page lists the $1.49 per-unit rate and the 50-unit minimum but does not publish the minimum dollar amount. Buildium's $62 and TurboTenant's $0 free plan are from the vendors' own pricing pages as reported in October–November 2026. A related earlier article, landlord-sms-inbox, covers the SMS-inbox and compliance angle; this piece is the maintenance-triage angle.",
+      "source_name": "BiggerPockets forum thread",
+      "source_url": "https://www.biggerpockets.com/forums/52/topics/1291745-how-do-you-all-handle-tenant-maintenance-requests-communication"
+    },
+    {
       "slug": "univer-office-sdk",
       "date": "2026-11-16",
       "category": "Tools",
