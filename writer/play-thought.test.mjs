@@ -417,6 +417,77 @@ check("a quoted span inside a thought stays italic thought, never bold", () => {
   assert.equal(em[0].textContent, 'She said "go" and meant it.');
 });
 
+/* --- slice 4a: narration/dialogue colour (one-element slice) --- */
+const narrationSpans = (p) => p.childNodes.filter(
+  (n) => n.tagName === "SPAN" && n.classList.contains("narration-span"));
+
+check("rendered narration becomes <span>, dialogue stays <strong>", () => {
+  T.setScenes([{
+    turn: 7,
+    text: 'The room was quiet.\n\n"We go now," she said.',
+  }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(ps.length, 2);
+  assert.equal(narrationSpans(ps[0]).length, 1);
+  assert.equal(narrationSpans(ps[0])[0].textContent, "The room was quiet.");
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "STRONG").length, 0);
+  const strong = ps[1].childNodes.filter((n) => n.tagName === "STRONG");
+  assert.equal(strong.length, 1);
+  assert.equal(strong[0].classList.contains("dialogue-span"), true);
+  assert.equal(narrationSpans(ps[1]).length, 1);
+  assert.equal(narrationSpans(ps[1])[0].textContent, " she said.");
+  assert.equal(ps[1].textContent, "We go now, she said.");
+});
+
+check("pure narration leaves no bare text node behind", () => {
+  T.setScenes([{ turn: 8, text: "Only narration here." }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(ps.length, 1);
+  assert.equal(ps[0].childNodes.filter((n) => n.nodeType === 3).length, 0);
+  assert.equal(narrationSpans(ps[0]).length, 1);
+  assert.equal(ps[0].textContent, "Only narration here.");
+});
+
+check("narration spans survive an in-place re-render, icons stay first", () => {
+  T.setScenes([{ turn: 9, text: 'Rain fell. "Stay," she said.' }]);
+  T.renderScenes();
+  let ps = paragraphs();
+  const icons = (p) => p.children.filter(
+    (c) => c.classList.contains("beat-icons"));
+  assert.equal(icons(ps[0]).length, 1);
+  T.renderBeatText(ps[0], 'Rain fell harder. "Stay," she said.', { turn: 9 });
+  ps = paragraphs();
+  assert.equal(icons(ps[0]).length, 1);
+  assert.equal(ps[0].children[0].classList.contains("beat-icons"), true);
+  assert.equal(narrationSpans(ps[0]).length, 2);
+  assert.equal(ps[0].textContent, 'Rain fell harder. Stay, she said.');
+});
+
+check("a quoted span inside a thought gains no narration span", () => {
+  T.setScenes([{
+    turn: 10,
+    text: '*She said "go" and meant it.*',
+  }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(narrationSpans(ps[0]).length, 0);
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "STRONG").length, 0);
+  assert.equal(ps[0].childNodes.filter((n) => n.tagName === "EM").length, 1);
+});
+
+check("dialogue-only paragraph has no narration span", () => {
+  T.setScenes([{ turn: 11, text: '"Hi."' }]);
+  T.renderScenes();
+  const ps = paragraphs();
+  assert.equal(narrationSpans(ps[0]).length, 0);
+  const strong = ps[0].childNodes.filter((n) => n.tagName === "STRONG");
+  assert.equal(strong.length, 1);
+  assert.equal(strong[0].textContent, "Hi.");
+  assert.equal(ps[0].textContent, "Hi.");
+});
+
 /* --- slice 3: stage background auto-follow --- */
 function stageSetup() {
   T.resetStageBackgroundState();
