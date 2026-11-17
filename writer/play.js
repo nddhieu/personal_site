@@ -167,16 +167,21 @@ function syncAudioButton(btn, sceneIndex, beatText) {
   btn.classList.toggle("is-playing", state === "playing");
   btn.classList.toggle("is-generating", state === "generating");
   btn.classList.toggle("is-unavailable", state === "unavailable");
-  // Only the unavailable state disables the button. The
-  // in-flight scene is NOT disabled here: renderScenes runs
-  // while a turn is still marked busy, and a disabled flag
-  // set then would stay stuck until the next re-render. The
-  // click handler is the guard instead (it ignores taps on
-  // the scene being written while busy).
-  btn.disabled = state === "unavailable";
+  // Only a probed-down TTS service disables the button. A
+  // single failed synthesis stays tappable so the tap can
+  // retry it (onAudioButton -> retryAudio). The in-flight
+  // scene is NOT disabled here: renderScenes runs while a
+  // turn is still marked busy, and a disabled flag set then
+  // would stay stuck until the next re-render. The click
+  // handler is the guard instead (it ignores taps on the
+  // scene being written while busy).
+  btn.disabled = state === "unavailable" &&
+    audioPlayer.available === false;
   btn.innerHTML = state === "playing" ? STOP_SVG : SPEAKER_SVG;
-  btn.title = AUDIO_BUTTON_TITLES[state];
-  btn.setAttribute("aria-label", AUDIO_BUTTON_TITLES[state]);
+  btn.title = state === "unavailable" && audioPlayer.available !== false
+    ? "Audio unavailable - tap to try again"
+    : AUDIO_BUTTON_TITLES[state];
+  btn.setAttribute("aria-label", btn.title);
 }
 
 /* Every speaker button on the page, refreshed in place
@@ -219,9 +224,50 @@ function updateAudioTransport() {
   }
 }
 
+/* The play-note's audio state: a spinner + "Generating
+ * audio..." while the reader waits on synthesis - a tapped
+ * speaker whose audio is not ready yet, or an auto-read
+ * queue whose first beat is still generating. It never
+ * clobbers the story loading label (busy) or a visible
+ * error, and it hands the note back (restoring any note it
+ * took over) when the wait ends. An audio error it showed
+ * clears once audio is playing again. */
+function syncAudioStatus() {
+  const n = el("play-note");
+  if (!n || busy) return;
+  const snap = audioPlayer.snapshot();
+  if (snap.currentKey !== null && n.dataset.audioError) {
+    delete n.dataset.audioError;
+    n.className = "play-note";
+    n.removeAttribute("role");
+    showNote(n, "");
+    return;
+  }
+  if (n.className === "form-error") return;
+  const waiting = audioWaiting ||
+    (snap.queueActive && snap.currentKey === null);
+  if (waiting) {
+    if (n.dataset.status === "audio") return;
+    if (!n.hidden && n.textContent.trim() !== "") {
+      n.dataset.prevNote = n.textContent;
+    }
+    showLoading(n, "Generating audio...");
+    n.dataset.status = "audio";
+    return;
+  }
+  if (n.dataset.status === "audio") {
+    delete n.dataset.status;
+    const prev = n.dataset.prevNote;
+    delete n.dataset.prevNote;
+    if (prev) showPlayNote(prev);
+    else showNote(n, "");
+  }
+}
+
 audioPlayer.onChange(() => {
   updateAudioButtons();
   updateAudioTransport();
+  syncAudioStatus();
 });
 
 async function onAudioButton(sceneIndex, beatIndex, beatText) {
@@ -231,7 +277,21 @@ async function onAudioButton(sceneIndex, beatIndex, beatText) {
     audioPlayer.stop();
     return;
   }
+  // The reader waits on synthesis from here until the
+  // first beat starts playing (or fails): the play-note
+  // names the wait while it lasts.
+  const state = audioPlayer.beatState(beatText, voice);
+  // Only states that may still need synthesis show the wait:
+  // a paused beat is cached, so it starts at once.
+  if (state === "idle" || state === "generating" ||
+      state === "unavailable") {
+    audioWaiting = true;
+    syncAudioStatus();
+  }
   try {
+    if (state === "unavailable" && audioPlayer.available !== false) {
+      await audioPlayer.retryAudio(beatText, voice);
+    }
     if (autoSpeakOn()) {
       if (!scenes[sceneIndex]) return;
       const from = Number.isInteger(beatIndex) ? beatIndex : 0;
@@ -255,8 +315,16 @@ async function onAudioButton(sceneIndex, beatIndex, beatText) {
       await audioPlayer.playBeat(beatText, voice);
     }
   } catch {
-    // A failed play leaves the quiet state: the button
-    // already shows "Audio unavailable"; reading continues.
+    // A failed play is visible, not quiet: the note names
+    // the failure, and the button stays tappable for a
+    // retry (a probed-down service keeps it disabled).
+    showPlayError(
+      "Couldn't generate audio for this paragraph. Tap the speaker to try again.",
+    );
+    el("play-note").dataset.audioError = "1";
+  } finally {
+    audioWaiting = false;
+    syncAudioStatus();
   }
 }
 
@@ -281,6 +349,7 @@ let book = null;
 let playthroughId = sessionStorage.getItem(PLAYTHROUGH_KEY) || "";
 let scenes = [];
 let busy = false;
+let audioWaiting = false; // a tapped speaker / auto-read waits on synthesis
 let currentSuggestions = [];
 let loadedSuggestions = [];
 
@@ -1948,6 +2017,20 @@ function showPlayNote(text) {
   showNote(n, text);
 }
 
+/* The note is a turn/reset loading label: reset any error
+ * styling and audio-ownership markers first, so a stale
+ * error never styles the spinner, and a stale marker never
+ * makes a later clear wipe the wrong note. */
+function showStatusLoading(text) {
+  const n = el("play-note");
+  n.className = "play-note";
+  n.removeAttribute("role");
+  delete n.dataset.status;
+  delete n.dataset.prevNote;
+  delete n.dataset.audioError;
+  showLoading(n, text);
+}
+
 function showPlayError(text) {
   const n = el("play-note");
   n.className = "form-error";
@@ -2053,7 +2136,10 @@ async function fetchStreamedTurn(body, actionText) {
     renderScenes();
     provisionalParas = captureProvisionalParas();
     scrollToLatestScene();
-    showNote(el("play-note"), "");
+    // The "Writing the next scene..." spinner + label stays
+    // up while the draft streams in: it is the turn's
+    // in-progress state, cleared only when the turn lands
+    // (applyTurnResult) or fails (handleTurnError).
   }
 
   /* The provisional scene's paragraph elements, captured
@@ -2246,7 +2332,7 @@ async function runTurnBody(body, actionText) {
   // playing (cancelQueue only stops queue playback).
   audioPlayer.cancelQueue();
   setBusy(true);
-  showLoading(el("play-note"), "Writing the next scene...");
+  showStatusLoading("Writing the next scene...");
   try {
     const result = await fetchStreamedTurn(body, actionText);
     await applyTurnResult(result, actionText, body);
@@ -2607,7 +2693,7 @@ async function resetPlaythrough() {
   resetInFlight = true;
   const oldId = playthroughId;
   setBusy(true);
-  showLoading(el("play-note"), "Starting over...");
+  showStatusLoading("Starting over...");
   try {
     try {
       await apiFetch(
@@ -2714,7 +2800,7 @@ function waitForResetSlot() {
     clearTimeout(resetTimer);
     resetTimer = null;
   }
-  showLoading(el("play-note"), "Starting over...");
+  showStatusLoading("Starting over...");
   if (resetWait) return;
   const started = Date.now();
   resetWait = setInterval(() => {

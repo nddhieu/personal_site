@@ -255,6 +255,18 @@ export function createAudioPlayer(deps = {}) {
     return chain;
   }
 
+  /* Drop a failed ("unavailable") entry so the next tap
+   * re-synthesizes instead of re-rejecting the cached
+   * failure. Ready/generating entries are untouched, so a
+   * retry never pays twice for audio that already exists
+   * or is already on its way. */
+  function retryAudio(text, voice) {
+    const key = cacheKeyFor(text, voice);
+    const entry = cache.get(key);
+    if (entry && entry.status === "unavailable") cache.delete(key);
+    return ensureAudio(text, voice);
+  }
+
   function attachAudio(url) {
     const audio = createAudio();
     audio.src = url;
@@ -435,6 +447,7 @@ export function createAudioPlayer(deps = {}) {
     beatState,
     probeAvailability,
     ensureAudio,
+    retryAudio,
     pregenerate,
     playBeat,
     playQueue,
