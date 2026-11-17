@@ -616,4 +616,83 @@ check("resetStageBackgroundState clears backdrop and cached URLs", () => {
   assert.equal(T.getSceneBackground(), null);
 });
 
+/* --- slice 4b: reading-settings panel, font size --- */
+function readingSetup() {
+  localStorage.removeItem("writer.readingSettings");
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+}
+
+check("no stored size reads standard and marks the prose", () => {
+  readingSetup();
+  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-font"),
+    "standard");
+  assert.equal(
+    document.getElementById("reading-font-standard")
+      .getAttribute("aria-pressed"), "true");
+  assert.equal(
+    document.getElementById("reading-font-small")
+      .getAttribute("aria-pressed"), "false");
+});
+
+check("choosing Large applies it and persists it", () => {
+  readingSetup();
+  T.setReadingFontSize("large");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-font"),
+    "large");
+  assert.equal(
+    JSON.parse(localStorage.getItem("writer.readingSettings")).fontSize,
+    "large");
+  assert.equal(
+    document.getElementById("reading-font-large")
+      .getAttribute("aria-pressed"), "true");
+  assert.equal(
+    document.getElementById("reading-font-standard")
+      .getAttribute("aria-pressed"), "false");
+  assert.equal(
+    document.getElementById("reading-font-large")
+      .classList.contains("is-on"), true);
+});
+
+check("a stored XL loads back before first paint", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "xl" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-font"),
+    "xl");
+  assert.equal(
+    document.getElementById("reading-font-xl")
+      .getAttribute("aria-pressed"), "true");
+});
+
+check("an unknown stored size falls back to standard", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "huge" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-font"),
+    "standard");
+});
+
+check("corrupt stored settings fall back to standard", () => {
+  localStorage.setItem("writer.readingSettings", "{not json");
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+});
+
+check("an unknown size choice changes nothing", () => {
+  readingSetup();
+  T.setReadingFontSize("huge");
+  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.equal(localStorage.getItem("writer.readingSettings"), null);
+});
+
 console.log(`\n${passed} checks passed`);
