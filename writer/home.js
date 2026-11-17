@@ -470,27 +470,36 @@ function renderSections() {
   }
   box.hidden = false;
   heading.hidden = false;
-  for (const sort of ["trending", "new", "top"]) {
+  /* Thin catalog (one book): a single section instead of three
+   * repeating the same book. The "All books" heading above
+   * already labels it, so the single section carries no title
+   * head and no See all — there is nothing more to see. The
+   * three titled sections return when the catalog grows. */
+  const thinCatalog = allBooks.length === 1;
+  const sorts = thinCatalog ? ["trending"] : ["trending", "new", "top"];
+  for (const sort of sorts) {
     const ranked = rankedBooks(sort, allBooks).slice(0, 5);
     if (ranked.length === 0) continue;
     const section = document.createElement("section");
     section.className = "explore-section";
     section.setAttribute("aria-label", RANKED_LABELS[sort]);
-    const head = document.createElement("div");
-    head.className = "explore-section-head";
-    const title = document.createElement("h2");
-    title.className = "explore-section-title";
-    title.textContent = RANKED_LABELS[sort];
-    const see = document.createElement("button");
-    see.type = "button";
-    see.className = "btn btn-ghost explore-see-all";
-    see.textContent = "See all";
-    see.addEventListener("click", () => {
-      setSort(sort);
-      el("explore-search").focus();
-    });
-    head.append(title, see);
-    section.append(head);
+    if (!thinCatalog) {
+      const head = document.createElement("div");
+      head.className = "explore-section-head";
+      const title = document.createElement("h2");
+      title.className = "explore-section-title";
+      title.textContent = RANKED_LABELS[sort];
+      const see = document.createElement("button");
+      see.type = "button";
+      see.className = "btn btn-ghost explore-see-all";
+      see.textContent = "See all";
+      see.addEventListener("click", () => {
+        setSort(sort);
+        el("explore-search").focus();
+      });
+      head.append(title, see);
+      section.append(head);
+    }
     ranked.forEach((book, i) => section.append(rankRow(book, i + 1, sort)));
     box.append(section);
   }
@@ -623,3 +632,19 @@ async function init() {
 }
 
 init();
+
+/* Test handle for the fake-DOM harness (writer/home-sections.test.mjs):
+ * drives renderSections without a browser or network. */
+export const __homeTest = {
+  setCatalog(books) {
+    allBooks = Array.isArray(books) ? [...books] : [];
+    activeSort = "explore";
+    activeGenre = "";
+    activeLanguage = "";
+    query = "";
+  },
+  setQuery(value) { query = String(value ?? ""); },
+  renderSections,
+  sectionsBox() { return el("explore-sections"); },
+  sectionsHeading() { return el("explore-all-heading"); },
+};
