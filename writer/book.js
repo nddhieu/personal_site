@@ -82,6 +82,30 @@ function fill(book) {
   el("f-opening").value = book.opening_scene || "";
 }
 
+/* One line stating the page state (guest-review fix): the
+ * shared template before the reader starts, their copy
+ * after. A playthrough under this book means the reader
+ * has started it; the list is the account's own runs, so
+ * a shared guest account reads as started once any guest
+ * joined. On a list failure the line stays hidden rather
+ * than claiming a state we do not know. */
+async function showBookState() {
+  const note = el("join-note");
+  let started = false;
+  try {
+    const mine = await apiFetch(
+      "/api/books/" + encodeURIComponent(BOOK_ID) + "/playthroughs",
+    );
+    started = (mine.playthroughs || []).length > 0;
+  } catch {
+    return;
+  }
+  note.textContent = started
+    ? "This is your copy - you have started this story."
+    : "This is the shared template. Starting copies it to your account - you can adjust the setup before you begin, and it locks once the story starts.";
+  note.hidden = false;
+}
+
 function collect() {
   const book = structuredClone(current);
   book.title = el("f-title").value.trim();
@@ -126,6 +150,7 @@ async function init() {
   el("book-status").hidden = true;
   fill(current);
   el("book-form").hidden = false;
+  showBookState();
 }
 
 el("book-form").addEventListener("submit", async (event) => {
