@@ -23,6 +23,34 @@
          button; the items keep the diary/reset ids so play.js's
          handlers are unchanged, and init() removes the topbar's
          Theme / Log out buttons on this page only. -->
+    <div class="play-topbar-actions">
+      <!-- Reading settings (redesign, seq 552; slice 4b: font
+           size first): a quiet panel off the topbar - the
+           button sits beside the menu, not an admin-looking
+           control. The panel is a popover over the top of
+           the reading area, so the prose below it stays
+           visible and reflows live as the size changes. -->
+      <div id="reading-panel-wrap" class="reading-panel-wrap">
+        <button id="reading-settings-btn" data-testid="reading-settings-btn" class="btn btn-secondary reading-settings-btn" type="button"
+          aria-haspopup="true" aria-expanded="false" aria-controls="reading-panel" aria-label="Reading settings" title="Reading settings">Aa</button>
+        <section id="reading-panel" data-testid="reading-panel" class="reading-panel" role="dialog" aria-label="Reading settings" hidden>
+          <header class="reading-panel-head">
+            <h2>Reading settings</h2>
+            <button id="reading-panel-close" data-testid="reading-panel-close" class="reading-panel-close" type="button"
+              aria-label="Close reading settings" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+          </header>
+          <div class="reading-panel-group">
+            <span id="reading-font-label" class="reading-panel-label">Font size</span>
+            <div class="reading-font-choices" role="group" aria-labelledby="reading-font-label">
+              <button id="reading-font-small" data-testid="reading-font-small" class="reading-font-choice" type="button" data-font-size="small" aria-pressed="false">Small</button>
+              <button id="reading-font-standard" data-testid="reading-font-standard" class="reading-font-choice" type="button" data-font-size="standard" aria-pressed="true">Standard</button>
+              <button id="reading-font-large" data-testid="reading-font-large" class="reading-font-choice" type="button" data-font-size="large" aria-pressed="false">Large</button>
+              <button id="reading-font-xl" data-testid="reading-font-xl" class="reading-font-choice" type="button" data-font-size="xl" aria-pressed="false">XL</button>
+            </div>
+          </div>
+          <p class="reading-panel-note">Applies to the story as you read.</p>
+        </section>
+      </div>
     <div id="play-menu-wrap" class="play-menu-wrap">
       <button id="play-menu-btn" data-testid="play-menu-btn" class="btn btn-secondary play-menu-btn" type="button"
         aria-haspopup="true" aria-expanded="false" aria-controls="play-menu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
@@ -32,6 +60,7 @@
         <button id="play-menu-theme" data-testid="play-menu-theme" class="play-menu-item" type="button" role="menuitem" aria-label="Switch color theme">Dark</button>
         <button id="play-menu-logout" data-testid="play-menu-logout" class="play-menu-item" type="button" role="menuitem">Log out</button>
       </div>
+    </div>
     </div>
   </header>
   <div id="play-status" class="loading-row"><span class="spinner" aria-hidden="true"></span><span>Loading the book...</span></div>

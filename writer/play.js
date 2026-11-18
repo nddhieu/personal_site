@@ -3294,6 +3294,105 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") exitBgAdjust();
 });
 
+/* Reading settings panel (redesign, seq 552; slice 4b: font
+ * size first - one element at a time, per the Nov 14
+ * 2-day rule). A quiet panel off the play topbar: the
+ * button sits beside the menu, not an admin-looking
+ * control, and the panel is a popover over the top of the
+ * reading area, so the prose below stays visible and
+ * reflows live as the size changes - the preview is the
+ * story itself. Font size is a reader preference, so it
+ * persists per user (not per playthrough) in localStorage
+ * as writer.readingSettings = { fontSize } and loads
+ * before first paint (the load + apply at the end of this
+ * section run at module load, not after init()). Mode /
+ * screen display / background join the same stored object
+ * in later slices; the panel carries no Stream switch -
+ * streaming is unconditional (seq 917-918). */
+const READING_SETTINGS_KEY = "writer.readingSettings";
+const READING_FONT_SIZES = ["small", "standard", "large", "xl"];
+const READING_FONT_DEFAULT = "standard";
+let readingSettings = { fontSize: READING_FONT_DEFAULT };
+
+function loadReadingSettings() {
+  let parsed = null;
+  try {
+    parsed = JSON.parse(localStorage.getItem(READING_SETTINGS_KEY));
+  } catch {
+    parsed = null;
+  }
+  readingSettings = {
+    fontSize: parsed && READING_FONT_SIZES.includes(parsed.fontSize)
+      ? parsed.fontSize
+      : READING_FONT_DEFAULT,
+  };
+  return readingSettings;
+}
+function saveReadingSettings() {
+  try {
+    localStorage.setItem(READING_SETTINGS_KEY,
+      JSON.stringify(readingSettings));
+  } catch {
+    // Private mode / full storage: the size still applies
+    // for this visit; nothing here may block reading.
+  }
+}
+function syncReadingFontControls() {
+  for (const size of READING_FONT_SIZES) {
+    const btn = el("reading-font-" + size);
+    if (!btn) continue;
+    const on = size === readingSettings.fontSize;
+    btn.classList.toggle("is-on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
+function applyReadingSettings() {
+  const prose = el("prose");
+  if (prose) {
+    prose.setAttribute("data-reading-font", readingSettings.fontSize);
+  }
+  syncReadingFontControls();
+}
+function setReadingFontSize(size) {
+  if (!READING_FONT_SIZES.includes(size)) return;
+  readingSettings.fontSize = size;
+  saveReadingSettings();
+  applyReadingSettings();
+}
+
+const readingSettingsBtn = el("reading-settings-btn");
+const readingPanel = el("reading-panel");
+const readingPanelWrap = el("reading-panel-wrap");
+function setReadingPanel(open) {
+  readingPanel.hidden = !open;
+  readingSettingsBtn.setAttribute(
+    "aria-expanded", open ? "true" : "false");
+}
+function closeReadingPanel() {
+  setReadingPanel(false);
+}
+readingSettingsBtn.addEventListener("click", () => {
+  setReadingPanel(readingPanel.hidden);
+});
+el("reading-panel-close").addEventListener("click", closeReadingPanel);
+for (const size of READING_FONT_SIZES) {
+  el("reading-font-" + size).addEventListener("click",
+    () => setReadingFontSize(size));
+}
+document.addEventListener("click", (event) => {
+  if (!readingPanel.hidden && !readingPanelWrap.contains(event.target)) {
+    closeReadingPanel();
+  }
+});
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeReadingPanel();
+});
+// Stored size before first paint: the module runs after the
+// prose element exists, so a returning reader never sees a
+// flash of the default size.
+loadReadingSettings();
+applyReadingSettings();
+
 /* Orientation chooser controls (Hieu, Nov 8): a tap on a
  * shape chip is the whole interaction - it remembers the
  * shape, closes the chooser, and generates (in regenerate
@@ -3488,6 +3587,10 @@ export const __playTest = {
     sceneImageSrc.clear();
     sceneBackground = null;
   },
+  loadReadingSettings,
+  applyReadingSettings,
+  setReadingFontSize,
+  getReadingSettings() { return { ...readingSettings }; },
 };
 
 init();
