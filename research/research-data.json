@@ -1,6 +1,148 @@
 {
   "articles": [
     {
+      "apply": "Start on HieuPC with npx @parcha/agentrun and our OpenRouter key — one key gives every harness a model. Pick one repeated story-realm job, run it twice, and compare token use run over run; the Learning tab shows what the agent kept. Set a spend cap before the first real run, and treat the trial as a proof of the OpenRouter path: our harness runs Gemini and Groq through OpenRouter, and that route has to be demonstrated, not assumed.",
+      "benefit": "For a team running agents on free-tier quotas and OpenRouter keys, the payoff compounds: every repeated job gets cheaper and faster because the agent stops re-paying the learning cost. The code-review case study shows the shape of it — a tuned reviewer at $0.18 a review that caught 1.6x the real bugs the $1-a-review incumbent caught on 30 PRs it had never seen. Durable runs and spend caps fit the same discipline: nothing is lost to a crash, and nothing bills silently.",
+      "category": "Tools",
+      "caveats": "All performance and cost figures are the vendor's own, from its README and case-study docs — no independent verification exists yet. AgentRun is at 0.4.14, early software with a moving API surface. Reflection and grading add model usage of their own, so learning is not free. Our path — Gemini and Groq models through OpenRouter — is supported in principle (one OpenRouter key serves every harness) but unproven in our setup; the trial has to demonstrate it. Local runs need macOS or Linux and Node 24.22.3 or newer.",
+      "checklist": [
+        "On HieuPC, run npx @parcha/agentrun (Node 24.22.3 or newer, macOS or Linux) and open the console on port 7340.",
+        "Add our OpenRouter key in Settings → Model keys — one key serves every harness.",
+        "Pick one repeated story-realm job and run it twice; compare tokens run over run.",
+        "Open the agent's Learning tab and read what it kept — corrections, skills, workflows.",
+        "Set a spend cap and an approval rule before any run touches a real repo."
+      ],
+      "date": "2026-11-19",
+      "details": [
+        {
+          "body": "Turn learning on with \"learning\": true in an agent's definition, and the agent keeps two things, both in its own git folder, with every run starting from that folder's main branch. Corrections are your words: a grade's words, or a message you send after a run's first answer, become one line of the agent's corrections.md, and every later run is given the file whole. Learned workflows are the bigger prize: once the agent has 20 completed runs, one run's end compiles the job into a workflow draft. Code checks the draft and dry-runs it — no model is asked and no tool runs — then replays it once on those runs' inputs. It serves only when it answers enough of them alone and agrees with the agent's answers. There are hard caps on what gets kept: 2,048 bytes for corrections.md, 16,384 for a workflow draft, 1,024 for its README. A secret, or a secret's shape, in a correction or a draft refuses it outright, and a held draft gets one revision before it stops and waits for you to act.",
+          "heading": "How the learning loop works"
+        },
+        {
+          "body": "Every run lives in one store. Kill the server mid-run, start it again, and the run carries on — the platform is built so a crash costs no work. Each agent gets the computer the job needs: a Docker sandbox with a shell, a Linux desktop, an Android phone, or a browser. Without Docker, agents still read and write files but get no shell. Mission Control opens first: what needs you, what failed, what is running, and what it cost, by day, by harness, and by tool. An agent can stop and ask you a question, and the run waits until you answer. Every agent is also an API — start a run from the Playground, then copy the same request into your code.",
+          "heading": "Durable runs and one console"
+        },
+        {
+          "body": "The pitch is the makers' own bill. Greptile started charging a dollar a review in March, then their agents took off, and the bill went from $180 a month to $6,451 — 36x growth. So they built their own reviewer on a cheap model and tuned it on their own PRs. It costs 18 cents a review, and on 30 PRs it had never seen it caught 1.6x the real bugs Greptile did. That is the whole argument in one paragraph: the learning loop is not a feature demo, it is a cost curve. These are the vendor's own figures from its README and case-study docs, and no independent verification exists yet — but the mechanism behind them, tuning on your own past work, is exactly what the platform is built to do.",
+          "heading": "The code-review case study, in numbers"
+        },
+        {
+          "body": "The second case study shows the same pattern on a different job. The team let Opus figure out how to classify merchants, then handed what it learned to a cheap model. Same job, $0.89 down to $0.12 a merchant — the project's own badge calls it 7x cheaper once it learned the job. The shape matters more than the job: a strong model does the figuring-out once, a cheap model does the repeating forever. For a team that routes most work through free or cheap models already, that hand-off is the cheapest win the platform offers.",
+          "heading": "The merchant-codes case study"
+        },
+        {
+          "body": "Not every repeated job needs an agent at all. AgentRun lets you write repeatable work as a typed workflow: tool calls, model steps, and fast typed decisions — yes or no, pick one, a score, each with its confidence — with an agent to fall back on when a case is unclear. The tour example is a KYB onboarding workflow: registry and certificate checks run in parallel, a cross-check follows, and a decision step leans approve at 0.61, below the workflow's 0.75 bar, so the case goes to review. You can watch any workflow run node by node, pause it and resume it, and read every decision and why it was made. A workflow runs as an agent's revision, under the agent's tool permissions and a cap like any run, and a trigger can start one.",
+          "heading": "Workflows that make the call"
+        },
+        {
+          "body": "Running Claude Code or Codex bare costs nothing extra and needs no server — but you pay the re-learning tax on every repeated run, a killed run is lost work, and there is no single view of cost or failures. AgentRun adds the learning loop, durable runs, approvals, spend caps, and Mission Control, and it works with the harness and sign-in you already use; connecting an existing agent needs no model key. The price is a server to run (locally with npx @parcha/agentrun on macOS or Linux with Node 24.22.3 or newer, self-hosted, or the hosted AgentRun Cloud), and reflection and grading add model usage of their own, so learning is not free. At 0.4.14 it is early software with a moving surface. For a team whose agents repeat the same jobs daily, the trade is worth a trial; for one-off work, the bare harness is still the simpler choice.",
+          "heading": "AgentRun vs. running your harness bare"
+        }
+      ],
+      "hook": "Your agent re-learns the same job every run. AgentRun makes it remember — and pay less.",
+      "image": "img/agentrun.jpg",
+      "kicker": "Agent Orchestration",
+      "problem": "Coding agents are brilliant at figuring things out — and they figure out the same things over and over. Hand an agent a job it has done a hundred times and it rediscovers the same API, rereads the same docs, and rebuilds the same plan, and you pay for every token of it. That is the tax our team pays daily: prompt tokens are more than 99% of our cost, and our agents re-derive the same plans every run. On top of that, a run that dies mid-way is work lost, and a bill nobody watches can grow 36x before anyone notices — exactly what happened to AgentRun's own makers, whose code-review bill went from $180 a month to $6,451.",
+      "slug": "agentrun",
+      "solution": "AgentRun wraps the harness you already use — Claude Code, Codex, OpenCode, or pi — and adds three things around it: learning, durable execution, and a control plane. After each run, the agent keeps what will help next time as a note, a skill, or a workflow, stored in its own git folder. Once a job has completed 20 times, one run's end compiles it into a typed workflow that runs as a single tool call. Every run lives in one store, so killing the server mid-run loses nothing — restart it and the run carries on. And Mission Control shows every agent in one place: what needs you, what failed, what is running, and what it cost, with approvals and spend caps to stop a bill running away.",
+      "source_name": "Parcha-ai/agentrun on GitHub",
+      "source_url": "https://github.com/Parcha-ai/agentrun",
+      "stats": [
+        {
+          "label": "cost per code review with AgentRun's tuned reviewer",
+          "value": "$0.18"
+        },
+        {
+          "label": "real bugs caught vs Greptile on 30 unseen PRs",
+          "value": "1.6x"
+        },
+        {
+          "label": "growth in the team's code-review bill, $180 to $6,451 a month",
+          "value": "36x"
+        },
+        {
+          "label": "completed runs before a job compiles into a workflow",
+          "value": "20"
+        }
+      ],
+      "summary": "AgentRun is an open-source platform that sits around Claude Code, Codex, OpenCode, or pi and makes the agent remember what it learned: after each run it keeps corrections, skills, and workflows in git, and a job done 20 times compiles into a typed workflow that runs as one tool call. Its own case study is the pitch — a code-review bill that grew 36x to $6,451 a month, replaced by a tuned reviewer at $0.18 a review that caught 1.6x the real bugs Greptile did. For a team whose prompt tokens are nearly the whole cost, this attacks the exact tax we pay every run.",
+      "takeaways": [
+        "After every run, the agent keeps what helped — a note, a skill, or a workflow — in git, so the next run starts from it.",
+        "A job repeated 20 times compiles into a typed workflow that runs as a single tool call, under a spend cap.",
+        "Its code-review case study: a $180-a-month bill became $6,451, then a tuned reviewer at $0.18 a review that caught 1.6x Greptile's real bugs."
+      ],
+      "title": "AgentRun: Teach Your Coding Agents the Job Once, Then Pay 18 Cents a Review"
+    },
+    {
+      "slug": "nocturne-memory",
+      "date": "2026-11-19",
+      "category": "Tools",
+      "kicker": "Agent Memory",
+      "title": "Nocturne Memory Decouples AI Intelligence From Context Windows",
+      "summary": "Nocturne Memory offers an independent storage server using the Model Context Protocol to grant AI agents persistent, long-term recall. By offloading data to an external SQLite or PostgreSQL backend, the system allows agents to retain complex identities across sessions without bloating their active context windows. This approach shifts memory management from ephemeral chat history to a structured, sovereign database architecture.",
+      "hook": "Offload millions of characters to an external server while keeping your AI agent's context window pristine.",
+      "takeaways": [
+        "Persistent memory decoupled from specific LLM providers.",
+        "Hierarchical URI graph routing replaces traditional vector-based RAG.",
+        "Tool-based memory management via seven dedicated MCP operations."
+      ],
+      "image": "img/nocturne-memory.jpg",
+      "problem": "Modern AI agents suffer from memory loss the moment a chat session ends. Relying solely on context windows forces developers to stuff irrelevant data into the prompt, increasing costs and confusing the model. Existing RAG solutions often fail to capture the nuanced, hierarchical relationships necessary to maintain a consistent personality or detailed, long-term project history across varied agentic tasks.",
+      "solution": "Nocturne Memory functions as a dedicated database server for your agent. It uses the Model Context Protocol to provide seven specific tools for CRUD operations and metadata management. By using a URI-based graph structure instead of vector embeddings, it ensures the AI can traverse its own history with precision, loading only the necessary facts into the active context window at the right moment.",
+      "benefit": "For developers and power users, Nocturne Memory provides a way to build AI entities with true continuity. Because the memory is not tied to a specific model or platform, your agent retains its identity and past learnings regardless of which interface or model version you use. It allows for deeper, more reliable relationships with your AI tools over time.",
+      "apply": "To integrate Nocturne Memory, install the backend on your local machine or a cloud server using Python 3.10+. Configure your MCP client—such as Cursor, Windsurf, or Claude Code—to point to the server. Once connected, your agent will gain the ability to search, create, and update its own memory namespace, enabling it to recall past project constraints and persona details automatically.",
+      "stats": [
+        {
+          "value": "969,000",
+          "label": "character count in memory library benchmark"
+        },
+        {
+          "value": "7.2K",
+          "label": "characters loaded in first message"
+        },
+        {
+          "value": "78%",
+          "label": "total library memory recalled over 30 days"
+        },
+        {
+          "value": "7",
+          "label": "tools provided via MCP"
+        }
+      ],
+      "details": [
+        {
+          "heading": "Architecture and Data Routing",
+          "body": "Nocturne Memory avoids the common pitfalls of vector search by employing a URI Graph Routing mechanism. Memories are structured using a 'domain://path' hierarchy, mapping information into a Node–Memory–Edge–Path topology. This mimics how humans associate concepts: rather than relying on mathematical similarity scores, the system links facts through directed relationships. The backend, which runs on either SQLite or PostgreSQL, handles the heavy lifting, ensuring that the AI agent interacts with its history as a structured entity rather than a disorganized blob of text. This mechanism allows the AI to perform complex memory operations without requiring deep architectural knowledge of the underlying database engine."
+        },
+        {
+          "heading": "Context Management Benchmarks",
+          "body": "The project demonstrates significant efficiency gains in handling large-scale information. The author reports that even with millions of characters in storage, the agent avoids context window clutter. In a real-world benchmark using a library of 969,000 characters, the system only loaded 7.2K characters in the initial message. This demonstrates that the retrieval logic is highly targeted, pulling only the relevant slices of data required for the task at hand. Furthermore, the author notes that 78% of the entire library's content was successfully recalled over a 30-day testing period, suggesting high utility for long-term project retention compared to standard session-based chat models."
+        },
+        {
+          "heading": "The MCP Interface",
+          "body": "The core of the interaction lies in seven specific tools provided via the Model Context Protocol. These tools allow the AI to read, create, update, and delete memories, add aliases, manage triggers, and perform searches. By exposing these functions, the project grants the agent a degree of sovereignty over its own data. The system supports multiple transports, including stdio and Streamable HTTP, allowing it to work with a wide range of platforms including OpenClaw, GitHub Copilot, and Gemini CLI. This broad integration profile makes it highly adaptable, as it does not enforce a specific LLM frontend on the user."
+        },
+        {
+          "heading": "Status and Maintenance",
+          "body": "Readers should be aware that the project is currently in maintenance mode. While it remains functional and open-source under an MIT License, significant new feature development is not expected. The system is designed to be used in conjunction with a Visualization Dashboard for human auditing, which is crucial since the system requires human confirmation for memory cleanup tasks. There is no automated garbage collection for sensitive data. Prospective users should also note that the server will explicitly refuse to bind to non-localhost addresses if an API Token is not properly configured, a security feature intended to prevent unauthorized remote access to the memory store."
+        },
+        {
+          "heading": "Architectural Philosophy",
+          "body": "The maintainers take a firm stance against Vector RAG, labeling it a fatal architectural error for this specific use case. The focus here is on precision and structured recall rather than the 'fuzzy' retrieval common in current AI agent frameworks. For those implementing this, the project documentation includes extensive guides on system prompt recommendations and architectural data model analysis. Whether you are running this on a local machine or deploying to the cloud, the goal is to move from ephemeral, stateless conversations to a persistent identity. The system prompt should be tuned to leverage these specific tools, allowing the agent to proactively query its history as the conversation evolves."
+        }
+      ],
+      "checklist": [
+        "Clone the repository and install backend requirements via pip.",
+        "Configure your MCP client with the path to the mcp_server.py wrapper.",
+        "Initialize a namespace for your agent persona.",
+        "Test memory retrieval with a known project fact.",
+        "Set up the Visualization Dashboard to monitor memory growth."
+      ],
+      "caveats": "The benchmarks and performance statistics provided are based on the author's own deployments and specific testing environments; there are currently no independent, third-party benchmarks available to verify these recall efficiency figures.",
+      "source_name": "Dataojitori/nocturne_memory on GitHub",
+      "source_url": "https://github.com/Dataojitori/nocturne_memory"
+    },
+    {
       "slug": "paper-orchestra",
       "date": "2026-11-19",
       "category": "Tools",
@@ -4828,5 +4970,5 @@
       "source_url": "https://github.com/Supersynergy/agent-token-saver"
     }
   ],
-  "generated_at": "2026-11-19T08:22:00-06:00"
+  "generated_at": "2026-11-19T15:46:26-06:00"
 }
