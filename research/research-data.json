@@ -1,6 +1,144 @@
 {
   "articles": [
     {
+      "apply": "Start with the hosted route, then go local. Try the model first through the Tinker playground and API, then pull the IQ4_NL GGUF and run it under llama.cpp on HieuPC against our current local brain on one repeated story-realm job, comparing quality and tokens. Official guidance is 32 GB or more of VRAM or Apple silicon memory, so if HieuPC's 16 GB card cannot fit the full checkpoint, evaluate through the Tinker API first. Run any test sandboxed and require confirmation before destructive actions.",
+      "benefit": "For a team whose local brains are Qwen3-based, this is the first open model that beats Qwen3-27B on agentic coding while staying laptop-sized. If the vendor numbers hold up in our own testing, it is a candidate next local brain for the bridge and the agents — same machine, same privacy, stronger coding — with a 1M-token context that keeps long sessions in view.",
+      "category": "Models",
+      "caveats": "All benchmark figures are vendor-reported from Thinking Machines Lab's own model card and have not been independently verified; our side-by-side against the current local brain has not run yet. Official hardware guidance is 32 GB or more of VRAM or Apple silicon memory, so HieuPC's 16 GB card may not fit the full checkpoint. Looped-model support in local runtimes is new and speed varies by runtime. The model is weaker than Inkling 2 Small on factual recall and can take destructive actions without confirmation.",
+      "checklist": [
+        "Open the Tinker playground and give Inkling 2 Mini one small agentic coding task; watch how it follows instructions and reports its work.",
+        "Pull the IQ4_NL GGUF and try it under llama.cpp on HieuPC; if the 16 GB card cannot fit it, use the Tinker API first.",
+        "Run one repeated story-realm job through Inkling 2 Mini and the current local brain, comparing quality and tokens.",
+        "Set output-token and agent-turn limits before any long debugging run — the model can loop on re-checking its own work.",
+        "Run agentic workloads sandboxed and require confirmation before destructive actions like deleting or overwriting files."
+      ],
+      "date": "2026-11-21",
+      "details": [
+        {
+          "body": "A normal transformer runs each layer once. Inkling 2 Mini loops: its middle 12 layers run three times with shared weights, so a token passes through 48 layer applications while the model stores only 24 layers of weights. Each extra pass adds about 1.0 billion effective active parameters, taking it from 3.4 billion active to 5.4 billion effective per token. The model is natively multimodal — a vision transformer encodes images into the same hidden space as text — and it is the first looped transformer the lab has released.",
+          "heading": "How looping works"
+        },
+        {
+          "body": "The model card publishes a full table against Gemma 4 31B, Muse Glimmer, Qwen3-27B and Nemotron 3.5 Super VL. On the coding rows Inkling 2 Mini leads Qwen3-27B: SWE-bench Verified 79.2% to 77.8%, SWE-bench Pro v2 Hard 77.9% to 73.8%, DeepSWE 48.2% to 42.2%. On tool use, MCP Atlas is 82.7% to 77.3%. The table also shows where it loses: Terminal-Bench v2.1 goes to Qwen3-27B, 73.0% to 71.6%. Every number here is vendor-reported — our own side-by-side is the test that matters.",
+          "heading": "What the benchmarks actually say"
+        },
+        {
+          "body": "The checkpoint is a single download of about 20 GB, in mixed NVFP4 and MXFP8 precision. Local inference runs through Hugging Face, SGLang, vLLM, Unsloth and llama.cpp for GGUF versions, the Llama App, and Ollama and Exo Labs on Apple silicon. The hardware guidance is explicit: 32 GB or more of VRAM is recommended, Apple silicon devices need 32 GB or more of memory. A 16 GB card is below the official bar — which is why the Tinker API is the sensible first route for machines that cannot fit the full checkpoint.",
+          "heading": "Running it locally"
+        },
+        {
+          "body": "Against Qwen3-27B, our current local-brain family, Inkling 2 Mini wins the agentic coding rows that matter for agent work while giving up a little on Terminal-Bench v2.1 and some pure-knowledge rows. Against its own bigger sibling, Inkling 2 Small, the model card is blunt: Mini is less capable across most evaluations, with the largest gaps on factual recall, and it is more likely to state incorrect information with confidence. The honest positioning is narrow but useful: the strongest open model in this size class at agentic coding, and the first that beats our current local brain at that job while still fitting on local hardware.",
+          "heading": "Compared honestly: Inkling 2 Mini vs Qwen3-27B vs Inkling 2 Small"
+        },
+        {
+          "body": "The model card's limitations section reads like a list of things an agent operator needs to hear before the first run. In internal testing the model sometimes got stuck in long reasoning loops or repeatedly re-checked its own work without making progress, particularly when debugging code — the lab recommends setting limits on output tokens and agent turns. When using tools it is less reliable than larger models at following detailed instructions. Most importantly, it may take destructive actions, such as deleting files, without confirmation, and may not report outcomes accurately. None of this disqualifies it — but the first deployment should be sandboxed, turn-limited, and confirmation-gated, not handed a live repo.",
+          "heading": "The agentic reliability warnings"
+        }
+      ],
+      "hook": "A 20 GB model that beats Qwen3-27B at agentic coding — and runs on local hardware.",
+      "image": "img/inkling-2-mini.jpg",
+      "kicker": "Open-weight looped model for local agents",
+      "problem": "Good local coding models have forced an unhappy trade: small enough to run on your own machine, or strong enough to trust with real agent work — rarely both. Our free local brains are Qwen3-based, and Qwen3-27B has been the practical ceiling for laptop-sized agentic coding. Anything stronger meant a hosted API, a bill, and your code leaving the machine. And the models that do run locally tend to fumble the things agents need most: following instructions, using tools reliably, and not doing something destructive without asking.",
+      "slug": "inkling-2-mini",
+      "solution": "Inkling 2 Mini attacks the trade with looping instead of size. It is a 24-layer decoder-only transformer with sparse mixture-of-experts layers, and its middle 12 layers run three times with shared weights — 48 layer applications per token from 24 layers of weights. Each token is routed to 8 of 128 experts, so only 3.4 billion parameters are active per token — 5.4 billion effective once the extra loop passes are counted. The whole checkpoint is about 20 GB in NVFP4 and MXFP8 precision, it takes text and image inputs, and it carries a 1-million-token context window. Thinking Machines Lab released it on November 20, 2026 under Apache 2.0, under Apache 2.0, with open weights.",
+      "source_name": "Thinking Machines Lab — Inkling 2 Mini model card",
+      "source_url": "https://huggingface.co/thinkingmachines/Inkling-2-Mini",
+      "stats": [
+        {
+          "label": "SWE-bench Verified (vendor-reported), vs 77.8% for Qwen3-27B",
+          "value": "79.2%"
+        },
+        {
+          "label": "SWE-bench Pro v2 Hard (vendor-reported), vs 73.8% for Qwen3-27B",
+          "value": "77.9%"
+        },
+        {
+          "label": "MCP Atlas tool-use score (vendor-reported), vs 77.3% for Qwen3-27B",
+          "value": "82.7%"
+        },
+        {
+          "label": "Context window",
+          "value": "1M tokens"
+        }
+      ],
+      "summary": "Thinking Machines Lab released Inkling 2 Mini on November 20, 2026: an open-weight, Apache 2.0 model that loops its middle layers three times to squeeze big-model coding ability out of 3.4 billion active parameters per token. On the vendor's own scoreboard it beats Qwen3-27B at agentic coding, while staying small enough to run on local hardware. The catch is the hardware bar and a set of agentic reliability warnings worth reading before you hand it a terminal.",
+      "takeaways": [
+        "Looped layers: the middle 12 of 24 layers run three times, so 3.4B active parameters behave like 5.4B.",
+        "Vendor-reported SWE-bench Verified 79.2% and Pro v2 Hard 77.9%, both ahead of Qwen3-27B.",
+        "Runs locally via Ollama, llama.cpp, vLLM and SGLang — but the official bar is 32 GB of VRAM or Apple silicon memory."
+      ],
+      "title": "Inkling 2 Mini: A Looped 26B Model That Out-Codes Qwen3-27B on a Laptop"
+    },
+    {
+      "apply": "Start with the cheapest test: install the nightly binary and run lightpanda fetch --dump markdown on a few pages our checks already hit daily, then compare speed and output quality against our current fetches. If the output holds up, serve it over CDP and point an existing Puppeteer script at it. The bigger prize is the replay path: record one repeated check — the daily f1-t3 probe or a live-verify poll — as a PandaScript in agent mode, then replay it token-free and measure what a week of those checks actually costs.",
+      "benefit": "For a team whose agents fetch and verify pages constantly — live checks, research, publish verification — a browser that uses about a sixteenth of the memory and runs about nine times faster changes what is cheap to do. Repeated checks that cost a browser launch and a model call can become a recorded script replayed with no model at runtime. ",
+      "category": "Tools",
+      "caveats": "The 123 MB / 5 s benchmark figures are the project's own, measured on one AWS EC2 m5.large instance over 933 real pages, and have not been independently verified. As a from-scratch engine, Lightpanda may render some Chromium-dependent pages differently — check its published Web Platform Tests results before trusting it with a hard page. AGPL-3.0 is fine for internal use but needs a note before embedding in anything shipped. Telemetry is on by default, and there is no native Windows binary.",
+      "checklist": [
+        "Install the nightly binary (Homebrew, AUR, direct download or Docker) and run lightpanda version to verify it.",
+        "Run lightpanda fetch --dump markdown on three pages our daily checks hit, and compare speed and output quality with current fetches.",
+        "Set LIGHTPANDA_DISABLE_TELEMETRY=true before the first real run.",
+        "Start lightpanda serve on port 9222 and connect one existing Puppeteer script to it; note any page that renders differently from Chrome.",
+        "Record one repeated check as a PandaScript in agent mode, then replay it token-free."
+      ],
+      "date": "2026-11-21",
+      "details": [
+        {
+          "body": "The lightness is architectural, not a diet. Lightpanda is written in Zig, a low-level language with explicit memory control, and it was built from scratch rather than forked: no Chromium, no Blink, no WebKit, and no graphical rendering engine — the parts of a desktop browser that a headless agent never sees. JavaScript still runs for real, on V8, because the modern web is JavaScript-driven. Pages are parsed with html5ever and fetched with libcurl; the implemented surface covers CORS, the DOM, XHR and Fetch, cookies, proxy support, network interception, an adblocker, and robots.txt handling.",
+          "heading": "How it stays light"
+        },
+        {
+          "body": "The headline numbers come from the project's own benchmark: requesting 933 real web pages over the network on an AWS EC2 m5.large instance, Lightpanda peaked at 123 MB of memory and took 5 seconds for 100 pages, where headless Chrome peaked at 2 GB and took 46 seconds — about 16 times less memory and about 9 times faster. Those are the project's numbers on the project's machine, not an independent test. The honest way to read them is as a claim worth a cheap local check: our own pages, our own machine, our own timer.",
+          "heading": "The benchmark, honestly"
+        },
+        {
+          "body": "The most interesting part for agent teams is not the speed but the replay. Running lightpanda agent lets you drive the browser in plain English or with slash commands — navigating pages, clicking through flows, filling forms, extracting structured data. The output of a session is a PandaScript: vanilla JavaScript with a small set of native browser primitives built into Lightpanda. Save one with /save, then replay it with lightpanda run session.js. Scripts are deterministic and token-free, so you can prototype with the model and ship the output to production. The agent supports Anthropic, OpenAI, Gemini, Vertex AI, Mistral, Hugging Face, the Vercel AI Gateway and OpenRouter, local models via Ollama, llama.cpp or LLMD, and OpenAI Codex — or no model at all with --no-llm.",
+          "heading": "Agent mode and PandaScript"
+        },
+        {
+          "body": "Lightpanda also ships a native MCP server speaking JSON-RPC 2.0 over stdio, or over HTTP on a port for serving several agents from one process. Over HTTP, each connection is routed to its own browsing session — its own page, cookies and memory — tracked by an Mcp-Session-Id header, so agents no longer clobber each other's pages. The run tool executes a PandaScript in the caller's session; cookies and storage persist, so a login carries over to the next run.",
+          "heading": "Native MCP with session isolation"
+        },
+        {
+          "body": "Headless Chrome is the fit when a page needs full web compatibility: it is the reference engine, and its DevTools protocol is the standard everything speaks. It is the wrong fit when you run it hundreds of times a day and pay per megabyte — that is Lightpanda's whole argument. Plain HTTP fetching is the fit for a static page you only need the HTML of; it cannot run JavaScript, so it fails on most of the modern web. Lightpanda sits between them: it runs JavaScript and speaks CDP, so it covers the pages a fetch cannot, at a fraction of Chrome's weight. The right trial is a split, not a switch: keep Chrome for the pages that need it, try Lightpanda for the repeated checks.",
+          "heading": "Compared honestly: Lightpanda vs headless Chrome vs plain HTTP fetch"
+        }
+      ],
+      "hook": "Chrome's 2 GB habit, replaced by a 123 MB browser your agents can drive.",
+      "image": "img/lightpanda.jpg",
+      "kicker": "Headless browser for AI agents",
+      "problem": "Agents spend a huge share of their working lives in a browser: checking a page, verifying a publish, reading a repo, polling a deploy. The standard tool for that job is headless Chrome, and Chrome is a full desktop browser dragged onto a server — heavy on RAM and CPU and full of features a headless job never uses. And a plain HTTP fetch cannot run JavaScript — which rules out most of the modern web.",
+      "slug": "lightpanda",
+      "solution": "Lightpanda rebuilds the browser for the job instead of shrinking Chrome. It is written from scratch in Zig, with no Chromium, Blink or WebKit inside and no graphical rendering engine at all — JavaScript runs on V8 and the whole thing is built for headless use. It speaks the protocols agents already use: a CDP server on port 9222, WebDriver BiDi, and Puppeteer and Playwright compatibility. On top of that it adds two agent-native pieces: a native MCP server, and an agent mode that turns a driven session into a replayable PandaScript.",
+      "source_name": "lightpanda-io/browser on GitHub",
+      "source_url": "https://github.com/lightpanda-io/browser",
+      "stats": [
+        {
+          "label": "Peak memory for 100 pages (project benchmark), vs 2 GB for headless Chrome",
+          "value": "123 MB"
+        },
+        {
+          "label": "Execution time for 100 pages (project benchmark), vs 46 s for headless Chrome",
+          "value": "5 s"
+        },
+        {
+          "label": "Less memory than headless Chrome in the project's benchmark",
+          "value": "16×"
+        },
+        {
+          "label": "GitHub stars for lightpanda-io/browser",
+          "value": "42,298"
+        }
+      ],
+      "summary": "Lightpanda is a headless browser written from scratch in Zig for AI agents and automation. In the project's own benchmark over 933 real pages, it used 123 MB of peak memory and 5 seconds for 100 pages where headless Chrome used 2 GB and 46 seconds. It ships a native MCP server with per-session isolation and an agent mode that records a session once and replays it later with no model at runtime. The trade-offs are real, but for teams whose agents fetch pages all day, the weight saving is hard to ignore.",
+      "takeaways": [
+        "123 MB peak memory and 5 seconds for 100 pages, against 2 GB and 46 seconds for headless Chrome — the project's own benchmark.",
+        "Native MCP server with per-session isolation, plus agent mode that replays recorded sessions token-free.",
+        "Written from scratch in Zig with no graphical rendering engine; AGPL-3.0, 42,298 stars."
+      ],
+      "title": "Lightpanda: A Browser Built From Scratch That Uses 16× Less Memory Than Chrome"
+    },
+    {
       "slug": "artex-autonomous-pentest",
       "date": "2026-11-21",
       "category": "Tools",
