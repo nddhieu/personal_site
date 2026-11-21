@@ -1734,6 +1734,108 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closePersonaSheet();
 });
 
+/* Speaker chips + attribution (reading-view redesign, slice
+ * 4c; research seq 1477): every message block is attributed
+ * with avatar + name + a role chip that distinguishes the
+ * played character (tagged You) from story-world characters
+ * (tagged Character). Per-block, not per-line: scenes carry
+ * only {turn, text, action} - no speaker field - so the
+ * reader's typed action is a block under the played
+ * character and the AI scene a block under the viewpoint
+ * character (book.main_character). Presentation only: no API
+ * change, no new state. The You face reuses the marker
+ * precedence (bound persona photo, else the account avatar
+ * disc); the Character face is the book portrait, with an
+ * initial-letter fallback - never a bare img - on books
+ * without one. Dialogue spans inside one scene cannot get
+ * per-speaker chips; that would need a backend speaker field
+ * on beats, out of scope for 4c. */
+function buildSpeakerChipRow(testid, name, role, face) {
+  const row = document.createElement("div");
+  row.className = "speaker-chip-row";
+  row.dataset.testid = testid;
+  const faceEl = document.createElement("span");
+  faceEl.className = "speaker-chip-face";
+  // Decorative: the name + role beside it carry the meaning.
+  faceEl.setAttribute("aria-hidden", "true");
+  if (face.persona) {
+    const img = document.createElement("img");
+    img.className = "speaker-chip-img";
+    img.alt = "";
+    const src = personaImageSrc(face.persona.image_id);
+    if (src) img.src = src;
+    faceEl.append(img);
+    // The uploaded photo swaps in when its fetch lands; a
+    // failed fetch keeps the library portrait (or the bare
+    // img, same as the marker) - never a broken image.
+    applyPersonaImage(img, face.persona);
+  } else if (face.avatarId) {
+    const disc = avatarNode(face.avatarId);
+    disc.removeAttribute("role");
+    disc.removeAttribute("aria-label");
+    disc.setAttribute("aria-hidden", "true");
+    faceEl.append(disc);
+  } else if (face.img) {
+    const img = document.createElement("img");
+    img.className = "speaker-chip-img";
+    img.alt = "";
+    img.src = face.img;
+    faceEl.append(img);
+  } else {
+    const initial = document.createElement("span");
+    initial.className = "speaker-chip-initial";
+    initial.textContent = face.initial || "?";
+    faceEl.append(initial);
+  }
+  const nameEl = document.createElement("span");
+  nameEl.className = "speaker-chip-name";
+  nameEl.textContent = name;
+  const roleEl = document.createElement("span");
+  roleEl.className = "speaker-chip-role";
+  roleEl.textContent = role;
+  row.append(faceEl, nameEl, roleEl);
+  return row;
+}
+
+/* The You face + name: the same identity the persona chip
+ * and the input markers wear - bound persona first, else
+ * the book's default player (see bookDefaultPlayer). */
+function youSpeakerChip(key) {
+  const persona = playthroughPersona;
+  let name;
+  let face;
+  if (persona) {
+    name = personaFirstName(persona.name);
+    face = (personaImageSrc(persona.image_id) ||
+      personaHasCustomImage(persona))
+      ? { persona }
+      : { initial: personaFirstName(persona.name).charAt(0) || "P" };
+  } else {
+    const fallback = bookDefaultPlayer();
+    name = personaFirstName(fallback.name) || fallback.name;
+    face = { avatarId: getAvatar(userAvatarId).id };
+  }
+  return buildSpeakerChipRow("speaker-chip-you-" + key,
+    name, "You", face);
+}
+
+/* The Character face + name: the viewpoint character. No
+ * main-character name means no attribution - a chip with no
+ * name would be worse than none. */
+function characterSpeakerChip(key) {
+  const mc = (book && book.main_character) || {};
+  const name = String(mc.name || "").trim();
+  if (!name) return null;
+  const portrait = book
+    ? resolveBookImageUrl(book.main_character_image)
+    : null;
+  const face = portrait
+    ? { img: portrait }
+    : { initial: name.charAt(0) };
+  return buildSpeakerChipRow("speaker-chip-character-" + key,
+    name, "Character", face);
+}
+
 function renderScenes() {
   const prose = el("prose");
   prose.innerHTML = "";
@@ -1741,6 +1843,7 @@ function renderScenes() {
     const action = scene && scene.action ? String(scene.action) : "";
     if (action) {
       const key = scene.turn ?? i;
+      prose.append(youSpeakerChip(key));
       const marker = document.createElement("button");
       marker.type = "button";
       marker.className = "turn-input-marker";
@@ -1772,6 +1875,10 @@ function renderScenes() {
     // opening premise is turn 0.
     splitBeats(sceneText(scene)).forEach((beatText, j) => {
       const key = beatKey(i, j);
+      if (j === 0) {
+        const chip = characterSpeakerChip(scene.turn ?? i);
+        if (chip) prose.append(chip);
+      }
       const p = document.createElement("p");
       if (j === 0 && typeof scene !== "string" &&
           Number.isInteger(scene && scene.turn)) {
@@ -3571,6 +3678,8 @@ async function init() {
  * which is testable in node without a browser. */
 export const __playTest = {
   setScenes(list) { scenes = list; },
+  setBook(value) { book = value; },
+  setPlaythroughPersona(state) { setPlaythroughPersona(state); },
   renderScenes,
   renderBeatText,
   parseThoughtSpans,
