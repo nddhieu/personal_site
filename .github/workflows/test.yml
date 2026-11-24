@@ -1,0 +1,106 @@
+# CI test workflow for nddhieu/personal_site.
+#
+# DRAFT ONLY (daily review 2026-11-24) - Tier 2: this file itself merges only
+# with Hieu's approval, never through the queue it enables. Do not merge or
+# enable anything until the tier pick lands.
+#
+# Purpose (merge-queue pilot spec 2026-11-23, research_notes/merge-queue-pilot-spec.md):
+# the queue needs a green CI check before it can merge anything. This workflow
+# provides it: one `test` job that becomes the required status check in the
+# merge-queue ruleset. It runs on every PR (pull_request) and on the batched
+# branch the queue builds (merge_group).
+#
+# Steps mirror the team's verify-before-ship gate: a parse check over
+# writer/*.js + writer/*.html, then the writer harness
+# (`node --test writer/*.test.mjs`).
+
+name: test
+
+on:
+  pull_request:
+  merge_group:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+
+      - name: Parse check (writer JS + HTML)
+        run: |
+          find writer \( -name '*.js' -o -name '*.mjs' \) -exec node --check {} \;
+          python3 - <<'PY'
+          import glob, sys
+          from html.parser import HTMLParser
+          VOID = {'area', 'base', 'br', 'col', 'embed', 'hr', 'img', 'input',
+                  'link', 'meta', 'param', 'source', 'track', 'wbr'}
+          RAW = {'script', 'style'}
+
+          class Checker(HTMLParser):
+              def __init__(self):
+                  super().__init__(convert_charrefs=True)
+                  self.stack = []
+                  self.raw = None
+                  self.errors = []
+
+              def handle_starttag(self, tag, attrs):
+                  if self.raw:
+                      return
+                  if tag not in VOID:
+                      self.stack.append((tag, self.getpos()))
+                  if tag in RAW:
+                      self.raw = tag
+
+              def handle_startendtag(self, tag, attrs):
+                  pass
+
+              def handle_endtag(self, tag):
+                  if tag in VOID:
+                      return
+                  if self.raw:
+                      if tag == self.raw:
+                          self.raw = None
+                          if self.stack and self.stack[-1][0] == tag:
+                              self.stack.pop()
+                      return
+                  if not self.stack:
+                      self.errors.append(f'stray </{tag}> at {self.getpos()}')
+                      return
+                  if self.stack[-1][0] == tag:
+                      self.stack.pop()
+                      return
+                  names = [t for t, _ in self.stack]
+                  if tag in names:
+                      while self.stack and self.stack[-1][0] != tag:
+                          t, pos = self.stack.pop()
+                          self.errors.append(f'unclosed <{t}> opened at {pos}')
+                      self.stack.pop()
+                  else:
+                      self.errors.append(f'stray </{tag}> at {self.getpos()}')
+
+              def close(self):
+                  super().close()
+                  for t, pos in self.stack:
+                      self.errors.append(f'unclosed <{t}> opened at {pos}')
+
+          failed = False
+          for path in sorted(glob.glob('writer/*.html')):
+              checker = Checker()
+              checker.feed(open(path, encoding='utf-8').read())
+              checker.close()
+              if checker.errors:
+                  failed = True
+                  print(f'{path}:')
+                  for error in checker.errors:
+                      print(f'  {error}')
+          sys.exit(1 if failed else 0)
+          PY
+
+      - name: Writer harness
+        run: node --test writer/*.test.mjs
