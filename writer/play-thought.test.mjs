@@ -695,4 +695,145 @@ check("an unknown size choice changes nothing", () => {
   assert.equal(localStorage.getItem("writer.readingSettings"), null);
 });
 
+/* --- slice 4c: speaker chips + attribution --- */
+function chipRows() {
+  return document.getElementById("prose").children.filter(
+    (c) => c.classList.contains("speaker-chip-row"));
+}
+function chipParts(row) {
+  // Face, name, role - in that order.
+  return {
+    face: row.children[0],
+    name: row.children[1],
+    role: row.children[2],
+  };
+}
+const testBook = () => ({
+  main_character: { name: "Kim Nguyen" },
+  main_character_image: "characters/kim.jpg",
+  supporting_cast: [
+    { name: "Accad Smith", role: "co-lead" },
+    { name: "Rin", role: "friend" },
+  ],
+});
+
+check("a typed-action block gets a You chip before its marker", () => {
+  T.setBook(testBook());
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+  T.setScenes([{
+    turn: 0, action: "I open the door.", text: "She waits.",
+  }]);
+  T.renderScenes();
+  const rows = chipRows();
+  assert.equal(rows.length, 2);
+  const you = chipParts(rows[0]);
+  assert.equal(rows[0].dataset.testid, "speaker-chip-you-0");
+  assert.equal(you.name.textContent, "Accad");
+  assert.equal(you.role.textContent, "You");
+  // No persona bound: the face is the account avatar disc.
+  assert.equal(you.face.children[0].classList.contains("avatar-disc"), true);
+  const prose = document.getElementById("prose");
+  assert.equal(
+    prose.children.indexOf(rows[0]) <
+      prose.children.indexOf(prose.children.filter(
+        (c) => c.classList.contains("turn-input-marker"))[0]),
+    true);
+});
+
+check("the AI scene gets a Character chip before its first beat", () => {
+  T.setBook(testBook());
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+  T.setScenes([{
+    turn: 0, action: "I open the door.", text: "She waits.",
+  }]);
+  T.renderScenes();
+  const rows = chipRows();
+  const ch = chipParts(rows[1]);
+  assert.equal(rows[1].dataset.testid, "speaker-chip-character-0");
+  assert.equal(ch.name.textContent, "Kim Nguyen");
+  assert.equal(ch.role.textContent, "Character");
+  assert.equal(ch.face.children[0].tagName, "IMG");
+  assert.equal(ch.face.children[0].src, "characters/kim.jpg");
+  const prose = document.getElementById("prose");
+  assert.equal(
+    prose.children.indexOf(rows[1]) <
+      prose.children.indexOf(paragraphs()[0]), true);
+});
+
+check("a scene without an action gets only the Character chip", () => {
+  T.setBook(testBook());
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+  T.setScenes([{ turn: 1, text: "She waits." }]);
+  T.renderScenes();
+  const rows = chipRows();
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].dataset.testid, "speaker-chip-character-1");
+});
+
+check("a book without a portrait falls back to the initial, never a bare img", () => {
+  const book = testBook();
+  book.main_character_image = "";
+  T.setBook(book);
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+  T.setScenes([{ turn: 2, text: "She waits." }]);
+  T.renderScenes();
+  const ch = chipParts(chipRows()[0]);
+  assert.equal(ch.face.children[0].classList.contains("speaker-chip-initial"), true);
+  assert.equal(ch.face.children[0].textContent, "K");
+  assert.equal(
+    ch.face.children.filter((n) => n.tagName === "IMG").length, 0);
+});
+
+check("a book without a main-character name skips the Character chip", () => {
+  const book = testBook();
+  book.main_character = {};
+  T.setBook(book);
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+  T.setScenes([{
+    turn: 3, action: "I look around.", text: "The room is quiet.",
+  }]);
+  T.renderScenes();
+  const rows = chipRows();
+  assert.equal(rows.length, 1);
+  assert.equal(rows[0].dataset.testid, "speaker-chip-you-3");
+});
+
+check("a bound persona names the You chip and paints its photo", () => {
+  T.setBook(testBook());
+  T.setPlaythroughPersona({
+    persona_id: "p1",
+    persona: { id: "p1", name: "Milu Test", image_id: "f1" },
+  });
+  T.setScenes([{
+    turn: 4, action: "I step inside.", text: "She smiles.",
+  }]);
+  T.renderScenes();
+  const you = chipParts(chipRows()[0]);
+  assert.equal(you.name.textContent, "Milu");
+  assert.equal(you.role.textContent, "You");
+  assert.equal(you.face.children[0].tagName, "IMG");
+  assert.equal(you.face.children[0].src, "./personas/f1.jpg");
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+});
+
+check("a bound persona without a usable image falls back to its initial", () => {
+  T.setBook(testBook());
+  T.setPlaythroughPersona({
+    persona_id: "p2",
+    persona: { id: "p2", name: "No Photo", image_id: "nope" },
+  });
+  T.setScenes([{
+    turn: 5, action: "I wait.", text: "Nothing happens.",
+  }]);
+  T.renderScenes();
+  const you = chipParts(chipRows()[0]);
+  assert.equal(you.name.textContent, "No");
+  assert.equal(
+    you.face.children[0].classList.contains("speaker-chip-initial"), true);
+  assert.equal(you.face.children[0].textContent, "N");
+  assert.equal(
+    you.face.children.filter((n) => n.tagName === "IMG").length, 0);
+  T.setPlaythroughPersona({ persona_id: null, persona: null });
+});
+
 console.log(`\n${passed} checks passed`);

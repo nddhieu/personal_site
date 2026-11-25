@@ -622,6 +622,89 @@
   }
 }
 
+/* Speaker chips + attribution (reading-view redesign, slice
+ * 4c): one row per message block - avatar + name + a role
+ * chip (You for the played character, Character for the
+ * viewpoint character). The row sits directly above its
+ * block, so the input marker's scene gap collapses when a
+ * chip precedes it; the first beat paragraph carries no top
+ * margin, so the character row lands tight above it. The
+ * face reuses the marker/avatar-disc sizing (28px) and the
+ * persona-chip initial treatment; on a scene background the
+ * row reads light, like the persona chip. App-only: gone in
+ * print with the other attribution controls. */
+.page-play .speaker-chip-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 1.25rem 0 0.35rem;
+}
+.page-play .speaker-chip-row:first-child {
+  margin-top: 0.5rem;
+}
+.page-play .speaker-chip-row + .turn-input-marker {
+  margin-top: 0.1rem;
+}
+.page-play .speaker-chip-face {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-primary-soft, rgba(127, 127, 127, 0.2));
+}
+.page-play .speaker-chip-face .avatar-disc {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.page-play .speaker-chip-face .avatar-disc svg,
+.page-play .speaker-chip-face .avatar-disc img {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.page-play .speaker-chip-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 20%;
+  display: block;
+}
+.page-play .speaker-chip-initial {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.page-play .speaker-chip-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+.page-play .speaker-chip-role {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 0.12rem 0.45rem;
+  border: 1px solid var(--color-card-border);
+  border-radius: 999px;
+  color: var(--color-text-muted);
+}
+.page-play.has-scene-bg .speaker-chip-row {
+  color: #f4f5fa;
+}
+.page-play.has-scene-bg .speaker-chip-role {
+  border-color: rgba(255, 255, 255, 0.35);
+  color: rgba(244, 245, 250, 0.85);
+}
+@media print {
+  .page-play .speaker-chip-row {
+    display: none !important;
+  }
+}
+
 /* Diary panel (live wiring): read-only list of the run's diary. */
 .page-play .diary-panel {
   margin-top: 0.25rem;
