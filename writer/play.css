@@ -1797,3 +1797,72 @@ body.light-theme .page-play .settings-sheet {
     max-width: 3.4rem;
   }
 }
+
+/* Scene index drawer (M5c): the settings-sheet palette
+ * reshaped into a left slide-over - full height, capped at
+ * 320px, hugging the left edge of the play layout. Rows are
+ * 44px-minimum tap targets; the current (last) scene's row
+ * carries the accent edge. */
+.page-play .scene-drawer {
+  left: 0;
+  right: auto;
+  top: 0;
+  bottom: 0;
+  width: min(320px, 85vw);
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  border: 1px solid var(--sheet-border);
+  border-left: none;
+  border-radius: 0 1.5rem 1.5rem 0;
+  box-shadow: 14px 0 44px var(--sheet-shadow);
+}
+.page-play .scene-drawer-list {
+  display: grid;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+.page-play .scene-drawer-row {
+  appearance: none;
+  display: grid;
+  gap: 0.15rem;
+  width: 100%;
+  min-height: 44px;
+  padding: 0.55rem 0.75rem;
+  text-align: left;
+  font: inherit;
+  color: var(--sheet-text);
+  background: var(--sheet-tile-bg);
+  border: 1px solid var(--sheet-tile-border);
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+.page-play .scene-drawer-row:hover,
+.page-play .scene-drawer-row:focus-visible {
+  background: var(--sheet-tile-hover);
+}
+.page-play .scene-drawer-row-current {
+  border-color: var(--sheet-accent);
+  box-shadow: inset 3px 0 0 var(--sheet-accent);
+}
+.page-play .scene-drawer-row-title {
+  font-weight: 600;
+}
+.page-play .scene-drawer-row-excerpt {
+  color: var(--sheet-muted);
+  font-size: 0.875rem;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.page-play .scene-drawer-row-you {
+  font-style: italic;
+}
+.page-play .scene-drawer-empty {
+  color: var(--sheet-muted);
+  margin: 0.75rem 0 0;
+  line-height: 1.5;
+}

@@ -63,6 +63,7 @@
         aria-haspopup="true" aria-expanded="false" aria-controls="play-menu" aria-label="Menu" title="Menu"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></button>
       <div id="play-menu" data-testid="play-menu" class="play-menu" role="menu" aria-label="Story menu" hidden>
         <button id="diary-btn" data-testid="diary-btn" class="play-menu-item" type="button" role="menuitem">Diary</button>
+        <button id="scenes-btn" data-testid="scenes-btn" class="play-menu-item" type="button" role="menuitem">Scenes</button>
         <button id="reset-btn" data-testid="reset-btn" class="play-menu-item" type="button" role="menuitem" aria-label="Reset the story and start over">Reset story</button>
         <button id="play-menu-theme" data-testid="play-menu-theme" class="play-menu-item" type="button" role="menuitem" aria-label="Switch color theme">Dark</button>
         <button id="play-menu-logout" data-testid="play-menu-logout" class="play-menu-item" type="button" role="menuitem">Log out</button>
@@ -294,6 +295,26 @@
     <p id="persona-sheet-empty" class="persona-sheet-empty" hidden>No personas yet - create one and it can step into this story.</p>
     <p id="persona-sheet-error" data-testid="persona-sheet-error" class="form-error" role="alert" hidden></p>
     <a id="persona-sheet-manage" data-testid="persona-sheet-manage" class="persona-sheet-manage" href="./persona.html">Manage personas</a>
+  </section>
+
+  <!-- Scene index drawer (M5c): a slide-over listing every
+       rendered scene in story order, opened from the play
+       menu's Scenes item. Tapping a row jumps to that scene
+       (the diary jump: same scroll + highlight) and closes
+       the drawer. It rides the settings-sheet palette like
+       the persona sheet does, reshaped into a left drawer;
+       the rows are built by play.js from the scenes array on
+       every render, so the list never goes stale. -->
+  <div id="scene-drawer-backdrop" data-testid="scene-drawer-backdrop" class="settings-backdrop" hidden></div>
+  <section id="scene-drawer" data-testid="scene-drawer" class="settings-sheet scene-drawer" role="dialog"
+    aria-modal="false" aria-label="Scene index" hidden>
+    <header class="settings-head">
+      <h2 id="scene-drawer-title">Scenes</h2>
+      <button id="scene-drawer-close" data-testid="scene-drawer-close" class="settings-close" type="button"
+        aria-label="Close scene index" title="Close"><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M5 5l14 14M19 5L5 19"/></svg></button>
+    </header>
+    <nav id="scene-drawer-list" class="scene-drawer-list" aria-label="Scenes"></nav>
+    <p id="scene-drawer-empty" data-testid="scene-drawer-empty" class="scene-drawer-empty">No scenes yet - they appear as the story unfolds.</p>
   </section>
 
   <p id="play-out" hidden>You are not signed in.
