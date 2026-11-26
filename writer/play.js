@@ -3402,24 +3402,31 @@ document.addEventListener("keydown", (event) => {
 });
 
 /* Reading settings panel (redesign, seq 552; slice 4b: font
- * size first - one element at a time, per the Nov 14
- * 2-day rule). A quiet panel off the play topbar: the
- * button sits beside the menu, not an admin-looking
- * control, and the panel is a popover over the top of the
- * reading area, so the prose below stays visible and
- * reflows live as the size changes - the preview is the
- * story itself. Font size is a reader preference, so it
- * persists per user (not per playthrough) in localStorage
- * as writer.readingSettings = { fontSize } and loads
- * before first paint (the load + apply at the end of this
- * section run at module load, not after init()). Mode /
- * screen display / background join the same stored object
- * in later slices; the panel carries no Stream switch -
- * streaming is unconditional (seq 917-918). */
+ * size first, slice 4d: mode joins - one element at a time,
+ * per the Nov 14 2-day rule). A quiet panel off the play
+ * topbar: the button sits beside the menu, not an
+ * admin-looking control, and the panel is a popover over the
+ * top of the reading area, so the prose below stays visible
+ * and reflows live as the size changes - the preview is the
+ * story itself. Font size and mode are reader preferences,
+ * so they persist per user (not per playthrough) in
+ * localStorage as writer.readingSettings = { fontSize, mode }
+ * and load before first paint (the load + apply at the end
+ * of this section run at module load, not after init()).
+ * Mode: Default = prose in a rounded card over the lower
+ * image; Immersion = prose directly on the dimmed full
+ * image, no card. Screen display / background join the same
+ * stored object in later slices; the panel carries no Stream
+ * switch - streaming is unconditional (seq 917-918). */
 const READING_SETTINGS_KEY = "writer.readingSettings";
 const READING_FONT_SIZES = ["small", "standard", "large", "xl"];
 const READING_FONT_DEFAULT = "standard";
-let readingSettings = { fontSize: READING_FONT_DEFAULT };
+const READING_MODES = ["default", "immersion"];
+const READING_MODE_DEFAULT = "default";
+let readingSettings = {
+  fontSize: READING_FONT_DEFAULT,
+  mode: READING_MODE_DEFAULT,
+};
 
 function loadReadingSettings() {
   let parsed = null;
@@ -3432,6 +3439,9 @@ function loadReadingSettings() {
     fontSize: parsed && READING_FONT_SIZES.includes(parsed.fontSize)
       ? parsed.fontSize
       : READING_FONT_DEFAULT,
+    mode: parsed && READING_MODES.includes(parsed.mode)
+      ? parsed.mode
+      : READING_MODE_DEFAULT,
   };
   return readingSettings;
 }
@@ -3453,16 +3463,33 @@ function syncReadingFontControls() {
     btn.setAttribute("aria-pressed", on ? "true" : "false");
   }
 }
+function syncReadingModeControls() {
+  for (const mode of READING_MODES) {
+    const btn = el("reading-mode-" + mode);
+    if (!btn) continue;
+    const on = mode === readingSettings.mode;
+    btn.classList.toggle("is-on", on);
+    btn.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+}
 function applyReadingSettings() {
   const prose = el("prose");
   if (prose) {
     prose.setAttribute("data-reading-font", readingSettings.fontSize);
+    prose.setAttribute("data-reading-mode", readingSettings.mode);
   }
   syncReadingFontControls();
+  syncReadingModeControls();
 }
 function setReadingFontSize(size) {
   if (!READING_FONT_SIZES.includes(size)) return;
   readingSettings.fontSize = size;
+  saveReadingSettings();
+  applyReadingSettings();
+}
+function setReadingMode(mode) {
+  if (!READING_MODES.includes(mode)) return;
+  readingSettings.mode = mode;
   saveReadingSettings();
   applyReadingSettings();
 }
@@ -3485,6 +3512,10 @@ el("reading-panel-close").addEventListener("click", closeReadingPanel);
 for (const size of READING_FONT_SIZES) {
   el("reading-font-" + size).addEventListener("click",
     () => setReadingFontSize(size));
+}
+for (const mode of READING_MODES) {
+  el("reading-mode-" + mode).addEventListener("click",
+    () => setReadingMode(mode));
 }
 document.addEventListener("click", (event) => {
   if (!readingPanel.hidden && !readingPanelWrap.contains(event.target)) {
@@ -3699,6 +3730,7 @@ export const __playTest = {
   loadReadingSettings,
   applyReadingSettings,
   setReadingFontSize,
+  setReadingMode,
   getReadingSettings() { return { ...readingSettings }; },
 };
 

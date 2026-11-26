@@ -163,11 +163,13 @@
   color: var(--color-text-muted);
   margin-bottom: 0.35rem;
 }
-.page-play .reading-font-choices {
+.page-play .reading-font-choices,
+.page-play .reading-mode-choices {
   display: flex;
   gap: 0.375rem;
 }
-.page-play .reading-font-choice {
+.page-play .reading-font-choice,
+.page-play .reading-mode-choice {
   appearance: none;
   flex: 1;
   background: none;
@@ -180,7 +182,8 @@
   cursor: pointer;
   text-align: center;
 }
-.page-play .reading-font-choice.is-on {
+.page-play .reading-font-choice.is-on,
+.page-play .reading-mode-choice.is-on {
   color: var(--color-primary);
   font-weight: 700;
   border-color: var(--color-primary);
@@ -205,6 +208,29 @@
 }
 .page-play #prose[data-reading-font="xl"] {
   font-size: 1.375rem;
+}
+/* Reading mode (redesign, slice 4d): Default puts the prose
+   in a rounded card over the lower image, so the text sits
+   on a surface and reads the same with or without a scene
+   behind it; Immersion lays the prose directly on the
+   dimmed full image, no card - the white-over-scrim
+   treatment below. The attribute always carries the
+   current mode, so the applied mode is visible in the DOM
+   and in the harness. */
+.page-play #prose[data-reading-mode="default"] {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-card-border);
+  border-radius: 1rem;
+  padding: 1rem 1.25rem;
+  box-sizing: border-box;
+}
+@media print {
+  /* Printed prose stays clean: no card chrome either. */
+  .page-play #prose[data-reading-mode="default"] {
+    background: none;
+    border: none;
+    padding: 0;
+  }
 }
 .page-play .play-layout {
   display: flex;
@@ -983,6 +1009,25 @@
 }
 .page-play.has-scene-bg .prose em {
   color: rgba(255, 255, 255, 0.78);
+}
+/* Default mode over a scene image (redesign, slice 4d):
+   the prose sits in a card, so it keeps the theme text on
+   the card surface - the white-over-scrim treatment above
+   is the Immersion look only. The id in these selectors
+   outranks the .has-scene-bg rules above, so no ordering
+   trap. */
+.page-play.has-scene-bg #prose[data-reading-mode="default"] {
+  color: var(--color-text);
+  text-shadow: none;
+}
+.page-play.has-scene-bg #prose[data-reading-mode="default"] span.narration-span {
+  color: var(--color-text-muted);
+}
+.page-play.has-scene-bg #prose[data-reading-mode="default"] strong.dialogue-span {
+  color: var(--color-text);
+}
+.page-play.has-scene-bg #prose[data-reading-mode="default"] em {
+  color: var(--color-text-muted);
 }
 .page-play.has-scene-bg .play-topbar h1 {
   color: #fff;
