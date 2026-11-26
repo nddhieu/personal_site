@@ -625,15 +625,25 @@ function readingSetup() {
 
 check("no stored size reads standard and marks the prose", () => {
   readingSetup();
-  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "standard", mode: "default" });
   assert.equal(
     document.getElementById("prose").getAttribute("data-reading-font"),
     "standard");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-mode"),
+    "default");
   assert.equal(
     document.getElementById("reading-font-standard")
       .getAttribute("aria-pressed"), "true");
   assert.equal(
     document.getElementById("reading-font-small")
+      .getAttribute("aria-pressed"), "false");
+  assert.equal(
+    document.getElementById("reading-mode-default")
+      .getAttribute("aria-pressed"), "true");
+  assert.equal(
+    document.getElementById("reading-mode-immersion")
       .getAttribute("aria-pressed"), "false");
 });
 
@@ -675,7 +685,8 @@ check("an unknown stored size falls back to standard", () => {
     JSON.stringify({ fontSize: "huge" }));
   T.loadReadingSettings();
   T.applyReadingSettings();
-  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "standard", mode: "default" });
   assert.equal(
     document.getElementById("prose").getAttribute("data-reading-font"),
     "standard");
@@ -685,13 +696,84 @@ check("corrupt stored settings fall back to standard", () => {
   localStorage.setItem("writer.readingSettings", "{not json");
   T.loadReadingSettings();
   T.applyReadingSettings();
-  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "standard", mode: "default" });
 });
 
 check("an unknown size choice changes nothing", () => {
   readingSetup();
   T.setReadingFontSize("huge");
-  assert.deepEqual(T.getReadingSettings(), { fontSize: "standard" });
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "standard", mode: "default" });
+  assert.equal(localStorage.getItem("writer.readingSettings"), null);
+});
+
+/* --- slice 4d: reading-settings panel, mode --- */
+check("choosing Immersion applies it and persists it", () => {
+  readingSetup();
+  T.setReadingMode("immersion");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-mode"),
+    "immersion");
+  assert.equal(
+    JSON.parse(localStorage.getItem("writer.readingSettings")).mode,
+    "immersion");
+  assert.equal(
+    document.getElementById("reading-mode-immersion")
+      .getAttribute("aria-pressed"), "true");
+  assert.equal(
+    document.getElementById("reading-mode-default")
+      .getAttribute("aria-pressed"), "false");
+  assert.equal(
+    document.getElementById("reading-mode-immersion")
+      .classList.contains("is-on"), true);
+});
+
+check("a stored Immersion loads back before first paint", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "large", mode: "immersion" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-mode"),
+    "immersion");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-font"),
+    "large");
+  assert.equal(
+    document.getElementById("reading-mode-immersion")
+      .getAttribute("aria-pressed"), "true");
+});
+
+check("an unknown stored mode falls back to default, keeping the size", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "large", mode: "cinematic" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "large", mode: "default" });
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-mode"),
+    "default");
+});
+
+check("stored settings from before mode still load, mode defaults", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "xl" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "xl", mode: "default" });
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-mode"),
+    "default");
+});
+
+check("an unknown mode choice changes nothing", () => {
+  readingSetup();
+  T.setReadingMode("cinematic");
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "standard", mode: "default" });
   assert.equal(localStorage.getItem("writer.readingSettings"), null);
 });
 
