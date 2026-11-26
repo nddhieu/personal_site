@@ -4,10 +4,13 @@
  * (world, main character, style, language), and saves edits with
  * PUT /api/books/{id} - the page sends the full definition back
  * with the edited fields in place, so untouched fields survive
- * by construction. Join navigates to the play screen. */
+ * by construction. Join navigates to the play screen.
+ * Guest-review Fix 2: the shared guest account reads the book
+ * read-only - the form is disabled and the Save button hidden
+ * (the backend 403s any guest write regardless). */
 
 import { apiFetch } from "./js/app-api.js";
-import { getToken, clearToken } from "./js/app-auth.js";
+import { getToken, clearToken, getMe } from "./js/app-auth.js";
 import { renderTopbar, friendlyError } from "./js/app-ui.js";
 import { renderShell } from "./js/shell.js";
 
@@ -82,15 +85,34 @@ function fill(book) {
   el("f-opening").value = book.opening_scene || "";
 }
 
+/* Guest-review Fix 2: disable the edit form for the shared
+ * guest account. The backend is the enforcement (guest writes
+ * 403); this keeps the page from offering an edit it cannot
+ * save. */
+function applyGuestReadOnly() {
+  el("book-form").querySelectorAll("input, textarea").forEach((field) => {
+    field.disabled = true;
+  });
+  el("save-btn").hidden = true;
+}
+
 /* One line stating the page state (guest-review fix): the
  * shared template before the reader starts, their copy
  * after. A playthrough under this book means the reader
  * has started it; the list is the account's own runs, so
  * a shared guest account reads as started once any guest
  * joined. On a list failure the line stays hidden rather
- * than claiming a state we do not know. */
-async function showBookState() {
+ * than claiming a state we do not know. For a guest the
+ * line is the read-only note instead, and the playthroughs
+ * check is skipped - the guest account is shared, so
+ * "started" would describe other guests, not this reader. */
+async function showBookState(isGuest) {
   const note = el("join-note");
+  if (isGuest) {
+    note.textContent = "You are browsing as a guest - this book is read-only. Sign in to edit it.";
+    note.hidden = false;
+    return;
+  }
   let started = false;
   try {
     const mine = await apiFetch(
@@ -149,8 +171,15 @@ async function init() {
   }
   el("book-status").hidden = true;
   fill(current);
+  let isGuest = false;
+  try {
+    isGuest = Boolean((await getMe()).is_guest);
+  } catch {
+    isGuest = false;
+  }
+  if (isGuest) applyGuestReadOnly();
   el("book-form").hidden = false;
-  showBookState();
+  showBookState(isGuest);
 }
 
 el("book-form").addEventListener("submit", async (event) => {
