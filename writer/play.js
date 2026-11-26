@@ -39,13 +39,6 @@ import {
   showNote,
   friendlyError,
 } from "./js/app-ui.js";
-import {
-  createAudioPlayer,
-  autoSpeakOn,
-  setAutoSpeak,
-  readVoice,
-  setVoice,
-} from "./js/audio.js";
 
 const BOOK_ID = new URLSearchParams(location.search).get("id") || "accad-kim";
 const PLAYTHROUGH_KEY = "st_playthrough_" + BOOK_ID;
@@ -68,55 +61,15 @@ const DEFAULT_ACTIONS = [
 ];
 
 const el = (id) => document.getElementById(id);
-/* Scene audio (stream-audio v1, T3): per-paragraph speaker
- * buttons + auto-speak flag + transport, over the T2 relay
- * (POST /api/audio/synthesize, GET /api/audio/health). The
- * player owns synthesis, caching, and playback; this file
- * owns the buttons and the scene-completed hook. The relay
- * is an enhancement: a down TTS service only quiets the
- * buttons ("Audio unavailable"), it never blocks reading. */
-const audioPlayer = createAudioPlayer({
-  synthesize: (text, voice) =>
-    apiFetch("/api/audio/synthesize", {
-      method: "POST",
-      body: { text, voice },
-      response: "blob",
-    }),
-  probe: () =>
-    apiFetch("/api/audio/health")
-      .then((d) => Boolean(d && d.available))
-      .catch(() => false),
-});
-
-/* A tap is a gesture: the first pointer/key interaction in
- * the session unlocks auto-read (browsers block autoplay
- * without one), so the flag can only auto-play from the
- * next turn onward, never on page load. */
-function markAudioInteracted() {
-  audioPlayer.userInteracted = true;
-}
-document.addEventListener("pointerdown", markAudioInteracted);
-document.addEventListener("keydown", markAudioInteracted);
-
-/* Outline speaker (Emochi tool-btn stroke idiom) and stop
- * square, swapped in place as the button's state changes. */
-const SPEAKER_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path d="M16.5 8.5a5 5 0 0 1 0 7"/><path d="M19 6a8.5 8.5 0 0 1 0 12"/></svg>';
-const STOP_SVG =
-  '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="1.5" fill="currentColor" stroke="none"/></svg>';
-
-const AUDIO_BUTTON_TITLES = {
-  idle: "Listen to this paragraph",
-  generating: "Generating audio…",
-  ready: "Listen to this paragraph",
-  playing: "Stop listening",
-  paused: "Listen to this paragraph",
-  unavailable: "Audio unavailable",
-};
+/* Scene audio stripped (T-016, Tier 1, 2026-11-26): the TTS
+ * relay 404s in prod, so the speaker buttons, auto-speak
+ * flag, voice select and transport are removed until T-020
+ * wires backend TTS. writer/js/audio.js stays in the tree
+ * for the re-wire; nothing imports it meanwhile. */
 
 /* One image icon per paragraph (Hieu, Nov 5), replacing the
  * "Generate image" / "Use as background" text buttons. The
- * icon is state-aware, mirroring syncAudioButton, in the
+ * icon is state-aware, in the
  * four states Hieu named (Nov 8):
  *   1. no image yet - muted outline; a tap opens the shape
  *      chooser in generate mode.
@@ -161,195 +114,10 @@ function syncImageButton(btn, scene, beatIndex) {
     IMAGE_BUTTON_TITLES[state] + " for this paragraph");
 }
 
-function syncAudioButton(btn, sceneIndex, beatText) {
-  const voice = readVoice();
-  const state = audioPlayer.beatState(beatText, voice);
-  btn.classList.toggle("is-playing", state === "playing");
-  btn.classList.toggle("is-generating", state === "generating");
-  btn.classList.toggle("is-unavailable", state === "unavailable");
-  // Only a probed-down TTS service disables the button. A
-  // single failed synthesis stays tappable so the tap can
-  // retry it (onAudioButton -> retryAudio). The in-flight
-  // scene is NOT disabled here: renderScenes runs while a
-  // turn is still marked busy, and a disabled flag set then
-  // would stay stuck until the next re-render. The click
-  // handler is the guard instead (it ignores taps on the
-  // scene being written while busy).
-  btn.disabled = state === "unavailable" &&
-    audioPlayer.available === false;
-  btn.innerHTML = state === "playing" ? STOP_SVG : SPEAKER_SVG;
-  btn.title = state === "unavailable" && audioPlayer.available !== false
-    ? "Audio unavailable - tap to try again"
-    : AUDIO_BUTTON_TITLES[state];
-  btn.setAttribute("aria-label", btn.title);
-}
-
-/* Every speaker button on the page, refreshed in place
- * when the player reports a state change (generation
- * finished, playback started/stopped, probe answered). */
-function updateAudioButtons() {
-  const voice = readVoice();
-  document.querySelectorAll("[data-testid^='scene-audio-btn-']")
-    .forEach((btn) => {
-      const key = btn.dataset.testid.slice("scene-audio-btn-".length);
-      const [si, bi] = key.split(":").map(Number);
-      const scene = scenes[si];
-      if (!scene) return;
-      const beats = splitBeats(sceneText(scene));
-      if (beats[bi] === undefined) return;
-      syncAudioButton(btn, si, beats[bi]);
-    });
-}
-
-/* The transport (pause/resume, stop, mute) shows only while
- * something is playing or paused; mute persists per user. */
-function updateAudioTransport() {
-  const bar = el("audio-transport");
-  if (!bar) return;
-  const snap = audioPlayer.snapshot();
-  const active = snap.currentKey !== null;
-  bar.hidden = !active;
-  const pauseBtn = el("audio-pause-btn");
-  if (pauseBtn) {
-    pauseBtn.textContent = snap.paused ? "Resume" : "Pause";
-    pauseBtn.setAttribute("aria-label",
-      snap.paused ? "Resume listening" : "Pause listening");
-  }
-  const muteBtn = el("audio-mute-btn");
-  if (muteBtn) {
-    muteBtn.textContent = snap.muted ? "Unmute" : "Mute";
-    muteBtn.setAttribute("aria-label",
-      snap.muted ? "Unmute" : "Mute");
-    muteBtn.classList.toggle("is-muted", snap.muted);
-  }
-}
-
-/* The play-note's audio state: a spinner + "Generating
- * audio..." while the reader waits on synthesis - a tapped
- * speaker whose audio is not ready yet, or an auto-read
- * queue whose first beat is still generating. It never
- * clobbers the story loading label (busy) or a visible
- * error, and it hands the note back (restoring any note it
- * took over) when the wait ends. An audio error it showed
- * clears once audio is playing again. */
-function syncAudioStatus() {
-  const n = el("play-note");
-  if (!n || busy) return;
-  const snap = audioPlayer.snapshot();
-  if (snap.currentKey !== null && n.dataset.audioError) {
-    delete n.dataset.audioError;
-    n.className = "play-note";
-    n.removeAttribute("role");
-    showNote(n, "");
-    return;
-  }
-  if (n.className === "form-error") return;
-  const waiting = audioWaiting ||
-    (snap.queueActive && snap.currentKey === null);
-  if (waiting) {
-    if (n.dataset.status === "audio") return;
-    if (!n.hidden && n.textContent.trim() !== "") {
-      n.dataset.prevNote = n.textContent;
-    }
-    showLoading(n, "Generating audio...");
-    n.dataset.status = "audio";
-    return;
-  }
-  if (n.dataset.status === "audio") {
-    delete n.dataset.status;
-    const prev = n.dataset.prevNote;
-    delete n.dataset.prevNote;
-    if (prev) showPlayNote(prev);
-    else showNote(n, "");
-  }
-}
-
-audioPlayer.onChange(() => {
-  updateAudioButtons();
-  updateAudioTransport();
-  syncAudioStatus();
-});
-
-async function onAudioButton(sceneIndex, beatIndex, beatText) {
-  if (busy && sceneIndex === scenes.length - 1) return;
-  const voice = readVoice();
-  if (audioPlayer.beatState(beatText, voice) === "playing") {
-    audioPlayer.stop();
-    return;
-  }
-  // The reader waits on synthesis from here until the
-  // first beat starts playing (or fails): the play-note
-  // names the wait while it lasts.
-  const state = audioPlayer.beatState(beatText, voice);
-  // Only states that may still need synthesis show the wait:
-  // a paused beat is cached, so it starts at once.
-  if (state === "idle" || state === "generating" ||
-      state === "unavailable") {
-    audioWaiting = true;
-    syncAudioStatus();
-  }
-  try {
-    if (state === "unavailable" && audioPlayer.available !== false) {
-      await audioPlayer.retryAudio(beatText, voice);
-    }
-    if (autoSpeakOn()) {
-      if (!scenes[sceneIndex]) return;
-      const from = Number.isInteger(beatIndex) ? beatIndex : 0;
-      // Read to the end of the book (Hieu, Nov 7): from the
-      // tapped beat through the last beat of the last scene
-      // that exists - scenes not yet written cannot play.
-      // A new turn cancels this queue before it can read a
-      // replaced scene's beats (runTurnBody -> cancelQueue),
-      // and the player's lookahead synthesis keeps up with
-      // scenes whose audio was never pre-generated.
-      const beats = [];
-      for (let si = sceneIndex; si < scenes.length; si++) {
-        splitBeats(sceneText(scenes[si])).forEach((text, j) => {
-          if (si === sceneIndex && j < from) return;
-          beats.push({ key: beatKey(si, j), text });
-        });
-      }
-      if (!beats.length) return;
-      await audioPlayer.playQueue(beats, voice);
-    } else {
-      await audioPlayer.playBeat(beatText, voice);
-    }
-  } catch {
-    // A failed play is visible, not quiet: the note names
-    // the failure, and the button stays tappable for a
-    // retry (a probed-down service keeps it disabled).
-    showPlayError(
-      "Couldn't generate audio for this paragraph. Tap the speaker to try again.",
-    );
-    el("play-note").dataset.audioError = "1";
-  } finally {
-    audioWaiting = false;
-    syncAudioStatus();
-  }
-}
-
-/* A scene just completed: pre-generate its paragraphs in
- * the background while the reader reads, and - when the
- * flag is on and the reader has already interacted - read
- * it aloud once the audio is ready. Only the newest scene
- * pre-generates; older scenes synthesize on first tap. */
-function onSceneCompleted(sceneIndex) {
-  const scene = scenes[sceneIndex];
-  if (!scene) return;
-  const beats = splitBeats(sceneText(scene))
-    .map((text, j) => ({ key: beatKey(sceneIndex, j), text }));
-  const voice = readVoice();
-  audioPlayer.pregenerate(beats, voice);
-  if (autoSpeakOn() && audioPlayer.userInteracted) {
-    audioPlayer.playQueue(beats, voice);
-  }
-}
-
 let book = null;
 let playthroughId = sessionStorage.getItem(PLAYTHROUGH_KEY) || "";
 let scenes = [];
 let busy = false;
-let audioWaiting = false; // a tapped speaker / auto-read waits on synthesis
 let currentSuggestions = [];
 let loadedSuggestions = [];
 
@@ -528,7 +296,7 @@ function parseDialogueSpans(text) {
  * coloured, so narration needs the span). A
  * whole-paragraph thought span on an eligible scene also
  * marks the paragraph thought-block. The leading
- * .beat-icons span (speaker + image buttons) is kept: in
+ * .beat-icons span (image button) is kept: in
  * the full render it is prepended after this call, and in
  * the provisional streaming sync it is already there. */
 function renderBeatText(p, beatText, scene) {
@@ -1923,34 +1691,16 @@ function renderScenes() {
           beatImageState(scene, j).file
             ? "regenerate" : "generate");
       });
-      // Speaker button (stream-audio v1, T3): one small
-      // control per paragraph, inline at its start beside
-      // the image icon - it plays this paragraph's cached
-      // audio (background pre-generation, design section
-      // 6). Auto-speak off: only this paragraph, then it
-      // stops. Auto-speak on: keeps going from here
-      // through the end of the book. Tapping another
-      // speaker stops the current one at once and plays
-      // the new one once ready; tap again stops it. Its
-      // state (idle / generating / ready / playing /
-      // unavailable) is refreshed in place by the player.
-      const audioBtn = document.createElement("button");
-      audioBtn.type = "button";
-      audioBtn.className = "scene-audio-btn";
-      audioBtn.dataset.testid = "scene-audio-btn-" + key;
-      syncAudioButton(audioBtn, i, beatText);
-      audioBtn.addEventListener("click",
-        () => onAudioButton(i, j, beatText));
       wrap.append(img);
-      // Beat icons inline (Hieu, Nov 5): the speaker and
-      // image icons open the paragraph itself, floated at
+      // Beat icons inline (Hieu, Nov 5): the image icon
+      // opens the paragraph itself, floated at
       // its start (see .beat-icons in play.css), instead of
-      // sitting on a controls line of their own - the prose
-      // starts right after them on the first line and wraps
+      // sitting on a controls line of its own - the prose
+      // starts right after it on the first line and wraps
       // full-width below.
       const icons = document.createElement("span");
       icons.className = "beat-icons";
-      icons.append(audioBtn, imgBtn);
+      icons.append(imgBtn);
       p.prepend(icons);
       prose.append(wrap);
     });
@@ -2125,16 +1875,11 @@ function showPlayNote(text) {
 }
 
 /* The note is a turn/reset loading label: reset any error
- * styling and audio-ownership markers first, so a stale
- * error never styles the spinner, and a stale marker never
- * makes a later clear wipe the wrong note. */
+ * styling first, so a stale error never styles the spinner. */
 function showStatusLoading(text) {
   const n = el("play-note");
   n.className = "play-note";
   n.removeAttribute("role");
-  delete n.dataset.status;
-  delete n.dataset.prevNote;
-  delete n.dataset.audioError;
   showLoading(n, text);
 }
 
@@ -2174,7 +1919,7 @@ function scrollToLatestScene() {
  *   revision      - QC rewrote the draft: {scene} is the
  *                   full final text, replacing the draft
  *   final_segment - segments of the checked scene (the
- *                   future audio build reads these; the
+ *                   future TTS build (T-020) reads these; the
  *                   display already has the text)
  *   turn_final    - {result}: the exact dict the classic
  *                   /turns endpoint returns; finalizing
@@ -2434,10 +2179,6 @@ async function fetchStreamedTurn(body, actionText) {
  * classic one. */
 async function runTurnBody(body, actionText) {
   if (busy || !playthroughId) return;
-  // A new turn cancels the auto-read queue for the scene it
-  // replaces; a paragraph the reader started manually keeps
-  // playing (cancelQueue only stops queue playback).
-  audioPlayer.cancelQueue();
   setBusy(true);
   showStatusLoading("Writing the next scene...");
   try {
@@ -2489,10 +2230,6 @@ async function applyTurnResult(result, actionText, body) {
   followStageBackground();
   if (scene) {
     scrollToLatestScene();
-    // The scene's text is complete: pre-generate its audio
-    // in the background, and auto-read it when the flag is
-    // on (onSceneCompleted handles both).
-    onSceneCompleted(scenes.length - 1);
   }
   el("action-input").value = "";
   growInput();
@@ -2589,62 +2326,6 @@ el("suggest-toggle").addEventListener("click", () => {
     String(!panel.hidden),
   );
 });
-
-/* Scene audio controls (T3): the auto-speak flag and the
- * narrator voice live in the composer bar, on the same
- * localStorage contract the future reading-settings panel
- * binds to (writer.autoSpeak "1" = on, OFF by default;
- * writer.narratorVoice vendetti/klett). The Audio toggle is
- * a text button (Hieu, Nov 7): no checkbox - the .is-on
- * class (accent color + bold) vs the muted default carries
- * the state, mirrored by aria-pressed. The transport
- * (pause/resume, stop, mute) appears only while something
- * plays; it never changes the flag. */
-const autoSpeakToggle = el("auto-speak-toggle");
-if (autoSpeakToggle) {
-  const syncAudioToggle = () => {
-    const on = autoSpeakOn();
-    autoSpeakToggle.classList.toggle("is-on", on);
-    autoSpeakToggle.setAttribute("aria-pressed", String(on));
-  };
-  syncAudioToggle();
-  autoSpeakToggle.addEventListener("click", () => {
-    setAutoSpeak(!autoSpeakOn());
-    syncAudioToggle();
-  });
-}
-const voiceSelect = el("narrator-voice");
-if (voiceSelect) {
-  voiceSelect.value = readVoice();
-  voiceSelect.addEventListener("change", () => {
-    // A voice switch stops the current reading: cached
-    // audio is per-voice, and the old voice must not keep
-    // playing under the new selection.
-    audioPlayer.stop();
-    setVoice(voiceSelect.value);
-    updateAudioButtons();
-  });
-}
-const audioPauseBtn = el("audio-pause-btn");
-if (audioPauseBtn) {
-  audioPauseBtn.addEventListener("click", () => {
-    const snap = audioPlayer.snapshot();
-    if (snap.currentKey === null) return;
-    if (snap.paused) audioPlayer.resume();
-    else audioPlayer.pause();
-  });
-}
-const audioStopBtn = el("audio-stop-btn");
-if (audioStopBtn) {
-  audioStopBtn.addEventListener("click", () => audioPlayer.stop());
-}
-const audioMuteBtn = el("audio-mute-btn");
-if (audioMuteBtn) {
-  audioMuteBtn.addEventListener("click", () => {
-    audioPlayer.setMuted(!audioPlayer.muted);
-  });
-}
-updateAudioTransport();
 
 el("continue-btn").addEventListener("click", () => {
   const staged = el("action-input").value.trim();
@@ -2842,7 +2523,6 @@ async function resetPlaythrough() {
     setControlCredits(state);
     clearSceneBackground();
     clearSceneImages();
-    audioPlayer.reset();
     expandedInputs.clear();
     currentSuggestions = [];
     loadedSuggestions = [];
@@ -2869,7 +2549,6 @@ async function resetPlaythrough() {
     scenes = [{ turn: 0, text: (book && book.opening_scene) || "" }];
     clearSceneBackground();
     clearSceneImages();
-    audioPlayer.reset();
     renderScenes();
     showPlayError(friendlyError(err));
   } finally {
@@ -2890,7 +2569,7 @@ async function resetPlaythrough() {
  * open so the confirm stays visible as the second tap's
  * target, exactly as the menu item always behaved. */
 /* A confirmed reset while the page is still busy (a turn
- * landing, its diary refresh and audio tail settling): the
+ * landing and its diary refresh): the
  * wipe must not race the turn - the turn's save could
  * resurrect the run being deleted - but the confirmation
  * must not be discarded either. Readers land in exactly
@@ -3649,22 +3328,6 @@ async function init() {
     // and the loader skips it. Not awaited - the images
     // fill in as they arrive and never block reading.
     loadExistingBeatImages();
-    // Scene audio (T3): probe the relay once per load. When
-    // it answers, pre-generate the newest scene's paragraphs
-    // so its speaker buttons are ready; when it is down, the
-    // probe marks every button "Audio unavailable" and no
-    // generation is attempted. Auto-read never starts on
-    // load - it needs a gesture first (see
-    // markAudioInteracted), so only new turns auto-play.
-    audioPlayer.probeAvailability().then((ok) => {
-      if (ok && scenes.length) {
-        const beats = splitBeats(sceneText(scenes[scenes.length - 1]))
-          .map((text, j) => ({
-            key: beatKey(scenes.length - 1, j), text,
-          }));
-        audioPlayer.pregenerate(beats, readVoice());
-      }
-    });
     renderDiary(state.diary);
     loadedSuggestions = state.suggestions || [];
     if (state.bible) renderBible(state.bible);
@@ -3705,8 +3368,8 @@ async function init() {
 
 /* Test handle (reading-view redesign harness): the fake-DOM
  * tests drive the real module through this instead of a
- * second copy of the render code. Same pattern as audio.js,
- * which is testable in node without a browser. */
+ * second copy of the render code. Same pattern as the audio
+ * module, which is testable in node without a browser. */
 export const __playTest = {
   setScenes(list) { scenes = list; },
   setBook(value) { book = value; },
