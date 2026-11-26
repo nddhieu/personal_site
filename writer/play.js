@@ -1705,6 +1705,10 @@ function renderScenes() {
       prose.append(wrap);
     });
   });
+  // The scene index (M5c) tracks the prose: rebuilding it
+  // here means a new turn adds its drawer row without a
+  // reload, and the list can never go stale.
+  renderSceneIndex();
 }
 
 function renderBible(stateBible) {
@@ -1780,6 +1784,69 @@ function renderDiary(entries) {
     }
     list.append(li);
   }
+}
+
+/* Scene index drawer (M5c): the play menu's Scenes item opens
+ * a slide-over listing every rendered scene in story order.
+ * Each row is "Scene N" plus the reader's action as an italic
+ * "You: ..." line where the scene has one, else the scene's
+ * opening line (first ~60 chars of the first beat). Tapping a
+ * row is the diary jump - same scroll + 2s highlight - and
+ * closes the drawer. The last scene's row is marked current:
+ * it is where the reader is. Scenes only - the data model has
+ * no chapter metadata, so there is no chapter grouping (plan
+ * section 8). The list rebuilds inside renderScenes(), so it
+ * tracks every turn. */
+function sceneIndexExcerpt(scene) {
+  const action = scene && scene.action ? String(scene.action).trim() : "";
+  const raw = action
+    ? "You: " + action
+    : (splitBeats(sceneText(scene))[0] || "").trim();
+  return raw.length > 60 ? raw.slice(0, 60).trimEnd() + "…" : raw;
+}
+
+function renderSceneIndex() {
+  const list = el("scene-drawer-list");
+  if (!list) return;
+  list.innerHTML = "";
+  const current = scenes.length - 1;
+  scenes.forEach((scene, i) => {
+    const turn = scene && Number.isInteger(scene.turn) ? scene.turn : i;
+    const row = document.createElement("button");
+    row.type = "button";
+    row.className = "scene-drawer-row" +
+      (i === current ? " scene-drawer-row-current" : "");
+    row.setAttribute("data-testid", "scene-drawer-row-" + turn);
+    if (i === current) row.setAttribute("aria-current", "true");
+    const title = document.createElement("span");
+    title.className = "scene-drawer-row-title";
+    title.textContent = "Scene " + (i + 1);
+    const excerpt = document.createElement("span");
+    excerpt.className = "scene-drawer-row-excerpt" +
+      (scene && scene.action ? " scene-drawer-row-you" : "");
+    excerpt.textContent = sceneIndexExcerpt(scene);
+    row.append(title, excerpt);
+    row.addEventListener("click", () => {
+      closeSceneDrawer();
+      jumpToScene(turn);
+    });
+    list.append(row);
+  });
+  el("scene-drawer-empty").hidden = scenes.length > 0;
+}
+
+function setSceneDrawer(open) {
+  el("scene-drawer").hidden = !open;
+  el("scene-drawer-backdrop").hidden = !open;
+}
+
+function openSceneDrawer() {
+  renderSceneIndex();
+  setSceneDrawer(true);
+}
+
+function closeSceneDrawer() {
+  setSceneDrawer(false);
 }
 
 /* Suggestion cards (F3 suggest): generated cards carry a
@@ -2685,6 +2752,20 @@ document.addEventListener("keydown", (event) => {
   if (event.key === "Escape") closePlayMenu();
 });
 el("diary-btn").addEventListener("click", closePlayMenu);
+
+/* Scene index drawer wiring (M5c): the menu item closes the
+ * menu and opens the drawer. The drawer closes on a row tap
+ * (see renderSceneIndex), its close button, a backdrop tap,
+ * or Escape - the same close rules as the sheets. */
+el("scenes-btn").addEventListener("click", () => {
+  closePlayMenu();
+  openSceneDrawer();
+});
+el("scene-drawer-close").addEventListener("click", closeSceneDrawer);
+el("scene-drawer-backdrop").addEventListener("click", closeSceneDrawer);
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") closeSceneDrawer();
+});
 function syncPlayMenuTheme() {
   el("play-menu-theme").textContent =
     getTheme() === "dark" ? "Light" : "Dark";
@@ -3375,6 +3456,9 @@ export const __playTest = {
   setBook(value) { book = value; },
   setPlaythroughPersona(state) { setPlaythroughPersona(state); },
   renderScenes,
+  renderSceneIndex,
+  openSceneDrawer,
+  closeSceneDrawer,
   renderBeatText,
   parseThoughtSpans,
   parseDialogueSpans,

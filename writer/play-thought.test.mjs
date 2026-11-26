@@ -918,4 +918,118 @@ check("a bound persona without a usable image falls back to its initial", () => 
   T.setPlaythroughPersona({ persona_id: null, persona: null });
 });
 
+/* --- M5c: scene index drawer --- */
+function drawerRows() {
+  return document.getElementById("scene-drawer-list").children;
+}
+function drawerRowText(row) {
+  return row.children.map((c) => c.textContent).join(" ");
+}
+
+check("scene drawer lists one row per scene in story order", () => {
+  T.setScenes([
+    { turn: 0, text: "Kim knocks on the cedar door, soaked through." },
+    { turn: 1, action: "I step inside.", text: "Candles first, then Accad." },
+    { turn: 2, action: "I sit down.", text: "The room settles." },
+  ]);
+  T.renderScenes();
+  const rows = drawerRows();
+  assert.equal(rows.length, 3);
+  assert.equal(rows[0].getAttribute("data-testid"), "scene-drawer-row-0");
+  assert.equal(rows[1].getAttribute("data-testid"), "scene-drawer-row-1");
+  assert.equal(rows[2].getAttribute("data-testid"), "scene-drawer-row-2");
+  assert.ok(drawerRowText(rows[0]).startsWith("Scene 1"));
+  assert.ok(drawerRowText(rows[2]).startsWith("Scene 3"));
+  assert.equal(document.getElementById("scene-drawer-empty").hidden, true);
+});
+
+check("a scene with an action shows the italic You line", () => {
+  const rows = drawerRows();
+  const excerpt = rows[1].children[1];
+  assert.equal(excerpt.textContent, "You: I step inside.");
+  assert.equal(excerpt.classList.contains("scene-drawer-row-you"), true);
+});
+
+check("a scene without an action shows its opening line, capped", () => {
+  const rows = drawerRows();
+  assert.equal(rows[0].children[1].textContent,
+    "Kim knocks on the cedar door, soaked through.");
+  T.setScenes([{
+    turn: 0,
+    text: "The rain had been falling since dawn and the whole valley smelled of wet pine and smoke.",
+  }]);
+  T.renderScenes();
+  const capped = drawerRows()[0].children[1].textContent;
+  assert.ok(capped.endsWith("…"));
+  assert.ok(capped.length <= 61);
+  assert.ok(capped.startsWith("The rain had been falling"));
+});
+
+check("the last scene's row is marked current", () => {
+  T.setScenes([
+    { turn: 0, text: "One." },
+    { turn: 1, text: "Two." },
+    { turn: 2, text: "Three." },
+  ]);
+  T.renderScenes();
+  const rows = drawerRows();
+  assert.equal(rows[0].classList.contains("scene-drawer-row-current"), false);
+  assert.equal(rows[2].classList.contains("scene-drawer-row-current"), true);
+  assert.equal(rows[2].getAttribute("aria-current"), "true");
+});
+
+check("scene drawer empty state shows when there are no scenes", () => {
+  T.setScenes([]);
+  T.renderScenes();
+  assert.equal(drawerRows().length, 0);
+  assert.equal(document.getElementById("scene-drawer-empty").hidden, false);
+});
+
+check("a new turn adds its drawer row on re-render, no reload", () => {
+  T.setScenes([
+    { turn: 0, text: "One." },
+    { turn: 1, text: "Two." },
+  ]);
+  T.renderScenes();
+  assert.equal(drawerRows().length, 2);
+  T.setScenes([
+    { turn: 0, text: "One." },
+    { turn: 1, text: "Two." },
+    { turn: 2, text: "Three." },
+  ]);
+  T.renderScenes();
+  assert.equal(drawerRows().length, 3);
+  assert.equal(
+    drawerRows()[2].classList.contains("scene-drawer-row-current"), true);
+});
+
+check("scene drawer opens and closes with its backdrop", () => {
+  T.openSceneDrawer();
+  assert.equal(document.getElementById("scene-drawer").hidden, false);
+  assert.equal(document.getElementById("scene-drawer-backdrop").hidden, false);
+  T.closeSceneDrawer();
+  assert.equal(document.getElementById("scene-drawer").hidden, true);
+  assert.equal(document.getElementById("scene-drawer-backdrop").hidden, true);
+});
+
+check("a row tap jumps to that scene and closes the drawer", () => {
+  T.setScenes([
+    { turn: 0, text: "One." },
+    { turn: 1, text: "Two." },
+    { turn: 2, text: "Three." },
+  ]);
+  T.renderScenes();
+  T.openSceneDrawer();
+  let scrolled = false;
+  const target = document.getElementById("scene-1");
+  target.scrollIntoView = () => { scrolled = true; };
+  const row = drawerRows()[1];
+  const click = row._listeners.find((l) => l[0] === "click");
+  assert.ok(click, "row carries a click listener");
+  click[1]({ target: row });
+  assert.equal(scrolled, true);
+  assert.equal(target.classList.contains("scene-jump-highlight"), true);
+  assert.equal(document.getElementById("scene-drawer").hidden, true);
+});
+
 console.log(`\n${passed} checks passed`);
