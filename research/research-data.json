@@ -65,6 +65,221 @@
       "source_url": "https://github.com/NVIDIA/SkillEvaluator"
     },
     {
+      "apply": "Pull the PTQ1_0 GGUF and PrismML's llama.cpp fork onto HieuPC, serve it, and run one repeated Story Realm job against our current local brain, comparing quality and tokens before trusting it with real work. Keep the Q2_0 file as the fallback — it runs on stock llama.cpp.",
+      "benefit": "A 27B-class agent brain can live on a 16 GB card with a large context window, offline, with no per-token cost and no quota — a free rung in the failover chain for when the API tiers 429 overnight.",
+      "category": "Models",
+      "caveats": "All benchmark figures are vendor-reported by PrismML and have not been independently reproduced. The independent 16 GB-card test ran the earlier 2.0 build, not 2.5, and PTQ1_0 is still under upstream review, so the fork is required for now.",
+      "checklist": [
+        "Download the PTQ1_0 GGUF from the Hugging Face repo (5.93 GB).",
+        "Grab a prebuilt binary from PrismML's llama.cpp fork — stock llama.cpp rejects the PTQ1_0 file.",
+        "Start the server with -np 1 if serving one request at a time on a 16 GB card.",
+        "Run one repeated Story Realm job against the current local brain and compare quality and tokens.",
+        "Keep the Q2_0 file as the fallback: it runs on stock llama.cpp from release b11556 onward."
+      ],
+      "date": "2026-11-25",
+      "details": [
+        {
+          "body": "Each weight takes one of three values — -1, 0, or +1 — so a ternary value carries about 1.585 bits of information. One shared FP16 scale factor covers every group of 128 weights, and the matrices are transformed blockwise by an orthogonal Hadamard rotation before the ternary assignment; the runtime applies the matching transform to activations, with the rotation folded into the stored weights offline at no extra cost. The total lands at 1.76 bits per weight and 5.93 GB.",
+          "heading": "How ternary weights work"
+        },
+        {
+          "body": "On tool calling, Bonsai 2.5 averages 77.2 across five benchmarks against 77.7 for FP16 — essentially level, and ahead of every conventional low-bit build of the same base model. It beats FP16 on τ²-Bench (82.0), τ³-Bench (73.9), and BFCL v3 (72.6), but trails on BFCL v4 (67.2, against 70.8 for FP16). The biggest jump is AppWorld, where the agent writes code against nine everyday apps' APIs: 90.5, up from 51.2, completing whole scenarios 89.3% of the time. On agentic coding, SWE-bench Verified rises from 60.8 to 75.6, Terminal-Bench 2.1 from 52.8 to 60.1, and DeepSWE from zero to 27.0. General capability across 16 benchmarks is 82.1 against 84.3 for FP16 — the closest any compressed build gets.",
+          "heading": "What the benchmarks actually say"
+        },
+        {
+          "body": "The comparison with the September release is the story. Bonsai 2 kept only 63% of the FP16 agentic coding score and solved not a single DeepSWE task; Bonsai 2.5 keeps about 90% and scores 27.0 on DeepSWE, which is 90% of FP16's 30.1. Tool calling rose from 67.0 to 77.2 on the same five-benchmark average. The model did not get bigger — the file is the same 5.93 GB — so the gain is in the training, not the size.",
+          "heading": "The leap from Bonsai 2"
+        },
+        {
+          "body": "Three packings ship, all the same ternary model. PTQ1_0 is the smallest file and the fastest decode on every NVIDIA GPU measured, but it needs the ternary kernels in PrismML's llama.cpp fork — stock llama.cpp rejects it as an unknown type, and PTQ1_0 is still under upstream review. PQ2_0 is the format benchmarked on Apple Metal and the source of the MLX export. Q2_0 runs on stock llama.cpp from release b11556 onward; older stock builds load it without warning and produce garbage, so check the build version first. The MTP variants add a draft head for speculative decoding: 1.5 to 1.8 times faster decode on NVIDIA GPUs, about 300 tokens per second on H200 and B200.",
+          "heading": "Which file runs where"
+        },
+        {
+          "body": "The file is 5.93 GB, so the weights alone are no problem; the question is the working memory at a useful context length. An independent tester ran the earlier 2.0 build at 135K context in 15 GB on a 16 GB RTX 5060 Ti — the first time a 27B-class agentic model has plausibly fit our card with a big window. A community report on a 10 GB RTX 3080 measured about 9.5 GB of total GPU memory, falling to about 7.8 GB with the single-request flag. The model card advises adding -np 1 to the server command when serving one request at a time on limited VRAM, since the server otherwise starts four parallel slots sharing one KV cache. None of this has been tested on our card yet — the 2.5 numbers above are all vendor-reported.",
+          "heading": "Why it fits a 16 GB card"
+        },
+        {
+          "body": "All benchmark figures are vendor-reported by PrismML and have not been independently reproduced; treat the tool-calling parity as a claim to verify, not a fact. The independent 16 GB test ran the 2.0 build, not 2.5, so the context headroom on our exact card is still unproven. The MTP draft head speeds decoding but slows prefill by 9 to 23% on NVIDIA GPUs until the kernels now in testing land. The model is a reasoning model that thinks by default at xhigh effort; the low setting is not supported and behaves close to xhigh.",
+          "heading": "What to watch"
+        }
+      ],
+      "hook": "27B agentic muscle in 5.93 GB — the first one that fits our 16 GB card.",
+      "image": "img/ternary-bonsai-2-5.jpg",
+      "kicker": "A 27B agentic model that fits on a 16 GB card",
+      "problem": "Local agent brains are stuck between two bad options. Small models fumble long, tool-using jobs, and capable 27B-class models need far more VRAM than a 16 GB consumer card holds — so a team either pays API bills or lives under free-tier quotas that rate-limit at the worst moment. Our own bridge agents hit the Gemini and OpenRouter free tiers hard enough that a quota-free local rung is now a real need.",
+      "slug": "ternary-bonsai-2-5",
+      "solution": "Ternary quantization. Every weight becomes -1, 0, or +1, with one shared FP16 scale factor per group of 128 weights, stored in a rotated Hadamard basis that costs no extra bits. Bonsai 2.5 applies that format to Qwen3.8-27B and trains the agentic behaviour back in: its coding average jumps from 37.9 to 54.2 and DeepSWE from zero to 27.0.",
+      "source_name": "PrismML — Ternary Bonsai 2.5 27B model card (Hugging Face)",
+      "source_url": "https://huggingface.co/prism-ml/Ternary-Bonsai-2.5-27B-GGUF",
+      "stats": [
+        {
+          "label": "File size of the PTQ1_0 build, against 53.8 GB for the same model at FP16 — about 9x smaller",
+          "value": "5.93 GB"
+        },
+        {
+          "label": "Average tool-calling score across five benchmarks, against the FP16 model",
+          "value": "77.2 vs 77.7"
+        },
+        {
+          "label": "Share of the FP16 agentic coding score kept (54.2 vs 60.5 across three coding benchmarks)",
+          "value": "90%"
+        },
+        {
+          "label": "Maximum context length in tokens",
+          "value": "262K"
+        }
+      ],
+      "summary": "PrismML's Ternary Bonsai 2.5 compresses Qwen3.8-27B to 1.76 bits per weight — a 5.93 GB file against 53.8 GB at full precision — and still matches the full model on tool calling while keeping about 90% of its agentic coding score. For a team whose local brains live on a 16 GB card, this is the first 27B-class agent model that plausibly fits with a large context window, no API bill, and no quota wall. The catch: the smallest file needs PrismML's own llama.cpp fork, and the independent 16 GB test so far ran the earlier 2.0 build.",
+      "takeaways": [
+        "Ternary weights at 1.76 bits each shrink Qwen3.8-27B from 53.8 GB to 5.93 GB — about a ninth of the size.",
+        "Tool calling averages 77.2 against 77.7 for full precision; agentic coding keeps about 90% of the FP16 score.",
+        "The smallest file needs PrismML's llama.cpp fork; only the Q2_0 file runs on stock llama.cpp."
+      ],
+      "title": "Ternary Bonsai 2.5: a 27B Agentic Model Squeezed to 5.93 GB — and It Keeps 90% of Full-Precision Coding"
+    },
+    {
+      "apply": "Install the CLI and the Edge extension on HieuPC, pair them, and trial one live-verify pass on the Story Realm dev deploy from the bridge — starting with a dedicated browser profile and a tight allowed-sites list, and watching the login handoff before widening it.",
+      "benefit": "Logged-in browser work becomes automatable without handing the agent your passwords: it inherits the sessions you already have, under an allowlist you control. The human stays in the loop exactly where a human is needed — the login — and out of the loop everywhere else.",
+      "category": "Tools",
+      "caveats": "Version 0.1.0, released November 16, 2026 — an early release the team has not tried. The remote relay flow is documented by the project but untested by us. Chromium browsers only; there is no Firefox or Safari path.",
+      "checklist": [
+        "Install the Chrome extension first — it walks through the rest of the setup.",
+        "Install the CLI on HieuPC from the product page (npm, bun, curl, or PowerShell).",
+        "Create a dedicated browser profile for agent work before pairing.",
+        "Set the allowed-sites list to just the Story Realm dev deploy and the sign-in pages it needs.",
+        "Trial one live-verify pass from the bridge and watch the login handoff before widening the list."
+      ],
+      "date": "2026-11-25",
+      "details": [
+        {
+          "body": "Install the Chrome extension first and it walks you through the rest; the CLI can also be installed directly with curl, PowerShell, npm, or bun. The MCP server connects to your agent's client, and the extension connects the server to your real browser. Agent tabs open in the background in collapsed groups, so they stay out of your way while the agent reads pages, clicks, types, takes screenshots, and records tabs and network traffic.",
+          "heading": "How it works"
+        },
+        {
+          "body": "The design decision that makes this usable is the handoff. Browse does not ask for your passwords and does not try to solve a login itself: when a login, a 2FA prompt, or a payment appears, it hands the tab back to you. You do the step, click Continue, and the agent carries on. All your logins work because the agent is using the browser where you are already signed in — no keys, no separate setup per site.",
+          "heading": "The handoff model"
+        },
+        {
+          "body": "You can also hand the agent a tab you already have open by clicking the toolbar button. That matters for our use: instead of the agent navigating to a deploy and signing in from scratch, you open the page, sign in once, and lend it. The agent then works inside a session you created, which is both simpler and safer than giving it credentials.",
+          "heading": "Lend a tab"
+        },
+        {
+          "body": "The product documents exactly the split our team lives with: a relay that sits beside the agent, and the extension in the local browser, connected over the private network. Our bridge agents run on a VM while the browser runs on HieuPC — Browse describes that remote arrangement as a supported flow rather than a hack. That is the piece that makes it usable for bridge agents instead of only for agents running on the same machine as the browser.",
+          "heading": "The remote flow that matches our setup"
+        },
+        {
+          "body": "The immediate candidate is the logged-in live-verify pass on the Story Realm dev deploy: the agent would open the deploy, run the checks, and hand back only the sign-in step. The Google sign-in click-through that is currently blocked on a human doing it by hand is the sharpest example — Browse's handoff is built for exactly that step. Screenshots and tab recordings would also give us evidence for each verify pass instead of a text report alone.",
+          "heading": "What it could automate for us"
+        },
+        {
+          "body": "This is version 0.1.0, released November 16, 2026, so it is an early release and the team has not tried it. An agent inside a signed-in browser is powerful — it can click, type, and act as you on any site you are logged into — so the first install should use a dedicated browser profile and an allowed-sites list limited to the deploy and the sign-in pages it needs. Keep it off banking and payment sites until the handoff behaviour is proven, and treat the first trial as an experiment, not a rollout.",
+          "heading": "The guardrails it needs"
+        }
+      ],
+      "hook": "Your agent drives your real browser — and hands logins back to you.",
+      "image": "img/opencode-browse.jpg",
+      "kicker": "Your agent, inside your real signed-in browser",
+      "problem": "Agents that need the browser get a headless one with no logins, no extensions, and no session — so every logged-in check falls back to a human doing it by hand. Our team feels this directly: the bridge agents live on a VM while the browser lives on HieuPC, and the logged-in live-verify passes, including the Google sign-in click-through, are still manual work.",
+      "slug": "opencode-browse",
+      "solution": "Browse pairs an MCP server with a Chromium extension. The agent opens tabs in the background, grouped and collapsed out of the way, and reads pages, clicks, types, takes screenshots, and records tabs — including network traffic. Anything that needs a human — a login, a 2FA prompt, a payment — is handed back to you, and the agent resumes when you click Continue. It works with any MCP client: OpenCode, Claude Code, Cursor, Codex, Zed, and more.",
+      "source_name": "OpenCode — Browse product page",
+      "source_url": "https://opencode.ai/product/browse",
+      "stats": [
+        {
+          "label": "Price: free, MIT-licensed MCP server and Chromium extension",
+          "value": "$0"
+        },
+        {
+          "label": "Chromium browsers supported: Chrome, Edge, Brave, Arc, Helium, Vivaldi, Opera, and Chromium",
+          "value": "8"
+        },
+        {
+          "label": "Version released November 16, 2026 — an early release, expect rough edges",
+          "value": "v0.1.0"
+        }
+      ],
+      "summary": "OpenCode Browse is a free, MIT-licensed MCP server plus Chromium extension that lets an agent use your real browser — your tabs, your logins, your extensions — instead of a clean-room headless one. When a login, a 2FA prompt, or a payment appears, it hands the tab back to you and continues when you click Continue. For our team, whose agents live on a VM while the browser lives on HieuPC, it documents exactly the remote relay flow we would need — and it could automate the logged-in live-verify passes we still do by hand, including the Google sign-in click-through that is currently blocked on a human doing it.",
+      "takeaways": [
+        "An MCP server plus Chromium extension puts an agent inside your real signed-in browser, across Chrome, Edge, Brave, and five more Chromium browsers.",
+        "Logins, 2FA, and payments hand back to you; the agent continues when you click Continue.",
+        "An allowed-sites list keeps the agent's tabs on the sites you name."
+      ],
+      "title": "OpenCode Browse: Let Your Coding Agent Drive Your Real Browser — Logins, 2FA and All"
+    },
+    {
+      "apply": "Build the monitor-only MVP first — nightly build and browser smoke test for Lovable and Bolt exports, with a weekly breakage report a non-technical founder can read — then sell the watch before building the auto-fix.",
+      "benefit": "Recurring revenue against a recurring problem, built from the exact loop our team already runs every day: coding agents plus live browser verification. The rescue market has already proven founders will pay; the watchdog turns that one-off payment into a subscription.",
+      "category": "Opportunities",
+      "caveats": "The market figures come from one Hacker News thread and one survey cited in it: the Discord size and pricing are one operator's self-report, not audited revenue, and the 390+ problem-post count is from a single survey. The $29-a-month price is our proposal, untested. No part of this has been validated with paying customers.",
+      "checklist": [
+        "Pick five Lovable or Bolt exports to monitor and confirm the breakage pattern first-hand.",
+        "Stand up a nightly build plus browser smoke test for one export and record what breaks in a week.",
+        "Write the weekly breakage report format a non-technical founder can actually read.",
+        "Price the watch: test $29 a month against the $50-a-month Discord and the $79 one-off fix.",
+        "Ship the monitor-only MVP before building auto-fix — sell the watch first."
+      ],
+      "date": "2026-11-25",
+      "details": [
+        {
+          "body": "Non-technical founders and small businesses who built on Lovable, Bolt, or v0. These are not toy projects: the apps run real businesses — bookings, storefronts, customer portals — and the founders chose vibe coding precisely because they cannot write or debug code themselves. When the app breaks, they have no one in-house to call, and the usual answer is to paste the error into the AI and hope the next prompt does not make it worse.",
+          "heading": "Who hurts"
+        },
+        {
+          "body": "The failure modes repeat. A fix prompt repairs one thing and breaks something nearby, because the model has no map of the app. A dependency update breaks the deploy. An exported app breaks on a missing environment variable or secret that the hosted version supplied invisibly. And the prototype becomes the production system: the app was declared good enough with a few small adjustments, the rewrite was declared too expensive, and the brittle build went live. Each rescue is a new chance to break something else, so the breakage is not a one-time event but a cycle.",
+          "heading": "How the breakage recurs"
+        },
+        {
+          "body": "A Hacker News thread about coding agents in a while loop surfaced the demand plainly. One operator, a former web developer who moved into vibe coding full time, runs a Discord of around 1,000 people paying $50 a month, where he helps them fix their vibe-coded projects — and a $500-a-month tier where he does everything the member asks. Paid rescue offers run from $49 audits to $2,500–$7,499 fix packages. These are self-reported figures from one thread, not audited revenue, but the direction is clear: founders are already paying real money for this, repeatedly.",
+          "heading": "The rescue market is already paying"
+        },
+        {
+          "body": "The AI fixers that exist sell one-off rescues. VibeFix charges $79 per fix; Launch Mango charges $79 to $199 for export plus fix. Both solve today's breakage and leave tomorrow's untouched — the app breaks again next month and the founder is back to prompting, or back to paying. Nobody sells the ongoing watch: the monitoring, the early detection, and the fix applied the moment something breaks, before the founder even notices.",
+          "heading": "What the fixers sell — and what they don't"
+        },
+        {
+          "body": "Connect the repo, run a nightly build plus a browser smoke test, and open an auto-fix pull request the moment it breaks — at a proposed $29 a month, undercutting both the $50-a-month Discord and the $79 one-off fix while delivering continuity neither offers. Our stack is literally this loop: coding agents that can make the fix, plus live browser verification that can prove the app works after it. The product is the loop, sold as a subscription.",
+          "heading": "Our angle: the watchdog"
+        },
+        {
+          "body": "Phase 0 is monitor-only: a GitHub-connected monitor for Lovable and Bolt exports with a weekly breakage report a non-technical founder can actually read. Phase 1 adds a one-click fix from the report. Phase 2 is the full watchdog: an auto-fix pull request opened the moment detection fires. Each phase is sellable before the next is built, so the product earns before the hardest part — trustworthy auto-fix — has to work. The risk to watch is the auto-fix itself: a bad automatic fix on a business's live app is worse than no fix, so the fix path needs the same live verification our team already demands of itself.",
+          "heading": "A phased path"
+        }
+      ],
+      "hook": "One operator charges $50 a month to fix broken vibe-coded apps. Nobody sells the watch.",
+      "image": "img/vibe-coded-app-watchdog.jpg",
+      "kicker": "The fix is one-off. The breakage is forever.",
+      "problem": "Vibe coding let non-technical founders ship real apps, but the apps are brittle. Each fix prompt breaks something nearby, dependency updates break deploys, and exported apps break on missing environment variables and secrets. The founder cannot fix it, cannot tell what broke, and the app that runs their business is down until someone rescues it — again.",
+      "slug": "vibe-coded-app-watchdog",
+      "solution": "A watchdog service. Connect the repo, run a nightly build plus a browser smoke test, and open an auto-fix pull request the moment it breaks — a subscription, not a rescue call, at a proposed $29 a month. The MVP is narrower: a GitHub-connected monitor for Lovable and Bolt exports with a weekly breakage report and a one-click fix.",
+      "source_name": "Hacker News discussion — 'We put a coding agent in a while loop'",
+      "source_url": "https://news.ycombinator.com/item?id=45005434",
+      "stats": [
+        {
+          "label": "Members in one operator's Discord, paying $50 a month for help fixing vibe-coded apps",
+          "value": "~1,000"
+        },
+        {
+          "label": "The same operator's done-for-you tier, where he does everything the member asks",
+          "value": "$500/mo"
+        },
+        {
+          "label": "Problem posts counted in one survey of founders whose vibe-coded apps broke",
+          "value": "390+"
+        },
+        {
+          "label": "Range of paid rescue offers, from audits to full fix packages",
+          "value": "$49–$7,499"
+        }
+      ],
+      "summary": "Non-technical founders built real businesses on Lovable, Bolt, and v0 — and now those apps keep breaking: a fix prompt breaks something nearby, a dependency update breaks the deploy, an exported app breaks on a missing secret. One operator already runs a roughly 1,000-member Discord at $50 a month just fixing these apps, and paid rescues run from $49 audits to $2,500–$7,499 packages. But every fixer sells a one-off rescue, and the app breaks again next month. The gap is the ongoing watch: connect the repo, test it nightly, and file the fix the moment it breaks — for a subscription, at a proposed $29 a month.",
+      "takeaways": [
+        "Vibe-coded apps break again and again: fixes break neighbours, updates break deploys, exports break on missing secrets.",
+        "The rescue market is proven — a roughly 1,000-member Discord at $50 a month, rescues from $49 to $7,499 — but every offer is one-off.",
+        "The gap is an ongoing watchdog: nightly build plus browser smoke test, auto-fix PR the moment it breaks, for a subscription."
+      ],
+      "title": "Vibe-Coded Apps Keep Breaking After Launch — and Nobody Sells the Watch"
+    },
+    {
       "slug": "batteryhub",
       "date": "2026-11-25",
       "category": "Tools",
@@ -5973,5 +6188,5 @@
       "source_url": "https://github.com/Supersynergy/agent-token-saver"
     }
   ],
-  "generated_at": "2026-11-26T08:22:00-06:00"
+  "generated_at": "2026-11-26T09:41:21-06:00"
 }
