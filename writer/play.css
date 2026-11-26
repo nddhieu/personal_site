@@ -361,7 +361,7 @@
   gap: 0.22rem;
   /* One line (Hieu, Nov 5): the controls never wrap on phone.
      The desktop sidebar may still wrap (see the min-width
-     rule with the voice-select styles below). */
+     rule below). */
   flex-wrap: nowrap;
 }
 .page-play .composer-icons {
@@ -448,22 +448,10 @@
   box-shadow: none;
 }
 /* Compact composer-bar controls (Hieu, Nov 5): slimmer
-   pills and buttons so Suggest, Continue, Audio, the
-   voice select and Send share one line at phone width.
-   The voice select keeps its 16px font (F1: selects are
-   editable controls; smaller would re-trigger iOS zoom). */
+   pills and buttons so Suggest, Continue and Send share one
+   line at phone width. */
 .page-play .composer-bar .tool-btn {
   padding: 0.32rem 0.38rem;
-}
-.page-play .composer-bar .audio-toggle {
-  padding: 0.32rem 0.38rem;
-  font-size: 0.74rem;
-}
-.page-play .composer-bar .voice-select {
-  gap: 0.25rem;
-}
-.page-play .composer-bar .voice-select select {
-  padding: 0.1rem 0.15rem;
 }
 /* Send is the bar's primary action: filled, at the end. */
 .page-play .send-btn {
@@ -474,31 +462,6 @@
 }
 .page-play .composer-icons {
   flex-shrink: 0;
-}
-/* Audio toggle (Hieu, Nov 7): a text button in the
-   composer bar in the tool-button idiom, but with no
-   checkbox or switch - font color and weight carry the
-   state: muted + normal weight when auto-speak is off,
-   accent color + bold when it is on (.is-on, mirrored by
-   aria-pressed in play.js). */
-.page-play .audio-toggle {
-  display: inline-flex;
-  align-items: center;
-  font: inherit;
-  font-size: 0.82rem;
-  font-weight: 400;
-  padding: 0.42rem 0.6rem;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-card-border);
-  border-radius: 999px;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-.page-play .audio-toggle.is-on {
-  color: var(--color-primary);
-  font-weight: 700;
 }
 /* A landed scene scrolls to its own first line (play.js
    scrollIntoView); keep that line clear of the top edge. */
@@ -513,8 +476,8 @@
 .page-play .prose em {
   color: var(--color-text-muted);
 }
-/* Beat icons inline (Hieu, Nov 5): the speaker + image
- * icons float at the very start of the beat's paragraph,
+/* Beat icons inline (Hieu, Nov 5): the image icon
+ * floats at the very start of the beat's paragraph,
  * like the reference app - the first line of prose starts
  * right after them on the same line and the lines below
  * wrap full-width underneath, instead of the icons taking
@@ -772,94 +735,6 @@
   font-weight: 600;
 }
 
-/* Scene audio (stream-audio v1, T3): one small speaker
- * button per paragraph, floated at the start of its
- * paragraph beside the image icon (see .beat-icons).
- * About 18px, muted, an icon-only button like
- * Suggest/Continue. States: playing shows a stop square;
- * generating waits; unavailable is dimmed and disabled
- * ("Audio unavailable"). App-only, hidden in print like
- * the other beat controls. */
-.page-play .scene-audio-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 1.5rem;
-  height: 1.5rem;
-  padding: 0;
-  cursor: pointer;
-  background: transparent;
-  border: 1px solid var(--color-card-border);
-  border-radius: 999px;
-  color: var(--color-text-muted);
-}
-.page-play .scene-audio-btn svg {
-  width: 1.1rem;
-  height: 1.1rem;
-  display: block;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 1.8;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-.page-play .scene-audio-btn:hover {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-.page-play .scene-audio-btn.is-playing {
-  color: var(--color-text);
-  border-color: var(--color-primary);
-}
-.page-play .scene-audio-btn.is-generating {
-  cursor: wait;
-  opacity: 0.6;
-}
-.page-play .scene-audio-btn.is-unavailable {
-  cursor: default;
-  opacity: 0.45;
-}
-.page-play .scene-audio-btn:disabled {
-  cursor: default;
-  box-shadow: none;
-}
-@media print {
-  .page-play .scene-audio-btn {
-    display: none !important;
-  }
-}
-
-/* Scene audio transport (T3): pause/resume, stop, mute for
- * the current reading. Hidden until something plays; the
- * mute button shows its pressed state while muted. */
-.page-play .audio-transport {
-  display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.5rem;
-}
-.page-play .audio-transport[hidden] {
-  display: none;
-}
-.page-play #audio-mute-btn.is-muted {
-  box-shadow: 0 0 0 2px var(--color-primary);
-}
-/* Narrator voice select (T3): same pill-chip idiom as the
- * Stream / Auto-speak toggles in the composer bar. */
-.page-play .voice-select {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
-.page-play .voice-select select {
-  font: inherit;
-  font-size: 1rem;
-  padding: 0.15rem 0.3rem;
-  background: var(--color-bg-primary);
-  border: 1px solid var(--color-card-border);
-  border-radius: 999px;
-  color: var(--color-text);
-}
 /* Desktop only: the 340px sidebar is narrower than the
    phone's full-width bar, so wrapping stays allowed there.
    On phone the bar is one line (see .composer-bar above). */
@@ -894,7 +769,7 @@
 }
 /* One image icon per paragraph (Hieu, Nov 5), replacing the
  * "Generate image" / "Use as background" text buttons: a
- * small round icon beside the speaker icon, in the same
+ * small round icon, in the same
  * idiom. Its styles are the four states Hieu named (Nov 8):
  * no image = muted outline (base rule); generating = dimmed
  * + spinning (is-generating, below); image shown = full
@@ -989,7 +864,7 @@
  * the photo; narration steps down to a softer white,
  * dialogue stays full white, thoughts step down to a
  * lighter white; the
- * per-beat speaker/image chips become the reference app's
+ * per-beat image chips become the reference app's
  * dark translucent circles with light glyphs. The header
  * title sits over the same photo, so it takes the same
  * treatment. Placed last so these rules win
@@ -1042,15 +917,10 @@
   color: rgba(255, 255, 255, 0.85);
   border-left-color: rgba(255, 255, 255, 0.35);
 }
-.page-play.has-scene-bg .scene-audio-btn,
 .page-play.has-scene-bg .scene-image-btn {
   background: rgba(20, 22, 28, 0.55);
   border-color: rgba(255, 255, 255, 0.28);
   color: #f8fafc;
-}
-.page-play.has-scene-bg .scene-audio-btn.is-playing {
-  color: #fff;
-  border-color: var(--color-primary);
 }
 .page-play.has-scene-bg .scene-image-btn.is-background {
   background: var(--color-primary);
@@ -1074,12 +944,12 @@
  * --color-bg-primary and the composer card sits on it in
  * --color-card-bg, so in the light theme the bottom chrome
  * was a white slab clashing with the photo above it (Hieu's
- * screenshot: white Pause/Stop/Mute band + white input card
- * under photo prose). Over a photo the whole composer column
+ * screenshot: white input card under photo prose). Over a photo
+ * the whole composer column
  * takes the settings sheet's dark-glass treatment instead,
  * in BOTH themes (the photo treatment has no light/dark
  * variant): the wrap goes transparent so photo + scrim show
- * through the transport row, and the floating cards - the
+ * through, and the floating cards - the
  * composer, the suggest sheet, the orientation chooser, the
  * bg-adjust bar - become dark frosted glass in the sheet's
  * values (rgba(17,19,27,0.85) + blur(14px) + the sheet
@@ -1104,13 +974,11 @@
 .page-play.has-scene-bg .composer textarea::placeholder {
   color: rgba(244, 245, 250, 0.5);
 }
-/* Composer-bar and transport controls as dark chips on the
- * glass (the transport buttons are .tool-btn too, so one
- * rule covers both rows). Send is the bar's primary action:
+/* Composer-bar controls as dark chips on the
+ * glass. Send is the bar's primary action:
  * re-asserted after the chip rule, which would otherwise
  * wash out its accent fill. */
-.page-play.has-scene-bg .tool-btn,
-.page-play.has-scene-bg .voice-select select {
+.page-play.has-scene-bg .tool-btn {
   background: rgba(255, 255, 255, 0.1);
   border-color: rgba(255, 255, 255, 0.16);
   color: #f4f5fa;
@@ -1119,18 +987,6 @@
   background: var(--color-primary);
   border-color: var(--color-primary);
   color: #fff;
-}
-/* The Audio toggle keeps its state language on glass: off
- * is a muted light, on is bold accent - the dark theme's
- * sky, because the light theme's #0284c7 is too dark to
- * read on the glass. */
-.page-play.has-scene-bg .audio-toggle {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.16);
-  color: rgba(244, 245, 250, 0.7);
-}
-.page-play.has-scene-bg .audio-toggle.is-on {
-  color: #38bdf8;
 }
 /* Suggest sheet on glass: the sheet frosts like the
  * composer; its cards and the Retry/Correct row become
@@ -1215,8 +1071,8 @@
  * touch drag from scrolling the page instead. The bar is
  * entered from the gallery (setting a background, or its
  * Adjust background button) since Nov 8 - no header icon.
- * The shape chooser sits in the composer column like the
- * audio transport, on a card so it reads over a photo
+ * The shape chooser sits in the composer column,
+ * on a card so it reads over a photo
  * background as well as over the plain page. */
 .page-play .bg-adjust-bar {
   position: fixed;
