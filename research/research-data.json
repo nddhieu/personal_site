@@ -57,6 +57,152 @@
       "source_url": "https://github.com/mvanhorn/last30days-skill"
     },
     {
+      "apply": "Pull the Q4_K_M GGUF and run one routine story-realm job — a small fix plus a test pass — against our current local brain, comparing tokens and time. If the tokens roughly halve and the tests pass, route the routine half of bridge work to Instruct and reserve Thinking for root-cause hunts and hard algorithmic work.",
+      "benefit": "A model that halves output tokens on the routine half of the work is a direct cut to the line item that dominates our agent costs — and it fits hardware we already own. The 8.1 GB Q4_K_M build runs on HieuPC's 16 GB card, so the fast worker can live next to the strong model instead of in a cloud bill. Apache 2.0 means no license friction for embedding it in our own tooling.",
+      "category": "Models",
+      "caveats": "All benchmark figures are JetBrains-reported from the model card and announcement; no independent leaderboard had tested the model at release. The token-halving figure comes from JetBrains' own repository-level validation tasks (about 5,600 generated tokens vs 10,100 for Thinking), not a promise for every request. The speed claims — about 1.4x faster than Qwen3.5 9B on a single request, about 1.8x under load, and up to 1.8x from the multi-token prediction head — are JetBrains' measurements on their hardware; local speed depends on the card and runtime. We have not run it yet — the trial above is the first real test.",
+      "checklist": [
+        "Pull the official Q4_K_M GGUF (8.1 GB) from JetBrains/Mellum2.1-12B-A2.5B-Instruct-GGUF.",
+        "Run one routine story-realm job — a small fix plus a test pass — and log tokens and wall time.",
+        "Run the same job against the current local brain and compare.",
+        "If tokens roughly halve with the tests passing, route routine bridge work to Instruct.",
+        "Keep Thinking as the pick for root-cause hunts, hard algorithms, and multi-file bug fixes."
+      ],
+      "date": "2026-11-27",
+      "details": [
+        {
+          "body": "Instruct is the same model as Thinking with the thinking taken out of the answer. Same 12-billion-parameter mixture-of-experts architecture, 2.5 billion active parameters per token, 131,072-token context, and the same two reinforcement-learning stages — first solving standalone code, math, tool-use and instruction tasks, then working as an agent in real repositories with shell and file tools, rewarded only when hidden tests passed. Two adjustments make the direct answers work: a tuned length penalty keeps answers concise, and generation and training were brought into closer agreement for stability. Both variants ship with a multi-token prediction head that makes generation up to 1.8x faster.",
+          "heading": "What changed from Thinking"
+        },
+        {
+          "body": "A mixture-of-experts model does not run all 12 billion parameters on every token — it routes each token to 8 of 64 experts, so only 2.5 billion parameters are active at a time. That is why a 12B model can answer fast on ordinary hardware. Training ran on NVIDIA's open NeMo libraries, collecting about half a million agent trajectories from 10,000 concurrent sandboxes. The 131,072-token context fits whole repositories in the window; the benchmark harness used a 114K-token budget with up to 16K tokens per turn.",
+          "heading": "How it works, in plain terms"
+        },
+        {
+          "body": "On SWE-bench Verified, Instruct scores 40.4% — nearly Thinking's 47.0% and double the 20.2% of the previous Mellum2 Instruct. Qwen3.5 9B scores higher on SWE-bench Verified at 49.8%, but Mellum activates only 2.5B parameters per token, so it generates tokens about 1.4x faster on a single request and about 1.8x faster under load. Instruct also leads Qwen3.5 9B on SWE-bench Pro (20.0% vs 12.7%), HumanEval+ (89.1% vs 84.8%), MBPP+ (74.3% vs 63.8%) and MultiPL-E across seven languages (73.7% vs 66.4%). Gemma 4 E4B trails far behind at 6.4% on SWE-bench Verified. All JetBrains-reported; no independent leaderboard had tested the model at release.",
+          "heading": "The benchmark table, read honestly"
+        },
+        {
+          "body": "JetBrains published the full-precision weights plus its own GGUF builds on Hugging Face. The recommended Q4_K_M file is 8.1 GB; Q8_0 is 12.9 GB, the full BF16 build is 24.3 GB, and the smallest MXFP4_MOE build is 7.0 GB. The one-line start is ollama run hf.co/JetBrains/Mellum2.1-12B-A2.5B-Instruct-GGUF:Q4_K_M, and it also runs under llama.cpp, LM Studio and vLLM. The 8.1 GB file fits a 12–16 GB card — the size class HieuPC already has — while the full 131K context wants the larger builds or more VRAM.",
+          "heading": "Running it locally"
+        },
+        {
+          "body": "JetBrains is explicit about this, and it matches the numbers. On hard algorithmic and math problems — LiveCodeBench and AIME — thinking is crucial, and Thinking remains the better choice. The gap is real there: Thinking scores 47.0% vs 40.4% on SWE-bench Verified and 28.0% vs 20.0% on SWE-bench Pro. A tough multi-file bug fix or finding the root cause of a failing test is a Thinking job. The Instruct model is the fast worker next to a stronger model, or the standalone pick when answers are short and mistakes are easy to check — which describes most of an agent's routine day.",
+          "heading": "When Thinking still wins"
+        },
+        {
+          "body": "Phase 0: pull the Q4_K_M GGUF and run one routine story-realm job — a small fix plus a test pass — against our current local brain, logging tokens and wall time on both. Pass bar: tokens roughly halve, tests pass, wall time drops. Phase 1: if it holds, make routing explicit — routine bridge work goes to Instruct, root-cause hunts and hard reasoning stay on Thinking. Phase 2: only then look at serving it as the default local brain for sub-agents and tool loops, with the MTP head where the runtime supports it. What still needs testing: whether the token saving survives our real prompts rather than JetBrains' validation tasks, and whether quality holds on our codebase rather than a benchmark harness.",
+          "heading": "Our first step, and what it would prove"
+        }
+      ],
+      "hook": "Half the tokens, nearly the same score: a small model for the routine half of agent work.",
+      "image": "img/mellum-2-1-instruct.jpg",
+      "kicker": "The fast sibling of Mellum2.1 Thinking, built for sub-agents and tool loops.",
+      "problem": "Most of a coding agent's work is not hard reasoning. JetBrains puts it plainly: much of an agent's day is a small fix, a command to run, or a question about the code. A reasoning model still thinks out loud through all of it, and locally every extra thinking token adds wall-clock latency you feel on every turn. Tokens are the meter that matters: on our own bridge agents, tokens are about 99% of run cost, and the routine half of the work pays the reasoning price for answers that never needed a chain of thought. The alternative until now was a smaller instruct model that gave up too much quality: Mellum2 Instruct scored just 20.2% on SWE-bench Verified.",
+      "slug": "mellum-2-1-instruct",
+      "solution": "Mellum2.1 Instruct is the same model as Thinking with the thinking taken out of the answer. Same 12B mixture-of-experts architecture, 2.5B active parameters per token, 131,072-token context, same two reinforcement-learning stages — first solving standalone code, math, tool-use and instruction tasks, then working as an agent in real repositories with shell and file tools, rewarded only when hidden tests passed. A tuned length penalty keeps the direct answers concise, and generation and training were brought into closer agreement for stability. It answers directly, generates about half Thinking's tokens on JetBrains' repository tasks, and keeps nearly all of the score. It ships with a multi-token prediction head that makes generation up to 1.8x faster, and official GGUF builds for local runtimes.",
+      "source_name": "JetBrains AI Blog announcement (Nov 25, 2026) and Mellum2.1 model card on Hugging Face",
+      "source_url": "https://blog.jetbrains.com/ai/2026/11/mellum2-1-instruct-is-out-bringing-faster-answers-for-coding-agents/",
+      "stats": [
+        {
+          "label": "SWE-bench Verified, JetBrains-reported — nearly Thinking's 47.0%, double the previous Instruct release's 20.2%",
+          "value": "40.4%"
+        },
+        {
+          "label": "Generated tokens on JetBrains' repository-level validation tasks, vs the Thinking variant",
+          "value": "~50% fewer"
+        },
+        {
+          "label": "Official Q4_K_M GGUF build — fits a 12–16 GB graphics card",
+          "value": "8.1 GB"
+        },
+        {
+          "label": "Context window — whole repositories fit in one pass",
+          "value": "131,072 tokens"
+        }
+      ],
+      "summary": "JetBrains released Mellum2.1 Instruct on November 25, 2026, the direct-answer sibling of October's Mellum2.1 Thinking: the same 12-billion-parameter mixture-of-experts model, 2.5 billion active parameters per token, but it answers without showing a chain of thought. On JetBrains' own repository-level tasks it generates about half the tokens of the Thinking variant and scores 40.4% on SWE-bench Verified, vendor-reported — nearly matching Thinking's 47.0% and double the 20.2% of the previous Instruct release. It is open under Apache 2.0, and the official Q4_K_M GGUF build is 8.1 GB, small enough for a 16 GB graphics card. Verdict: for the routine half of agent work, this is the cheap fast worker; keep Thinking for the hard reasoning.",
+      "takeaways": [
+        "Mellum2.1 Instruct answers coding questions directly — no chain of thought — using about half the tokens of its Thinking sibling.",
+        "It scores 40.4% on SWE-bench Verified (JetBrains-reported), nearly matching Thinking's 47.0% and doubling the previous Instruct release's 20.2%.",
+        "The 8.1 GB Q4_K_M build fits a 16 GB graphics card, so it can run locally next to the stronger model as the fast worker."
+      ],
+      "title": "Mellum2.1 Instruct: JetBrains' Open Coding Model That Answers Without Thinking First"
+    },
+    {
+      "apply": "Build the KDP interior exporter from one existing Accad & Kim chapter and run it through KDP's Print Previewer — one pass either proves the pipeline or shows exactly what is missing. Then price-test $29–$49 per book with a few indie authors before scoping any self-serve upload flow.",
+      "benefit": "The pain is recurring and the fix is mechanical. Every author who has paid $25 to move a comma after layout is a buyer for 'fix it yourself, re-export free, in minutes' — and the customer already exists inside the Co-Author, one click from a print-ready book. At $29–$49 per book it undercuts the $147–$249.99 DIY software and removes the learning curve entirely, and the subscription bundle turns a one-off formatter's fee into recurring revenue.",
+      "category": "Opportunities",
+      "caveats": "Reedsy's figures are marketplace averages from more than 230,000 quotes, updated August 13, 2026 — indicative, not a quote for any specific book. The $25-per-fix figure is what authors report in self-publishing communities, not a surveyed rate, and the $50–$150 community range is for plain text-only novels. BoundReady sells formatting itself ($59 a book), so its guide is vendor framing as well as information. The $29–$49 price is our proposal, untested with paying authors, and no part of this has been validated with them yet.",
+      "checklist": [
+        "Build the KDP interior exporter from one existing Accad & Kim chapter — print PDF at the exact trim size, fonts embedded.",
+        "Run the PDF through KDP's Print Previewer, every page, and check gutter and margins against KDP's minimums.",
+        "Generate the EPUB from the same manuscript and confirm the spine width from the real page count.",
+        "Price-test $29–$49 per book with a few indie authors against the $50–$150 community freelancer band.",
+        "Only if authors pay for re-exports, scope the subscription bundle or a self-serve upload flow."
+      ],
+      "date": "2026-11-27",
+      "details": [
+        {
+          "body": "Reedsy's 2026 cost guide, built from more than 230,000 freelancer quotes, puts professional interior design at about $800 on average, with around half of projects between $475 and $1,275. In author communities the most common quotes for a plain novel run $50–$150, while custom design pushes quotes to $300 and up, and books with images or tables cost more still — one formatter charged about $2 per image. A paperback and an ebook may also be priced separately. The spread is the point: where a book lands depends on how much of it is words versus layout.",
+          "heading": "What formatting costs in 2026"
+        },
+        {
+          "body": "The complaint authors repeat most often is not the first price. It is the second one. Authors report paying about $25 every time the formatter had to fix a typo or update the back matter; some accept only a 'flawless' manuscript because they make no changes at all. Typos turn up after layout all the time: in the proof copy, in a reader's email, in a new edition. Before agreeing a price, ask how many corrections are included, what one costs after delivery, and whether the formatter will still be available in six months.",
+          "heading": "The second bill: the typo tax"
+        },
+        {
+          "body": "The prices are published: Atticus costs $147 one-time for Windows and Mac, Vellum $249.99 and Mac-only ($199.99 for ebooks alone). Free tools — Kindle Create, Reedsy Studio, Draft2Digital's print formatting — handle straightforward novels, and Reedsy says a book that is mostly words can be typeset for $0 in its app. Many freelancers use exactly these programs, which is why a $300 quote for a plain novel draws raised eyebrows. Software pays for itself by the second book in a series, mainly because corrections become free. What remains is the learning curve — and the author's time.",
+          "heading": "The DIY route, and what it costs in time"
+        },
+        {
+          "body": "Print-ready is a checklist, not a feeling: a print PDF at the exact trim size — 5 x 8 in or 6 x 9 in are the common choices — with all fonts embedded, an EPUB, and the source file (Vellum, Atticus, InDesign or Word) so the next fix does not start from scratch. Page count decides the spine width, and with it the cover. The checks are mechanical: upload the PDF to KDP and check every page in the Print Previewer, which flags text outside the margins and wrong-size pages; check the inside margin, or gutter, whose KDP minimum grows with page count from 0.375 in up to 150 pages to 0.875 in for 701–828 pages; look for headers and page numbers on chapter-opening pages, which most published books leave off; and order a proof copy, because cramped text only shows up on paper.",
+          "heading": "What 'print-ready' actually means"
+        },
+        {
+          "body": "Every formatter and every tool treats layout as a one-shot job: fix a typo, pay again, wait again. The recurring need — a typo, a reader's email, a new edition — is exactly what a re-export solves, and nobody sells it. Authors already pay for formatting; the unserved part is the second, third and tenth export. That is why the DIY software case is really a re-export case: authors buy Atticus or Vellum so corrections become free. The product is not a cheaper layout. It is a layout that never needs paying for twice.",
+          "heading": "The gap: nobody sells the re-export"
+        },
+        {
+          "body": "Phase 0: build the KDP interior exporter from one existing Accad & Kim chapter — print PDF at the exact trim size with fonts embedded, EPUB, wraparound cover with the spine from the real page count — and run it through KDP's Print Previewer. Phase 1: if the pages pass, price-test a proposed $29–$49 per book with a few indie authors — do they pay for re-exports, or just for cheap? Phase 2: only if Phase 1 converts, bundle it into the Co-Author subscription or scope a self-serve upload flow. What still needs testing: whether cover and spine generation stay inside $29–$49, and whether authors buy per book or want the subscription. The sibling product is yesterday's book-trailer idea — same pipeline, same customer.",
+          "heading": "Our angle, in phases"
+        }
+      ],
+      "hook": "Formatting is a one-shot job; typos are forever — and every fix after layout costs again.",
+      "image": "img/book-formatting-typo-tax.jpg",
+      "kicker": "Layout is sold as a one-shot job. Typos don't care.",
+      "problem": "A self-published author finishing a book faces a formatting bill before the book can exist as a physical object. A professional interior designer averages about $800 on Reedsy's marketplace, with half of projects between $475 and $1,275; in author communities, the most common quotes for a plain novel run $50–$150, while custom design pushes quotes to $300 and up. Then a reader emails about a typo, or a new edition needs an updated 'Also by' page — and the layout must change. Authors report paying about $25 for every such fix, and some formatters accept only a 'flawless' manuscript because they make no changes at all — so the author pays again, waits again, or lives with the error.",
+      "slug": "book-formatting-typo-tax",
+      "solution": "Sell the re-export, not the layout. The MVP is a one-click KDP package built from the manuscript our Co-Author already produces: a print PDF at the exact trim size with fonts embedded, an EPUB, and a wraparound cover with the spine from the real page count — with free re-exports whenever the text changes. Charge per book at a proposed $29–$49, or bundle it into the Co-Author subscription. The first build is the KDP interior exporter run on one existing Accad & Kim chapter, checked the way a formatter would: every page through KDP's Print Previewer, gutter and margins against KDP's minimums, then a proof copy.",
+      "source_name": "Reedsy 2026 cost-to-self-publish guide (230,000+ quotes) and BoundReady hiring-a-book-formatter guide",
+      "source_url": "https://boundready.com/guides/hiring-a-book-formatter",
+      "stats": [
+        {
+          "label": "Average professional interior formatting, Reedsy 2026 guide from 230,000+ quotes",
+          "value": "~$800"
+        },
+        {
+          "label": "Band covering about half of professional interior projects on Reedsy",
+          "value": "$475–$1,275"
+        },
+        {
+          "label": "What authors report paying per fix when a typo surfaces after layout",
+          "value": "~$25"
+        },
+        {
+          "label": "DIY software: Atticus $147 one-time, Vellum $249.99 (Mac-only)",
+          "value": "$147–$249.99"
+        }
+      ],
+      "summary": "Reedsy's 2026 cost guide, built from more than 230,000 freelancer quotes, puts professional book interior formatting at about $800 on average, with around half of projects between $475 and $1,275. That is the first bill. The recurring complaint is the second one: authors report paying about $25 every time a typo surfaces after layout, and some formatters will not make changes at all. The do-it-yourself route is real but not free: Atticus costs $147 one-time, Vellum $249.99 and Mac-only, plus the hours to learn them. The gap: every formatter and tool treats layout as a one-shot job — fix a typo, pay again, wait again. Nobody sells 'your book, always print-ready, re-export in minutes.' That is the opening — our Co-Author already produces the manuscript, so the export step is the piece we can build.",
+      "takeaways": [
+        "Professional interior formatting averages about $800 (Reedsy 2026, 230,000+ quotes), with half of projects between $475 and $1,275.",
+        "The real pain is the second bill: authors report about $25 per fix when a typo surfaces after layout — and some formatters make no changes at all.",
+        "Nobody sells re-exports: a one-click KDP package with free re-exports at a proposed $29–$49 per book is the gap our Co-Author can fill."
+      ],
+      "title": "Authors Pay ~$800 to Format a Book, Then $25 Every Time a Typo Turns Up"
+    },
+    {
       "slug": "skillevaluator",
       "date": "2026-11-26",
       "category": "Tools",
@@ -119,6 +265,79 @@
       "caveats": "Star, fork, commit and release counts (4,572 stars, 573 forks, 783 commits, 15 releases) are from the GitHub repository page as read on November 26, 2026; the trending date (November 19, 2026, week 47) and the roughly 3,800-star figure at that time are from independent coverage (agentbeam). The 11-check / 500+ rules figures, the 70-point pass threshold, the Harness Check example limits and the tier gating rules are from the project's README and documentation as read November 26, 2026. Support is labeled experimental with no SLA, per the docs. We have not installed or run SkillEvaluator hands-on.",
       "source_name": "NVIDIA/SkillEvaluator on GitHub and SkillEvaluator documentation (docs.nvidia.com), plus agentbeam coverage of the November 19, 2026 trending",
       "source_url": "https://github.com/NVIDIA/SkillEvaluator"
+    },
+    {
+      "apply": "Cut one trailer from an existing Accad & Kim scene set and show it to Hieu first — if the characters hold across every clip, the product case is proven before any pricing page exists.",
+      "benefit": "A per-trailer or subscription product built from a pipeline we already run: consistent characters, scene beats and images are the hard part, and they are done. The trailer market has already proven authors will pay; the consistent-character trailer is the version nobody sells.",
+      "category": "Opportunities",
+      "caveats": "The price bands come from two vendor-published cost guides — Softiqq sells trailers and BookReelz sells an AI-assisted tool, so their bands are their framing, not an independent survey. The $1,000-per-post figure is one author's self-reported spend, not audited revenue. The $29–$49 and $19-a-month prices are our proposal, untested, and no part of this has been validated with paying authors.",
+      "checklist": [
+        "Pick one Accad & Kim scene set with 3–4 strong beats and cut a 30–60 second vertical trailer from it.",
+        "Add narration and music, and check the characters hold across every clip — that is the whole pitch.",
+        "Show the cut to Hieu before writing any pricing page.",
+        "Price-test $29–$49 per trailer against the $150–$400 freelancer band with a few indie authors.",
+        "Only then scope the $19-a-month launch pack and a self-serve upload flow."
+      ],
+      "date": "2026-11-26",
+      "details": [
+        {
+          "body": "Two 2026 cost guides agree on the shape of the market, even if their exact bands differ. DIY with Canva or CapCut runs $0–$50, or $0–$100 on BookReelz's wider reading. Freelancers charge $150–$400, or $150–$800 for semi-custom work. AI-assisted tools sit at $20–$300. Boutique studios charge $500–$1,500, fully custom work $500–$5,000 and up, and agencies $2,000 and beyond. Softiqq's own complete package is $600, marked down from $800 — deliberately priced between the freelancer gamble and agency bloat.",
+          "heading": "What a trailer costs in 2026"
+        },
+        {
+          "body": "Five things decide where a trailer lands on that scale. Animation style: template slideshows are cheap because nothing is made for you, while scene-based animation builds characters and settings from the moments that actually happen in the story. Length: the sweet spot is 30–60 seconds, and every extra 15 seconds adds animation, sound design and cost with diminishing returns on attention. Script: a trailer needs a script, not a book summary, and the cheapest packages quietly leave the writing to you. Revisions: budget packages allow one round or none. Music and platform versions: licensed music costs money, and delivering vertical cuts for reels and TikTok plus widescreen for YouTube takes real editing time.",
+          "heading": "What the money buys — and what it doesn't"
+        },
+        {
+          "body": "The trailer is only half the spend. Romance author Kristen Granata — about 29,000 followers on Threads — posted on August 12, 2026 that she has spent thousands of dollars over the years on paid promotional posts for her books, at around $1,000 per post, and warned fellow indie authors that the post-Covid landscape no longer guarantees Amazon success. Commenters overwhelmingly agreed: no single post is worth that. Her point was that a single viral video once put her book in the Amazon top 20, and that no longer happens reliably — so she now tells authors to invest in ads and community instead of paying individuals.",
+          "heading": "The promo-spend trap"
+        },
+        {
+          "body": "The $20–$300 AI-assisted band is the interesting one: tools there generate a script, narration and imagery and assemble a trailer without a full creative team. But they assemble stock footage and templates. None of them renders the book's own characters and scenes consistently — which is what makes a trailer stop the scroll instead of looking generic. BookReelz's own verdict is that clarity and genre fit matter more than production value alone. A trailer that shows the book's actual characters, in the book's actual scenes, is the clearest version of that fit, and nobody in the band sells it.",
+          "heading": "The gap in the $20–$300 band"
+        },
+        {
+          "body": "Our Story Realm pipeline already does the hard part: consistent characters, scene beats and images. A trailer is assembly on top of proven pieces — 3–4 consistent-character scene clips from an existing scene set, plus narration and music, cut into a 30–60 second vertical video. The MVP needs no new model work: take an Accad & Kim scene set we already have, cut the trailer, and judge it by one question — do the characters hold across every clip? If they do, the product is a rendering of the book, not a slideshow about it.",
+          "heading": "Our angle: the pipeline already exists"
+        },
+        {
+          "body": "Phase 0: cut one trailer from an existing Accad & Kim scene set and show it to Hieu — no pricing page, no landing page, just the cut. Phase 1: if the characters hold, price-test with a few indie authors at a proposed $29–$49 per trailer, or $19 a month for a launch pack, and learn whether authors pay for consistency or just for cheap. Phase 2: only if Phase 1 converts, scope a self-serve flow where an author uploads a book and gets a trailer back. What still needs testing: whether narration and music licensing stay inside a $29–$49 price, and whether authors buy a trailer per book or want the subscription.",
+          "heading": "A phased path"
+        }
+      ],
+      "hook": "Authors pay $150–$1,500 for a trailer and get a slideshow of stock footage, not their book.",
+      "image": "img/book-trailer-indie-authors.jpg",
+      "kicker": "The trailer is a slideshow. The book is not.",
+      "problem": "Self-published authors promoting on TikTok and Reels need video that stops the scroll. DIY with Canva or CapCut costs $0–$50 but looks like a slideshow, because it is one. Freelancers charge $150–$400 with wildly varying quality and reused templates; studios charge $500–$1,500. And the promo channel is no better: one romance author with about 29,000 followers reports spending around $1,000 per paid BookTok post, with commenters agreeing no single post is worth that.",
+      "slug": "book-trailer-indie-authors",
+      "solution": "A book-to-trailer service built on our Story Realm pipeline: the book's own consistent characters and scene beats, cut into a 30–60 second vertical trailer with narration and music. The MVP is one trailer from an existing Accad & Kim scene set — 3–4 consistent-character scene clips plus narration and music — charged per trailer at a proposed $29–$49, or $19 a month for a launch pack.",
+      "source_name": "Softiqq Solutions book-trailer cost guide (2026) and BookReelz cost guide, plus Kristen Granata's Threads post on paid BookTok promo pricing",
+      "source_url": "https://softiqqsolutions.com/blog-book-trailer-cost/",
+      "stats": [
+        {
+          "label": "Freelancer trailer band — quality varies wildly, many reuse the same templates",
+          "value": "$150–$400"
+        },
+        {
+          "label": "Boutique studio band — custom script, real animation, professional sound",
+          "value": "$500–$1,500"
+        },
+        {
+          "label": "AI-assisted trailer band — script, narration and imagery without a full creative team",
+          "value": "$20–$300"
+        },
+        {
+          "label": "What one romance author reports spending per paid BookTok promo post",
+          "value": "~$1,000"
+        }
+      ],
+      "summary": "Indie authors pay real money for book trailers — $150–$400 for a freelancer, $500–$1,500 for a boutique studio, $2,000 and up for an agency — and too often the result still looks like a slideshow, because it is one: stock footage and reused templates, not the book's own characters and scenes. Meanwhile one romance author with about 29,000 followers reports spending around $1,000 per paid BookTok promo post, with commenters agreeing no single post is worth that. The gap sits in the $20–$300 AI-assisted band: today's tools assemble stock and templates, and none renders the book's own characters consistently. That is exactly what our Story Realm pipeline already does — so the MVP is a book-to-trailer cut at a proposed $29–$49, or $19 a month for a launch pack.",
+      "takeaways": [
+        "Book trailers run $150–$400 from freelancers and $500–$1,500 from boutique studios — yet most are template slideshows, not scenes from the book.",
+        "Promo spend is brutal too: one romance author reports around $1,000 per paid BookTok post, with commenters agreeing no single post is worth that.",
+        "The gap is in the $20–$300 AI-assisted band: nothing there renders the book's own characters consistently — which is what our Story Realm pipeline already does."
+      ],
+      "title": "Indie Authors Pay $150–$1,500 for a Book Trailer That Still Looks Like a Slideshow"
     },
     {
       "apply": "Pull the PTQ1_0 GGUF and PrismML's llama.cpp fork onto HieuPC, serve it, and run one repeated Story Realm job against our current local brain, comparing quality and tokens before trusting it with real work. Keep the Q2_0 file as the fallback — it runs on stock llama.cpp.",
