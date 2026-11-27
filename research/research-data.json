@@ -1,6 +1,62 @@
 {
   "articles": [
     {
+      "slug": "last30days",
+      "date": "2026-11-27",
+      "category": "Tools",
+      "kicker": "Google shows you what editors published. This skill shows you what people actually did in the last 30 days.",
+      "title": "last30days: The Agent Skill That Researches Reddit, X, YouTube and Prediction Markets - Then Writes You the Brief",
+      "summary": "last30days is an MIT-licensed agent skill (mvanhorn/last30days-skill) that sends your coding agent to research any topic across Reddit, X, YouTube, TikTok, Hacker News, Polymarket, GitHub, Digg, arXiv and more, in parallel - then has an agent judge synthesize the findings into one grounded brief. It ranks by social relevancy, not SEO: a Reddit thread with 1,500 upvotes outranks a blog post nobody read, and a Polymarket line is backed by real money. It gained 5,448 stars in the week of November 18-25, 2026, took the #1 GitHub Trending Repository of the Day badge, and now sits at 76,155 stars. The open sources need zero configuration; a 30-second first-run wizard unlocks the authenticated ones. For anyone who has ever prepped for a meeting with a LinkedIn page from 2023, the one-line takeaway is: ask your agent for the last 30 days, not the last training cutoff.",
+      "hook": "Your model's training data is months old, and a web search only shows you what editors chose to publish. The fastest-growing repository on GitHub this week takes a different route: /last30days sends your coding agent to search Reddit, X, YouTube, TikTok, Hacker News, Polymarket and a dozen more sources in parallel, scores what it finds by what real people actually engaged with, and synthesizes it into one brief you can quote. It gained 5,448 stars in a single week and now sits at 76,155. The pitch is one line long: Google aggregates editors; /last30days searches people.",
+      "takeaways": [
+        "last30days is an MIT-licensed agent skill (mvanhorn/last30days-skill) that researches any topic across 30+ sources - Reddit, X, YouTube, TikTok, Instagram, Hacker News, Polymarket, GitHub, Digg, arXiv, Techmeme and more - then has an agent judge synthesize a single brief.",
+        "It ranks by social relevancy, not SEO: a Reddit thread with 1,500 upvotes outranks a blog post nobody read, and a Polymarket line is backed by real money, not opinion.",
+        "Zero configuration for the open sources - Reddit, Hacker News, Polymarket, GitHub, patent filings and careers pages work immediately; a 30-second first-run wizard unlocks X, YouTube, TikTok, arXiv and Techmeme with your own keys or browser sessions.",
+        "Version 4 reads what a company is doing before it announces it: Patent Secret Signals from that month's US filings, and Jobs Page Secret Signals from roles that give away unannounced teams.",
+        "Discovery mode answers 'what is exploding in AI agents?' with 5-10 velocity-ranked topics, each with a momentum label and a ready-to-run follow-up command."
+      ],
+      "image": "img/last30days.jpg",
+      "problem": "Every research shortcut we use is stale in the same way. A language model's training data is months behind what the community has already figured out, and a web search returns what editors and SEO chose to publish - not what people are actually saying, arguing about, or betting on right now. The author built /last30days to keep up in AI, where everything changes daily and the Reddit and X crowd is always on top of it first. The same staleness hits ordinary work: you Google someone before a meeting and get a LinkedIn page from 2023; you check a company and get last quarter's press release; you compare tools and get a blog post from before the last three releases. The fresh signal exists, but it lives in a dozen walled gardens at once - Reddit comments, X threads, YouTube transcripts, TikTok clips, Hacker News arguments, prediction-market odds - each with its own API, its own tokens, its own auth. No single AI has access to all of them, and searching them one by one by hand takes hours for a single question.",
+      "solution": "last30days is an agent skill that bridges those gardens with your own agent. You install it once - on Claude Code via the plugin marketplace, or on Codex, Cursor, Copilot, Gemini CLI, OpenClaw, DeepSeek Harness and 50+ other Agent Skills hosts with one npx command - and then you ask it like a command: `/last30days <topic>`. The skill searches its sources in parallel, scores each finding by what real people did with it - upvotes, likes, views, money on a market - and an agent judge synthesizes the result into one brief, with the best quote from each source sitting on its own line under the story it backs up, translated when needed. A Polymarket odds line sits under the story it bears on, with how much the odds moved; a listed company gets a Yahoo Finance line with its share-price move over the 30 days next to the S&P 500. Version 4 adds the two features that make it more than a search wrapper: Patent Secret Signals, which read that month's US patent filings and flag only the ones out of character for the company, and Jobs Page Secret Signals, which read the company's own careers page and flag the roles that give away what it is building before it ships. A discovery mode sweeps the source listings for what is gaining velocity and returns 5-10 ranked topics to research next.",
+      "benefit": "The benefit is research that is fresh, cross-checked, and quotable in minutes instead of hours. Before a meeting, `/last30days Peter Steinberger` returns what he is actually doing this month - joined OpenAI to work on Codex, 23 PRs at an 85% merge rate, building LobsterOS for cross-device agent control, and a 569-upvote Reddit debate about him - none of it on Google. Before a build, `/last30days OpenClaw vs Hermes vs Paperclip` returns a side-by-side table with live star counts pulled from the GitHub API, not a stale blog post. For a company, the jobs and patent signals surface intent before announcements: an Apple run flagged a director role that reads like quality control for an assistant that completes purchases, and a patent application for changing a device's state by tapping a saved photo of your room. And because the brief is scored by engagement rather than search ranking, the loudest real signal wins over the best-optimized page - a TikTok with 3.6M views tells you more about what is culturally relevant than a press release does.",
+      "apply": "Install it for your harness. On Claude Code (recommended, because the marketplace auto-updates it): `/plugin marketplace add mvanhorn/last30days-skill` then `/plugin install last30days`. On Codex, Cursor, Copilot, Gemini CLI, OpenClaw or any other Agent Skills host: `npx skills add mvanhorn/last30days-skill -g` (global, so it is available across projects; drop `-g` for a per-project install). Use one install method per machine - Claude Code does not dedupe a marketplace plugin and an npx copy, and `/last30days` will show twice. Run the first-run setup wizard when prompted: it unlocks X, YouTube, TikTok, arXiv and Techmeme in about 30 seconds using your own keys or browser sessions, while Reddit, Hacker News, Polymarket, GitHub, patents and careers pages already work with zero configuration. Then ask it something you actually need: `/last30days <person, company, or topic>`. For a company, add `--hiring-signals` for a hiring-only report. To find what to research next, ask `/last30days what is exploding in AI agents?` and pick one of the velocity-ranked topics it returns. Finally, treat the brief as a starting point, not a verdict: click through to the quoted thread or video before repeating a claim, and read a Polymarket line as what money thinks, not what will happen.",
+      "stats": [
+        {
+          "value": "76,155",
+          "label": "GitHub stars (6,749 forks) as of November 27, 2026, up from 74,157 a week earlier - a gain of 5,448 stars in the week of November 18-25, the fastest-growing repo that week, and #1 GitHub Trending Repository of the Day"
+        },
+        {
+          "value": "30+ sources",
+          "label": "Searched in parallel per the README source table - Reddit, X, YouTube, TikTok, Instagram, Hacker News, Polymarket, GitHub, Digg, arXiv, Techmeme, Yahoo Finance, LinkedIn, Meta Ads, StockTwits, Threads, Pinterest, Xiaohongshu, Bluesky, Perplexity, dev.to, Truth Social, Telegram, Trustpilot, Amazon, DripStack, jobs pages, patents, local files and the web"
+        },
+        {
+          "value": "30 seconds",
+          "label": "First-run setup wizard to unlock X, YouTube, TikTok, arXiv and Techmeme, per the README - the open sources (Reddit, Hacker News, Polymarket, GitHub, patents, careers pages) need no configuration at all"
+        }
+      ],
+      "details": [
+        {
+          "heading": "What the brief actually contains",
+          "body": "Each brief is built from parallel searches scored by engagement, then synthesized by an agent judge - not by a search ranking. The distinctive output choices are the quote lines (the best Reddit, X, YouTube, TikTok and Instagram comment under the story it backs up, translated when needed, including lines spoken in a video), the Polymarket odds line (one line under the story it bears on, with how much the odds moved - the Kanye West brief, for example, carried 'Will Kanye tweet again? 86% Yes' alongside 23 Reddit threads and 17 YouTube videos), and the Yahoo Finance line for listed companies (share-price move over the 30 days next to the S&P 500, plus the biggest single-day move - Alphabet was down 17.6% over 30 days while the S&P fell 3.6%, worst day October 29 at -12.6%). Company runs add the two Secret Signals: patent filings flagged only when out of character or describing something unshipped, and hiring roles flagged when they hint at something unannounced. Comparison runs pull numbers live - the OpenClaw vs Hermes vs Paperclip brief used star counts from the GitHub API, not a cached article. Discovery mode is the other half of the tool: ask what is exploding in a field and it sweeps Reddit category listings, Hacker News front and best stories, Digg and X, judges the nominations, and returns 5-10 velocity-ranked topics with momentum labels and a ready-to-run follow-up command for each."
+        },
+        {
+          "heading": "The fine print before you trust it",
+          "body": "First, not every source works out of the box: the README is explicit that availability depends on credentials, installed tools, the topic and explicit opt-ins. X, TikTok, Instagram and several others need your own auth - a browser session or an API key - and some sources are opt-in only (Telegram needs an API key and a channel list; Amazon needs an authenticated Bright Data CLI and spends your credits). Second, engagement is a popularity signal, not a truth signal: upvotes can be brigaded, views can be bought, and a viral take can be wrong - the brief ranks what people engaged with, and a confident Reddit thread is still a Reddit thread until you click through to it. Third, prediction-market odds are what money thinks, not what will happen; a 91% line on Apple being the world's largest company at year end is a market price, not a fact. Fourth, the synthesis is an agent judge reading other people's words, so sarcasm, irony and context can be misread - the quote lines help here, because you can see the source wording instead of only the summary. Fifth, the skill runs inside your agent, so a run costs your agent's model calls; the skill itself is free and MIT-licensed. Finally, we have not installed or run last30days hands-on; the install commands, source list and examples above are from the README and the November 25 weekly trending coverage as read November 27, 2026."
+        }
+      ],
+      "checklist": [
+        "Install it for your harness: Claude Code marketplace (`/plugin marketplace add mvanhorn/last30days-skill`, then `/plugin install last30days`) or `npx skills add mvanhorn/last30days-skill -g` for 50+ other hosts - one method per machine.",
+        "Run the 30-second first-run wizard to unlock X, YouTube, TikTok, arXiv and Techmeme; Reddit, Hacker News, Polymarket, GitHub, patents and careers pages already work with no setup.",
+        "Ask it something real: `/last30days <person, company, or topic>` - and for a company add `--hiring-signals` for the jobs-only view.",
+        "Try discovery mode once: `/last30days what is exploding in AI agents?` and follow one velocity-ranked topic it returns.",
+        "Before repeating any claim from a brief, click through to the quoted thread, video or market it came from - engagement is popularity, not truth.",
+        "Read a Polymarket odds line as a market price, not a prediction, and a Patent or Jobs Page Secret Signal as a lead worth checking, not a confirmed announcement."
+      ],
+      "caveats": "Star and fork counts (76,155 stars, 6,749 forks) are from the GitHub repository API as read on November 27, 2026; the weekly gain (+5,448 stars, 74,157 total) and fastest-growing ranking are from the shareuhack GitHub Trending weekly coverage of November 18-25, 2026, and the #1 Repository of the Day badge is from the project's README. The source list, install commands, setup-wizard timing, v4 features and examples are from the README as read November 27, 2026. We have not installed or run last30days hands-on.",
+      "source_name": "mvanhorn/last30days-skill on GitHub (README) and shareuhack GitHub Trending weekly, November 25, 2026",
+      "source_url": "https://github.com/mvanhorn/last30days-skill"
+    },
+    {
       "slug": "skillevaluator",
       "date": "2026-11-26",
       "category": "Tools",
@@ -6188,5 +6244,5 @@
       "source_url": "https://github.com/Supersynergy/agent-token-saver"
     }
   ],
-  "generated_at": "2026-11-26T09:41:21-06:00"
+  "generated_at": "2026-11-27T08:22:00-06:00"
 }
