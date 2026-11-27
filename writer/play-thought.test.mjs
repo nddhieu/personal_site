@@ -626,7 +626,7 @@ function readingSetup() {
 check("no stored size reads standard and marks the prose", () => {
   readingSetup();
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "standard", mode: "default" });
+    { fontSize: "standard", mode: "default", display: "full" });
   assert.equal(
     document.getElementById("prose").getAttribute("data-reading-font"),
     "standard");
@@ -644,6 +644,18 @@ check("no stored size reads standard and marks the prose", () => {
       .getAttribute("aria-pressed"), "true");
   assert.equal(
     document.getElementById("reading-mode-immersion")
+      .getAttribute("aria-pressed"), "false");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-display"),
+    "full");
+  assert.equal(
+    document.querySelector(".page-play")
+      .getAttribute("data-reading-display"), "full");
+  assert.equal(
+    document.getElementById("reading-display-full")
+      .getAttribute("aria-pressed"), "true");
+  assert.equal(
+    document.getElementById("reading-display-half")
       .getAttribute("aria-pressed"), "false");
 });
 
@@ -686,7 +698,7 @@ check("an unknown stored size falls back to standard", () => {
   T.loadReadingSettings();
   T.applyReadingSettings();
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "standard", mode: "default" });
+    { fontSize: "standard", mode: "default", display: "full" });
   assert.equal(
     document.getElementById("prose").getAttribute("data-reading-font"),
     "standard");
@@ -697,14 +709,14 @@ check("corrupt stored settings fall back to standard", () => {
   T.loadReadingSettings();
   T.applyReadingSettings();
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "standard", mode: "default" });
+    { fontSize: "standard", mode: "default", display: "full" });
 });
 
 check("an unknown size choice changes nothing", () => {
   readingSetup();
   T.setReadingFontSize("huge");
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "standard", mode: "default" });
+    { fontSize: "standard", mode: "default", display: "full" });
   assert.equal(localStorage.getItem("writer.readingSettings"), null);
 });
 
@@ -751,7 +763,7 @@ check("an unknown stored mode falls back to default, keeping the size", () => {
   T.loadReadingSettings();
   T.applyReadingSettings();
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "large", mode: "default" });
+    { fontSize: "large", mode: "default", display: "full" });
   assert.equal(
     document.getElementById("prose").getAttribute("data-reading-mode"),
     "default");
@@ -763,7 +775,7 @@ check("stored settings from before mode still load, mode defaults", () => {
   T.loadReadingSettings();
   T.applyReadingSettings();
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "xl", mode: "default" });
+    { fontSize: "xl", mode: "default", display: "full" });
   assert.equal(
     document.getElementById("prose").getAttribute("data-reading-mode"),
     "default");
@@ -773,7 +785,82 @@ check("an unknown mode choice changes nothing", () => {
   readingSetup();
   T.setReadingMode("cinematic");
   assert.deepEqual(T.getReadingSettings(),
-    { fontSize: "standard", mode: "default" });
+    { fontSize: "standard", mode: "default", display: "full" });
+  assert.equal(localStorage.getItem("writer.readingSettings"), null);
+});
+
+/* --- slice 4e: reading-settings panel, screen display --- */
+check("choosing Half-screen applies it and persists it", () => {
+  readingSetup();
+  T.setReadingDisplay("half");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-display"),
+    "half");
+  assert.equal(
+    document.querySelector(".page-play")
+      .getAttribute("data-reading-display"), "half");
+  assert.equal(
+    JSON.parse(localStorage.getItem("writer.readingSettings")).display,
+    "half");
+  assert.equal(
+    document.getElementById("reading-display-half")
+      .getAttribute("aria-pressed"), "true");
+  assert.equal(
+    document.getElementById("reading-display-full")
+      .getAttribute("aria-pressed"), "false");
+  assert.equal(
+    document.getElementById("reading-display-half")
+      .classList.contains("is-on"), true);
+});
+
+check("a stored Half-screen loads back before first paint", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "large", mode: "immersion", display: "half" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-display"),
+    "half");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-font"),
+    "large");
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-mode"),
+    "immersion");
+  assert.equal(
+    document.getElementById("reading-display-half")
+      .getAttribute("aria-pressed"), "true");
+});
+
+check("an unknown stored display falls back to full, keeping size and mode", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "large", mode: "immersion", display: "quarter" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "large", mode: "immersion", display: "full" });
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-display"),
+    "full");
+});
+
+check("stored settings from before display still load, display defaults", () => {
+  localStorage.setItem("writer.readingSettings",
+    JSON.stringify({ fontSize: "xl", mode: "immersion" }));
+  T.loadReadingSettings();
+  T.applyReadingSettings();
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "xl", mode: "immersion", display: "full" });
+  assert.equal(
+    document.getElementById("prose").getAttribute("data-reading-display"),
+    "full");
+});
+
+check("an unknown display choice changes nothing", () => {
+  readingSetup();
+  T.setReadingDisplay("quarter");
+  assert.deepEqual(T.getReadingSettings(),
+    { fontSize: "standard", mode: "default", display: "full" });
   assert.equal(localStorage.getItem("writer.readingSettings"), null);
 });
 
