@@ -1,6 +1,62 @@
 {
   "articles": [
     {
+      "slug": "superpowers",
+      "date": "2026-11-28",
+      "category": "Tools",
+      "kicker": "Your coding agent does not need a bigger model. It needs a method - and 328,000 developers just starred one.",
+      "title": "Superpowers: The 328,000-Star Method That Turns Your Coding Agent Into a Disciplined Team",
+      "summary": "Superpowers (obra/superpowers) is a complete software development methodology for coding agents: 15 composable skills that make the agent brainstorm before it builds, write a design you can actually read, break it into 2-5 minute tasks, dispatch subagents to do them with test-driven development, and review each one before moving on. It works across Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Pi and 10 more harnesses, needs no configuration, and gained 922 stars on November 28 alone. The one-line takeaway is: stop prompting your agent to write code - give it a process, and let the process write the code.",
+      "hook": "The most-starred agent project on GitHub this week is not a model, a tool, or a framework. It is a method. Superpowers - 328,764 stars, MIT-licensed - does not add a single capability to your coding agent. It adds discipline: brainstorm first, design in chunks a human can read, plan in 2-5 minute tasks, build with test-driven development, review every step, and only then merge. It gained 922 stars on November 28 alone, and its author Jesse Vincent has been shipping it since October 2025. The pitch is one line long: your agent does not need a bigger brain - it needs a better process.",
+      "takeaways": [
+        "Superpowers is a complete software development methodology for coding agents (obra/superpowers, MIT): 15 composable skills that turn a single agent prompt into brainstorm, design, plan, build, review, and merge.",
+        "The workflow is seven steps: brainstorming, git worktrees, writing-plans, subagent-driven-development (or the cheaper executing-plans), test-driven-development, requesting-code-review, and finishing-a-development-branch.",
+        "Skills trigger automatically - no commands to memorize. The agent checks for a relevant skill before any task; the workflows are mandatory, not suggestions.",
+        "It runs on 16 harnesses - Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Pi, Muse, Devin, Factory Droid, Copilot CLI, Grok, Kimi Code, Qwen, Hermes, Antigravity - installed once per harness, usually from an official plugin marketplace.",
+        "Its philosophy is four lines: test-driven development always, systematic over ad-hoc, simplicity as the primary goal, and evidence over claims - verify before declaring success."
+      ],
+      "image": "img/superpowers.jpg",
+      "problem": "Every coding agent has the same failure mode, and it is not a lack of intelligence. You give it a vague idea and it jumps straight into writing code - no spec, no design, no plan, no tests, and no review. An hour later you have 800 lines that mostly work, a test suite that was written after the code (or never), and a branch nobody - including the agent - can explain. The bigger the task, the worse it gets: long sessions drift off the plan, repeat work, burn tokens re-reading their own output, and declare victory on code they never verified. The usual fixes - a longer prompt, a bigger model, a stricter system instruction - all decay the same way, because they are still one instruction trying to hold a whole project together. What is missing is not capability; it is the process a good senior engineer follows without thinking: understand the problem, agree the design, break it into small pieces, build each one test-first, and review before moving on.",
+      "solution": "Superpowers installs that process as 15 composable skills your agent loads automatically. The moment you start building, brainstorming kicks in: the agent asks what you really want and why, then plays its understanding back in chunks short enough to read - a small change gets agreed in chat, a project gets a written design document. After you sign off, using-git-worktrees isolates the work on a new branch and verifies a clean test baseline; writing-plans breaks the design into bite-sized tasks of 2-5 minutes each, every one with exact file paths, complete code, and verification steps. Then the build runs one of two ways: subagent-driven-development dispatches a fresh subagent per task with a review after each (most thorough), or executing-plans implements every task inline with one fresh review of the whole branch at the end (cheapest). test-driven-development enforces true red/green/refactor during implementation - failing test first, minimal code, watch it pass, commit - and deletes code written before tests. requesting-code-review checks each task against the plan and blocks progress on critical issues, and finishing-a-development-branch verifies the tests, presents merge, PR, keep or discard, and cleans up the worktree. The agent checks for a relevant skill before any task, so the workflows are mandatory, not suggestions - and because skills trigger automatically, you do not need to do anything special. Your coding agent just has Superpowers.",
+      "benefit": "The benefit is the one every team lead already knows: a junior engineer with a good process beats a brilliant one without one, and the same holds for agents. A design agreed in readable chunks means the agent stops guessing at your intent - and you stop discovering what it built only after it is built. Plans broken into 2-5 minute tasks with exact paths and verification steps mean subagents can work autonomously for a couple of hours without deviating from the plan, because each task is small enough to hold in context. Test-first development means the test suite is the spec, not an afterthought, and the review-after-each-task step catches drift while it is still one task wide instead of a whole branch wide. The scale of adoption is itself a signal: 328,764 stars and 29,228 forks make it the most-starred agent-methodology project on GitHub, it sits on today's trending list, and it is maintained across 16 harnesses - so the method you learn in Claude Code transfers to Codex, Cursor, Gemini CLI or Pi without relearning anything. For our own team, the shape is familiar: subagent-driven development with review after each task is exactly how our builders already work - Superpowers just packages that discipline so any single agent can run it.",
+      "apply": "Install it once per harness you use. On Claude Code (recommended, from Anthropic's official marketplace): `/plugin install superpowers@claude-plugins-official`. On Codex, open the plugin search (`/plugins`), search for Superpowers, and select Install Plugin. On Cursor: `/add-plugin superpowers` in Agent chat. On Gemini CLI: `gemini extensions install https://github.com/obra/superpowers` (update later with `gemini extensions update superpowers`). On OpenCode, tell it: `Fetch and follow instructions from https://raw.githubusercontent.com/obra/superpowers/refs/heads/main/.opencode/INSTALL.md`. On Pi: `pi install git:github.com/obra/superpowers`. Then do nothing special - start a fresh session and say what you want to build, for example `Let's make a react todo list`, and a working install auto-triggers brainstorming before any code is written. If a session ever misbehaves - a skill fires when it should not, stays silent when it should, or the agent ignores its plan - ask your agent to `figure out what went wrong with superpowers in this session`; the diagnosing-superpowers skill reads the transcript, reports what happened with line-level evidence, and can package a scrubbed bundle for a bug report.",
+      "stats": [
+        {
+          "value": "328,764",
+          "label": "GitHub stars (29,228 forks) as of November 28, 2026, per the GitHub repository API read today - up 922 stars on November 28 alone, per that day's GitHub trending coverage, and the most-starred agent-methodology project on GitHub"
+        },
+        {
+          "value": "15 skills",
+          "label": "In the library as of v7.0.2 (released November 3, 2026): 1 testing, 3 debugging, 9 collaboration, 2 meta - covering brainstorming, planning, worktrees, subagent-driven development, TDD, code review, and diagnosing the system itself"
+        },
+        {
+          "value": "16 harnesses",
+          "label": "Supported from the same repository per the README: Claude Code, Codex, Cursor, Gemini CLI, OpenCode, Pi, Muse, Devin, Factory Droid, GitHub Copilot CLI, Grok, Kimi Code, Qwen Code, Hermes, Antigravity, and more"
+        }
+      ],
+      "details": [
+        {
+          "heading": "The two build modes, and which one to pick",
+          "body": "Superpowers offers two ways to run a plan, and the choice is a cost-versus-thoroughness trade. Subagent-driven-development dispatches a fresh subagent per task, then reviews each task twice - first for spec compliance, then for code quality - before moving on. It is the most thorough mode, and the one that matches how a team with a verifier works: every task is independently built and independently checked. Executing-plans is the cheap mode: one context, every task implemented inline, and a single fresh review of the whole branch at the end. It costs far fewer tokens, but a mistake in task three can quietly shape tasks four through ten before anyone looks. The README's own guidance is to use subagent-driven development by default and executing-plans when the plan is small or the budget is tight. Either way, the plan itself is the same artifact - bite-sized tasks with exact file paths, complete code, and verification steps - so you can switch modes between plans without re-planning."
+        },
+        {
+          "heading": "The fine print before you install it",
+          "body": "First, Superpowers is a methodology, not a capability: it makes your agent more disciplined, not smarter, and it cannot fix a model that cannot follow instructions - if your agent ignores plans, the diagnosing-superpowers skill can tell you why, but it cannot make a weak model strong. Second, the discipline costs tokens: a fresh subagent per task plus two-stage review is the most thorough mode and the most expensive one, so small fixes may be cheaper inline with executing-plans. Third, install it separately for each harness - there is no shared install, and each harness has its own update command (Claude Code marketplace, `gemini extensions update`, `devin plugins update`, and so on). Fourth, one telemetry note worth knowing: the optional visual companion in brainstorming loads the Prime Radiant logo from the project's website, which includes the Superpowers version in use - no project, prompt, or agent details - and it is fully optional; set SUPERPOWERS_DISABLE_TELEMETRY to any true value to turn it off, and it also honors Claude Code's DISABLE_TELEMETRY and CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC. Finally, we have not installed or run Superpowers hands-on; the workflow, skill list, install commands and counts above are from the README and the GitHub repository API as read November 28, 2026."
+        }
+      ],
+      "checklist": [
+        "Install it for your harness: Claude Code (`/plugin install superpowers@claude-plugins-official`), Codex (plugin search), Cursor (`/add-plugin superpowers`), Gemini CLI (`gemini extensions install https://github.com/obra/superpowers`), or Pi (`pi install git:github.com/obra/superpowers`).",
+        "Verify the install: start a fresh session, say `Let's make a react todo list`, and confirm brainstorming triggers before any code is written.",
+        "Let it run the full loop once on a real task: brainstorm, approve the design, let it plan in 2-5 minute tasks, and watch a subagent build and review one task at a time.",
+        "Pick your build mode deliberately: subagent-driven-development for thoroughness, executing-plans when the plan is small or the token budget is tight.",
+        "If a session misbehaves, ask the agent to `figure out what went wrong with superpowers in this session` and read the line-level evidence before re-prompting.",
+        "Set SUPERPOWERS_DISABLE_TELEMETRY if you do not want the optional visual-companion version ping."
+      ],
+      "caveats": "Star and fork counts (328,764 stars, 29,228 forks) are from the GitHub repository API as read on November 28, 2026; the +922 stars on November 28 is from that day's GitHub trending coverage, not the API. The skill list, workflow steps, install commands, harness count and telemetry note are from the README as read November 28, 2026, and the latest release is v7.0.2 (November 3, 2026). We have not installed or run Superpowers hands-on.",
+      "source_name": "obra/superpowers on GitHub (README) and GitHub trending coverage, November 28, 2026",
+      "source_url": "https://github.com/obra/superpowers"
+    },
+    {
       "slug": "last30days",
       "date": "2026-11-27",
       "category": "Tools",
@@ -6463,5 +6519,5 @@
       "source_url": "https://github.com/Supersynergy/agent-token-saver"
     }
   ],
-  "generated_at": "2026-11-27T08:22:00-06:00"
+  "generated_at": "2026-11-28T08:22:00-06:00"
 }
